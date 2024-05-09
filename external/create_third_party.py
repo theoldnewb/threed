@@ -35,7 +35,8 @@ def build_and_install(tpl_name):
 def main():
     print("Hello, World!")
     print("SCRIPT_PATH=%s" % SCRIPT_PATH)
-    build_and_install("SDL")
+    #build_and_install("SDL")
+    build_and_install("cglm")
 
 if __name__ == "__main__":
     main()

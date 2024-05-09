@@ -1,6 +1,17 @@
 #include <SDL3/SDL_log.h>
 #include <SDL3/SDL_version.h>
 
+#include <cglm/mat4.h>
+#include <cglm/io.h>
+
+
+void
+hello_cglm()
+{
+    mat4 m4 ;
+    glm_mat4_identity(m4) ;
+    glm_mat4_print(m4, stdout) ;
+}
 
 void
 hello_sdl3()
@@ -23,6 +34,7 @@ main(
 {
     SDL_Log("Hello, World!") ;
     hello_sdl3() ;
+    hello_cglm() ;
 
     return 0 ;
 }
