@@ -13,6 +13,9 @@ set(CMAKE_PREFIX_PATH tpl/cglm)
 find_package(cglm REQUIRED)
 message(STATUS "cglm_FOUND=${cglm_FOUND}")
 
+find_package(Vulkan REQUIRED)
+message(STATUS "Vulkan_FOUND=${Vulkan_FOUND}")
+
 
 add_compile_definitions(CGLM_FORCE_DEPTH_ZERO_TO_ONE)
 add_compile_definitions(CGLM_FORCE_LEFT_HANDED)
@@ -58,5 +61,6 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE SDL3::SDL3
+    PRIVATE Vulkan::Vulkan
 )
 

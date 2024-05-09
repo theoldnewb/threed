@@ -15,6 +15,10 @@
 #include <cglm/io.h>
 
 
+#include <vulkan/vulkan.h>
+
+
+
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 //
@@ -28,6 +32,18 @@ static char const   window_title_[] = "threed" ;
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 //
+void
+hello_vulkan()
+{
+    uint32_t vulkan_api_version ;
+    VkResult const res = vkEnumerateInstanceVersion(&vulkan_api_version) ;
+    SDL_assert(res == VK_SUCCESS) ;
+    uint32_t const major = VK_VERSION_MAJOR(vulkan_api_version) ;
+    uint32_t const minor = VK_VERSION_MINOR(vulkan_api_version) ;
+    uint32_t const patch = VK_VERSION_PATCH(vulkan_api_version) ;
+    SDL_Log("Vulkan Version: major=%d, minor=%d, patch=%d", major, minor, patch) ;
+}
+
 void
 hello_cglm()
 {
@@ -311,6 +327,7 @@ app_main(
     SDL_Log("Hello, World!") ;
     hello_sdl3() ;
     hello_cglm() ;
+    hello_vulkan() ;
 
     if(check(create_app()))
     {
