@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.29.2)
+cmake_minimum_required(VERSION 3.25.1)
 
 project(threed)
 
@@ -37,6 +37,11 @@ endif()
 
 set(PROJECT_SOURCES
     src/main.c
+    src/app.c
+    src/app.h
+    src/types.h
+    src/defines.c
+    src/defines.h
 )
 
 add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})
