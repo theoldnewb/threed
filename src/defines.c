@@ -1,9 +1,12 @@
 #include "defines.h"
+#include "log.h"
 
 #include <SDL3/SDL_log.h>
 #include <SDL3/SDL_error.h>
 
 #include <errno.h>
+#include <string.h>
+
 
 int
 check_impl(
@@ -14,7 +17,7 @@ check_impl(
 ,   int const       line
 )
 {
-    SDL_Log("%s(%d) %s: %d=%s", file, line, func, result, expr) ;
+    log_output_impl(file, func, line, LOG_PRI_DEBUG, "%d=%s", result, expr) ;
 
     if(result)
     {
@@ -37,11 +40,11 @@ check_c_impl(
 
     if(0 == result)
     {
-        SDL_Log("%s(%d) %s: %d=%s", file, line, func, result, expr) ;
+        log_output_impl(file, func, line, LOG_PRI_DEBUG, "%d=%s", result, expr) ;
         return 0 ;
     }
 
-    SDL_Log("%s(%d) %s: %d=%s failed. errno=%d", file, line, func, result, expr, errno) ;
+    log_output_impl(file, func, line, LOG_PRI_DEBUG, "%d=%s failed. errno=%d strerror=%s", result, expr, errno, strerror(errno)) ;
 
     return 1 ;
 }
@@ -59,11 +62,11 @@ check_sdl_impl(
 {
     if(result)
     {
-        SDL_Log("%s(%d) %s: %d=%s", file, line, func, result, expr) ;
+        log_output_impl(file, func, line, LOG_PRI_DEBUG, "%d=%s", result, expr) ;
         return 0 ;
     }
 
-    SDL_Log("%s(%d) %s: %d=%s failed. SDL_GetError()=%s", file, line, func, result, expr, SDL_GetError()) ;
+    log_output_impl(file, func, line, LOG_PRI_DEBUG, "%d=%s failed. SDL_GetError=%s", result, expr, SDL_GetError()) ;
 
     return 1 ;
 }

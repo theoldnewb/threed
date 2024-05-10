@@ -5,6 +5,9 @@
 #define APP_H_INC
 
 
+#include "types.h"
+
+
 typedef struct SDL_Window SDL_Window;
 
 
@@ -21,6 +24,11 @@ typedef struct app
     int             running_ ;
     int             minimized_ ;
     int             keyboard_focus_ ;
+
+    uint64_t        performance_counter_0_ ;
+    char const *    base_path_ ;
+    char const *    pref_path_ ;
+
 
 } app ;
 

@@ -49,5 +49,23 @@ check_sdl_impl(
 #endif
 
 
+#ifdef  __linux__
+#define def_noop    ((void)0)
+#endif
+
+#ifdef  __APPLE__
+#define def_noop    ((void)0)
+#endif
+
+#ifdef  _WIN64
+#define def_noop    __noop
+#endif
+
+
+#ifndef UNUSED
+#define UNUSED(a)   ((void)a)
+#endif
+
+
 #endif // DEFINES_H_INC
 

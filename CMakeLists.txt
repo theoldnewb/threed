@@ -35,6 +35,7 @@ endif()
 
 if(MSVC)
     add_compile_options(-W4)
+    add_compile_options(-Wall)
 endif()
 
 
@@ -45,6 +46,10 @@ set(PROJECT_SOURCES
     src/types.h
     src/defines.c
     src/defines.h
+    src/log.c
+    src/log.h
+    src/debug.c
+    src/debug.h
 )
 
 add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})

@@ -6,7 +6,8 @@
 	],
 	"settings": {
 		"files.associations": {
-			"app.h": "c"
+			"app.h": "c",
+			"sdl_thread.h": "c"
 		}
 	}
 }

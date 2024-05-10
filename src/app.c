@@ -1,6 +1,7 @@
 #include "app.h"
 #include "types.h"
 #include "defines.h"
+#include "log.h"
 
 #include <SDL3/SDL_log.h>
 #include <SDL3/SDL_version.h>
@@ -9,7 +10,7 @@
 #include <SDL3/SDL_assert.h>
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_timer.h>
-
+#include <SDL3/SDL_filesystem.h>
 
 #include <cglm/mat4.h>
 #include <cglm/io.h>
@@ -17,6 +18,7 @@
 
 #include <vulkan/vulkan.h>
 
+#include <sys/stat.h>
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -26,7 +28,10 @@ static app the_app_ ;
 app * app_ = &the_app_ ;
 
 
-static char const   window_title_[] = "threed" ;
+static char const   org_name_[] = "whatever" ;
+static char const   app_name_[] = "threed" ;
+
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -41,7 +46,7 @@ hello_vulkan()
     uint32_t const major = VK_VERSION_MAJOR(vulkan_api_version) ;
     uint32_t const minor = VK_VERSION_MINOR(vulkan_api_version) ;
     uint32_t const patch = VK_VERSION_PATCH(vulkan_api_version) ;
-    SDL_Log("Vulkan Version: major=%d, minor=%d, patch=%d", major, minor, patch) ;
+    log_debug("Vulkan Version: major=%d, minor=%d, patch=%d", major, minor, patch) ;
 }
 
 void
@@ -60,9 +65,9 @@ hello_sdl3()
     SDL_Version linked ;
     SDL_VERSION(&compiled) ;
     SDL_GetVersion(&linked) ;
-    SDL_Log("compiled with: %u, %u, %u", compiled.major, compiled.minor, compiled.patch) ;
-    SDL_Log("linking with: %u, %u, %u", linked.major, linked.minor, linked.patch) ;
-    SDL_Log("SDL_GetRevision()=%s", SDL_GetRevision()) ;
+    log_debug("compiled with: %u, %u, %u", compiled.major, compiled.minor, compiled.patch) ;
+    log_debug("linking with: %u, %u, %u", linked.major, linked.minor, linked.patch) ;
+    log_debug("SDL_GetRevision()=%s", SDL_GetRevision()) ;
 }
 
 
@@ -79,7 +84,7 @@ create_app()
     SDL_assert(!app_->window_) ;
 
     app_->window_ = SDL_CreateWindow(
-        window_title_
+        app_name_
     ,   app_->window_width_
     ,   app_->window_height_
     ,   SDL_WINDOW_RESIZABLE | SDL_WINDOW_VULKAN
@@ -97,6 +102,7 @@ create_app()
 bool
 update_app()
 {
+    //log_debug("update...") ;
     return true ;
 }
 
@@ -120,7 +126,7 @@ handle_window_event(
     case SDL_EVENT_WINDOW_MOVED:
         break ;
     case SDL_EVENT_WINDOW_RESIZED:
-        SDL_Log("Resized: [%d,%d]", we->data1, we->data2) ;
+        log_debug("Resized: [%d,%d]", we->data1, we->data2) ;
         break ;
     case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
         break ;
@@ -321,10 +327,29 @@ app_main(
     app_->argv_ = argv ;
     app_->argc_ = argc ;
     app_->exit_code_ = 0 ;
+#ifndef NDEBUG
+    SDL_LogSetPriority(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_DEBUG) ;
+#endif
+    app_->performance_counter_0_ = SDL_GetPerformanceCounter() ;
 
+    app_->base_path_ = SDL_GetBasePath() ;
+    SDL_assert(app_->base_path_) ;
+    app_->pref_path_ = SDL_GetPrefPath(org_name_, app_name_) ;
+    SDL_assert(app_->pref_path_) ;
+    log_debug_str(app_->base_path_) ;
+    log_debug_str(app_->pref_path_) ;
 
+    create_log_file(true) ;
 
-    SDL_Log("Hello, World!") ;
+    log_debug("logfile test") ;
+    log_info("logfile test") ;
+    log_error("logfile test") ;
+
+    log_debug("Hello, World!") ;
+    log_info("Hello, World!") ;
+    log_error("Hello, World!") ;
+
+    log_info("Hello, World!") ;
     hello_sdl3() ;
     hello_cglm() ;
     hello_vulkan() ;
@@ -338,6 +363,8 @@ app_main(
     {
         return 1 ;
     }
+
+    destroy_log_file() ;
 
     return 0 ;
 }
