@@ -51,6 +51,7 @@ check_sdl_impl(
 
 #ifdef  __linux__
 #define def_noop    ((void)0)
+#define require(a)  if(!(a)){__builtin_trap();}
 #endif
 
 #ifdef  __APPLE__
@@ -59,6 +60,7 @@ check_sdl_impl(
 
 #ifdef  _WIN64
 #define def_noop    __noop
+#define require(a)  if(!(a)){DebugBreak();}
 #endif
 
 

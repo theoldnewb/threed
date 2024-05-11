@@ -195,9 +195,10 @@ log_output_impl(
 ,   ...
 )
 {
-    static char const fmt_debug[] = "%14lu %2u %s(%d) : %s : %s" ;
-    static char const fmt_info[] = " %14lu %2u %s(%d) : %s : %s" ;
-    static char const fmt_error[] = "%14lu %2u %s(%d) : %s : %s" ;
+
+    static char const fmt_debug[] = "%15" SDL_PRIu64 "%2u %16s(%4d) : %s : %s" ;
+    static char const fmt_info[] = " %15" SDL_PRIu64 "%2u %16s(%4d) : %s : %s" ;
+    static char const fmt_error[] = "%15" SDL_PRIu64 "%2u %16s(%4d) : %s : %s" ;
     char buf[max_log_buf] ;
     va_list args ;
     va_start(args, fmt) ;

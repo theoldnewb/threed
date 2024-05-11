@@ -2,6 +2,7 @@
 #include "types.h"
 #include "defines.h"
 #include "log.h"
+#include "debug.h"
 
 #include <SDL3/SDL_log.h>
 #include <SDL3/SDL_version.h>
@@ -68,6 +69,16 @@ hello_sdl3()
     log_debug("compiled with: %u, %u, %u", compiled.major, compiled.minor, compiled.patch) ;
     log_debug("linking with: %u, %u, %u", linked.major, linked.minor, linked.patch) ;
     log_debug("SDL_GetRevision()=%s", SDL_GetRevision()) ;
+}
+
+void
+hello_debug()
+{
+    begin_timed_block() ;
+
+    SDL_Delay(30) ;
+
+    end_timed_block() ;
 }
 
 
@@ -354,6 +365,18 @@ app_main(
     hello_cglm() ;
     hello_vulkan() ;
 
+    log_debug("test_debug_file_func=%d", test_debug_file_func()) ;
+
+    begin_timed_block() ;
+
+    for(int i = 0; i < 10; ++i)
+    {
+        begin_timed_block() ;
+        hello_debug() ;
+        end_timed_block() ;
+    }
+    end_timed_block() ;
+
     if(check(create_app()))
     {
         return 1 ;
@@ -364,6 +387,7 @@ app_main(
         return 1 ;
     }
 
+    dump_all_debug_counter_keepers() ;
     destroy_log_file() ;
 
     return 0 ;

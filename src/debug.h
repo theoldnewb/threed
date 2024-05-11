@@ -8,24 +8,6 @@
 #include "types.h"
 
 
-typedef struct debug_info
-{
-    char const *    file_ ;
-    char const *    func_ ;
-    int             line_ ;
-
-} debug_info ;
-
-
-typedef struct debug_counter
-{
-    debug_info  begin_info_ ;
-    debug_info  end_info_ ;
-    uint64_t    begin_time_ ;
-    uint64_t    end_time_ ;
-
-} debug_counter ;
-
 
 void
 begin_timed_block_impl(
@@ -41,6 +23,14 @@ end_timed_block_impl(
 ,   char const *    func
 ,   int const       line
 ) ;
+
+
+int
+test_debug_file_func() ;
+
+
+void
+dump_all_debug_counter_keepers() ;
 
 
 #define  ENABLE_TIMED_BLOCK
