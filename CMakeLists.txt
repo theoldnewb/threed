@@ -35,7 +35,9 @@ endif()
 
 if(MSVC)
     add_compile_options(-W4)
-    add_compile_options(-Wall)
+    #show lots of warning need firther env add_compile_options(-Wall)
+    # -GF if needed to enable string pooling, otherwise debug counter recording will not work.
+    add_compile_options(-GF)
 endif()
 
 
