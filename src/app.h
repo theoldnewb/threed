@@ -1,10 +1,6 @@
 #pragma once
 
 
-#ifndef APP_H_INC
-#define APP_H_INC
-
-
 #include "types.h"
 
 
@@ -15,15 +11,16 @@ typedef struct app
 {
     char ** argv_ ;
     int     argc_ ;
-    int     exit_code_ ;
 
+    uint32_t        subsystems_ ;
     SDL_Window *    window_ ;
     int             window_width_ ;
     int             window_height_ ;
 
-    int             running_ ;
-    int             minimized_ ;
-    int             keyboard_focus_ ;
+    bool            created_ ;
+    bool            running_ ;
+    bool            minimized_ ;
+    bool            keyboard_focus_ ;
 
     uint64_t        performance_counter_0_ ;
     char const *    base_path_ ;
@@ -34,15 +31,15 @@ typedef struct app
 
 
 int
-app_main(
+main_app(
     int     argc
 ,   char *  argv[]
 ) ;
 
 
+uint64_t
+get_app_time() ;
+
+
 extern app * app_ ;
-
-
-#endif // APP_H_INC
-
 

@@ -3,13 +3,5 @@
 		{
 			"path": "."
 		}
-	],
-	"settings": {
-		"files.associations": {
-			"app.h": "c",
-			"sdl_thread.h": "c",
-			"sdl_init.h": "c",
-			"sdl_version.h": "c"
-		}
-	}
+	]
 }

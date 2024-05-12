@@ -31,11 +31,14 @@ def build_and_install(tpl_name):
     subprocess.run(['cmake', '--build', build_dir, '--config', BUILD_CONFIG, '--verbose'])
     subprocess.run(['cmake', '--install', build_dir, '--prefix', tpl_dir, '--verbose'])
 
+    if os.path.isdir(build_dir):
+        shutil.rmtree(build_dir)
+
 
 def main():
     print("Hello, World!")
     print("SCRIPT_PATH=%s" % SCRIPT_PATH)
-    #build_and_install("SDL")
+    build_and_install("SDL")
     build_and_install("cglm")
 
 if __name__ == "__main__":

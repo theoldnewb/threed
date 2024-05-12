@@ -1,14 +1,6 @@
 #pragma once
 
 
-#ifndef DEBUG_H_INC
-#define DEBUG_H_INC
-
-
-#include "types.h"
-
-
-
 void
 begin_timed_block_impl(
     char const *    file
@@ -33,8 +25,6 @@ void
 dump_all_debug_counter_keepers() ;
 
 
-#define  ENABLE_TIMED_BLOCK
-
 #ifdef  ENABLE_TIMED_BLOCK
 #define begin_timed_block() begin_timed_block_impl(__FILE__, __func__, __LINE__)
 #define end_timed_block()   end_timed_block_impl(__FILE__, __func__, __LINE__)
@@ -43,6 +33,3 @@ dump_all_debug_counter_keepers() ;
 #define end_timed_block()   def_noop
 #endif
 
-
-
-#endif  // DEBUG_H_INC

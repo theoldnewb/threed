@@ -17,6 +17,14 @@ find_package(Vulkan REQUIRED)
 message(STATUS "Vulkan_FOUND=${Vulkan_FOUND}")
 
 
+add_compile_definitions(ENABLE_DEBUG_LOG)
+add_compile_definitions(ENABLE_INFO_LOG)
+add_compile_definitions(ENABLE_ERROR_LOG)
+add_compile_definitions(ENABLE_LOG_FILE)
+add_compile_definitions(ENABLE_CHECK)
+add_compile_definitions(ENABLE_TIMED_BLOCK)
+
+
 add_compile_definitions(CGLM_FORCE_DEPTH_ZERO_TO_ONE)
 add_compile_definitions(CGLM_FORCE_LEFT_HANDED)
 
@@ -45,8 +53,9 @@ set(PROJECT_SOURCES
     src/main.c
     src/app.c
     src/app.h
+    src/check.c
+    src/check.h
     src/types.h
-    src/defines.c
     src/defines.h
     src/log.c
     src/log.h

@@ -1,5 +1,5 @@
 #include "app.h"
-#include "types.h"
+#include "check.h"
 #include "defines.h"
 #include "log.h"
 #include "debug.h"
@@ -8,7 +8,6 @@
 #include <SDL3/SDL_version.h>
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_video.h>
-#include <SDL3/SDL_assert.h>
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_timer.h>
 #include <SDL3/SDL_filesystem.h>
@@ -34,7 +33,6 @@ static char const   app_name_[] = "threed" ;
 
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 //
@@ -43,7 +41,7 @@ hello_vulkan()
 {
     uint32_t vulkan_api_version ;
     VkResult const res = vkEnumerateInstanceVersion(&vulkan_api_version) ;
-    SDL_assert(res == VK_SUCCESS) ;
+    require(res == VK_SUCCESS) ;
     uint32_t const major = VK_VERSION_MAJOR(vulkan_api_version) ;
     uint32_t const minor = VK_VERSION_MINOR(vulkan_api_version) ;
     uint32_t const patch = VK_VERSION_PATCH(vulkan_api_version) ;
@@ -71,9 +69,13 @@ hello_sdl3()
     log_debug("SDL_GetRevision()=%s", SDL_GetRevision()) ;
 }
 
+
 void
 hello_debug()
 {
+
+    log_debug("test_debug_file_func=%d", test_debug_file_func()) ;
+
     begin_timed_block() ;
 
     SDL_Delay(30) ;
@@ -82,17 +84,51 @@ hello_debug()
 }
 
 
+uint64_t
+get_app_time()
+{
+    require(app_->performance_counter_0_) ;
+    return SDL_GetPerformanceCounter() - app_->performance_counter_0_ ;
+}
+
+
 bool
 create_app()
 {
-    if(check_sdl(0 == SDL_Init(SDL_INIT_VIDEO)))
+#ifndef NDEBUG
+    SDL_LogSetPriority(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_DEBUG) ;
+#endif
+    // BUG(tom): if this call actually returns 0,which is highly unlikely.
+    // Then get_app_time() will fail. For now, we don't care and hope that
+    // calling it twice will make it physically impossible...
+    app_->performance_counter_0_ = SDL_GetPerformanceCounter() ;
+    app_->performance_counter_0_ = SDL_GetPerformanceCounter() ;
+    require(app_->performance_counter_0_) ;
+
+    app_->base_path_ = SDL_GetBasePath() ;
+    require(app_->base_path_) ;
+    app_->pref_path_ = SDL_GetPrefPath(org_name_, app_name_) ;
+    require(app_->pref_path_) ;
+
+#ifdef  ENABLE_LOG_FILE
+    create_log_file(true) ;
+#endif
+
+    log_debug("Hello, World!") ;
+    log_info("Hello, World!") ;
+    log_error("Hello, World!") ;
+    log_debug_str(app_->base_path_) ;
+    log_debug_str(app_->pref_path_) ;
+
+    app_->subsystems_ = SDL_INIT_VIDEO ;
+    if(check_sdl(0 == SDL_Init(app_->subsystems_)))
     {
         return  false ;
     }
 
     app_->window_width_     = 1280 ;
     app_->window_height_    = 768 ;
-    SDL_assert(!app_->window_) ;
+    require(!app_->window_) ;
 
     app_->window_ = SDL_CreateWindow(
         app_name_
@@ -106,14 +142,38 @@ create_app()
         return false ;
     }
 
+    app_->created_ = true ;
     return true ;
+}
+
+
+void
+destroy_app()
+{
+    if(app_->window_)
+    {
+        SDL_DestroyWindow(app_->window_) ;
+        app_->window_ = NULL ;
+    }
+
+    if(app_->subsystems_)
+    {
+        SDL_QuitSubSystem(app_->subsystems_) ;
+        app_->subsystems_ = 0 ;
+    }
+
+#ifdef  ENABLE_LOG_FILE
+    destroy_log_file() ;
+#endif
 }
 
 
 bool
 update_app()
 {
-    //log_debug("update...") ;
+    begin_timed_block() ;
+    SDL_Delay(10) ;
+    end_timed_block() ;
     return true ;
 }
 
@@ -123,7 +183,7 @@ handle_window_event(
     SDL_Event * event
 )
 {
-    SDL_assert(event) ;
+    require(event) ;
 
     SDL_WindowEvent * we = &event->window ;
     switch(event->type)
@@ -179,6 +239,7 @@ handle_window_event(
     case SDL_EVENT_WINDOW_LEAVE_FULLSCREEN:
         break ;
     case SDL_EVENT_WINDOW_DESTROYED:
+        app_->running_ = false ;
         break ;
     default:
         break ;
@@ -204,7 +265,7 @@ handle_quit_event(
     SDL_Event * event
 )
 {
-    SDL_assert(event) ;
+    require(event) ;
     switch(event->type)
     {
     case SDL_EVENT_QUIT:
@@ -222,7 +283,7 @@ handle_keyboard_event(
     SDL_Event * event
 )
 {
-    SDL_assert(event) ;
+    require(event) ;
     SDL_KeyboardEvent * ke = NULL ;
 
     switch(event->type)
@@ -275,7 +336,7 @@ handle_event(
     SDL_Event * event
 )
 {
-    SDL_assert(event) ;
+    require(event) ;
 
     handle_window_event(event) ;
     handle_keyboard_event(event) ;
@@ -286,13 +347,15 @@ handle_event(
 bool
 run_app()
 {
+    begin_timed_block() ;
+
     app_->running_          = true ;
     app_->minimized_        = false ;
     app_->keyboard_focus_   = false ;
 
     for( ; app_->running_ ; )
     {
-        int const wait = app_->minimized_ || app_->keyboard_focus_ == false ;
+        bool const wait = app_->minimized_ || app_->keyboard_focus_ == false ;
 
         if(wait)
         {
@@ -300,7 +363,8 @@ run_app()
             if(check_sdl(SDL_TRUE == SDL_WaitEvent(&event)))
             {
                 app_->running_ = false ;
-                break ;
+                end_timed_block() ;
+                return false ;
             }
 
             handle_event(&event) ;
@@ -314,14 +378,15 @@ run_app()
             }
         }
 
-        //if(check(update_app()))
         if(!update_app())
         {
             app_->running_ = false ;
-            break ;
+            end_timed_block() ;
+            return false ;
         }
     }
 
+    end_timed_block() ;
     return true ;
 }
 
@@ -330,65 +395,36 @@ run_app()
 //                                                                            //
 //
 int
-app_main(
+main_app(
     int     argc
 ,   char *  argv[]
 )
 {
     app_->argv_ = argv ;
     app_->argc_ = argc ;
-    app_->exit_code_ = 0 ;
-#ifndef NDEBUG
-    SDL_LogSetPriority(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_DEBUG) ;
-#endif
-    app_->performance_counter_0_ = SDL_GetPerformanceCounter() ;
-
-    app_->base_path_ = SDL_GetBasePath() ;
-    SDL_assert(app_->base_path_) ;
-    app_->pref_path_ = SDL_GetPrefPath(org_name_, app_name_) ;
-    SDL_assert(app_->pref_path_) ;
-    log_debug_str(app_->base_path_) ;
-    log_debug_str(app_->pref_path_) ;
-
-    create_log_file(true) ;
-
-    log_debug("logfile test") ;
-    log_info("logfile test") ;
-    log_error("logfile test") ;
-
-    log_debug("Hello, World!") ;
-    log_info("Hello, World!") ;
-    log_error("Hello, World!") ;
-
-    log_info("Hello, World!") ;
-    hello_sdl3() ;
-    hello_cglm() ;
-    hello_vulkan() ;
-
-    log_debug("test_debug_file_func=%d", test_debug_file_func()) ;
-
-    begin_timed_block() ;
-
-    for(int i = 0; i < 10; ++i)
-    {
-        begin_timed_block() ;
-        hello_debug() ;
-        end_timed_block() ;
-    }
-    end_timed_block() ;
 
     if(check(create_app()))
     {
+        destroy_app() ;
         return 1 ;
     }
+
+    begin_timed_block() ;
+
+    hello_sdl3() ;
+    hello_cglm() ;
+    hello_vulkan() ;
+    hello_debug() ;
 
     if(check(run_app()))
     {
+        end_timed_block() ;
+        destroy_app() ;
         return 1 ;
     }
 
+    end_timed_block() ;
     dump_all_debug_counter_keepers() ;
-    destroy_log_file() ;
-
+    destroy_app() ;
     return 0 ;
 }

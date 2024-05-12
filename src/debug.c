@@ -1,7 +1,6 @@
 #include "app.h"
 #include "debug.h"
 #include "log.h"
-#include <SDL3/SDL_timer.h>
 #include <SDL3/SDL_stdinc.h>
 
 
@@ -137,6 +136,9 @@ dump_counter_keeper(
     log_debug_u64(ck->start_count_) ;
     log_debug_u64(ck->end_count_) ;
     log_debug_u64(ck->elapsed_count_) ;
+    log_debug_u64(ck->elapsed_count_/1000) ;
+    log_debug_u64(ck->elapsed_count_/1000000) ;
+    log_debug_u64(ck->elapsed_count_/1000000000) ;
 
     for(
         uint32_t i = 0
@@ -342,7 +344,7 @@ begin_timed_block_impl(
     cks_->counter_keeper_stack_[cks_->stack_index_] = ck ;
 
     ck->hit_count_++ ;
-    ck->start_count_ = SDL_GetPerformanceCounter() - app_->performance_counter_0_ ;
+    ck->start_count_ = get_app_time() ;
 }
 
 
@@ -375,7 +377,7 @@ end_timed_block_impl(
     ck->end_.file_      = ffli.file_ ;
     ck->end_.func_      = ffli.func_ ;
     ck->end_.line_      = ffli.line_ ;
-    ck->end_count_      = SDL_GetPerformanceCounter() - app_->performance_counter_0_ ;
+    ck->end_count_      = get_app_time() ;
     ck->elapsed_count_  = ck->end_count_ - ck->start_count_ ;
 
     ck->delta_count_[ck->delta_count_index_] = ck->elapsed_count_ ;

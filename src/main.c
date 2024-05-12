@@ -7,5 +7,5 @@ main(
 ,   char *  argv[]
 )
 {
-    return app_main(argc, argv) ;
+    return main_app(argc, argv) ;
 }
