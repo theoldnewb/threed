@@ -61,6 +61,8 @@ set(PROJECT_SOURCES
     src/log.h
     src/debug.c
     src/debug.h
+    src/vulkan.c
+    src/vulkan.h
 )
 
 add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})

@@ -20,3 +20,5 @@
 #define UNUSED(a)   ((void)a)
 #endif
 
+
+#define boolify(a)  ((a)?1:0)

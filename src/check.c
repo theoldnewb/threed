@@ -116,3 +116,40 @@ check_sdl_impl(
     return 1 ;
 }
 
+
+int
+check_vulkan_impl(
+    int             result
+,   char const *    expr
+,   char const *    file
+,   char const *    func
+,   int const       line
+)
+{
+    if(0 == result)
+    {
+        log_output_impl(
+            file
+        ,   func
+        ,   line
+        ,   LOG_PRI_DEBUG
+        ,   "%d=%s"
+        ,   result
+        ,   expr
+        ) ;
+
+        return 0 ;
+    }
+
+    log_output_impl(
+        file
+    ,   func
+    ,   line
+    ,   LOG_PRI_DEBUG
+    ,   "%d=%s failed."
+    ,   result
+    ,   expr
+    ) ;
+
+    return 1 ;
+}

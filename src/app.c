@@ -3,6 +3,8 @@
 #include "defines.h"
 #include "log.h"
 #include "debug.h"
+#include "vulkan.h"
+
 
 #include <SDL3/SDL_log.h>
 #include <SDL3/SDL_version.h>
@@ -162,6 +164,8 @@ destroy_app()
         app_->subsystems_ = 0 ;
     }
 
+    log_debug("And we are done.") ;
+
 #ifdef  ENABLE_LOG_FILE
     destroy_log_file() ;
 #endif
@@ -171,9 +175,9 @@ destroy_app()
 bool
 update_app()
 {
-    begin_timed_block() ;
-    SDL_Delay(10) ;
-    end_timed_block() ;
+    //begin_timed_block() ;
+    //SDL_Delay(10) ;
+    //end_timed_block() ;
     return true ;
 }
 
@@ -411,6 +415,22 @@ main_app(
 
     begin_timed_block() ;
 
+    void * p = NULL ;
+
+    if(check(p = malloc(23)))
+    {
+        end_timed_block() ;
+        destroy_app() ;
+        return 1 ;
+    }
+
+
+    if(check(create_vulkan()))
+    {
+        destroy_app() ;
+        return 1 ;
+    }
+
     hello_sdl3() ;
     hello_cglm() ;
     hello_vulkan() ;
@@ -423,8 +443,116 @@ main_app(
         return 1 ;
     }
 
+    destroy_vulkan() ;
+
     end_timed_block() ;
-    dump_all_debug_counter_keepers() ;
+    //dump_all_debug_counter_keepers() ;
     destroy_app() ;
     return 0 ;
+}
+
+
+void *
+alloc_memory_impl(
+    size_t const    byte_count
+,   int const       clear_memory
+,   char const *    expr
+,   char const *    file
+,   char const *    func
+,   int const       line
+)
+{
+    void * p = SDL_malloc(byte_count) ;
+    require(p) ;
+    if(!p)
+    {
+        log_output_impl(
+            file
+        ,   func
+        ,   line
+        ,   LOG_PRI_ERROR
+        ,   "allocating memory failed! %s (%p)" "(" PRIu64 ") bytes (cleared=%d)"
+        ,   expr
+        ,   p
+        ,   (uint64_t)byte_count
+        ,   clear_memory
+        ) ;
+
+        return NULL ;
+    }
+
+    if(clear_memory)
+    {
+        SDL_memset(p, 0, byte_count) ;
+    }
+
+    log_output_impl(
+        file
+    ,   func
+    ,   line
+    ,   LOG_PRI_DEBUG
+    ,   "allocating %s (%p)" "(" PRIu64 ") bytes (cleared=%d)"
+    ,   expr
+    ,   p
+    ,   (uint64_t)byte_count
+    ,   clear_memory
+    ) ;
+
+    return p ;
+}
+
+
+void *
+alloc_array_impl(
+    size_t const    count
+,   size_t const    byte_size
+,   int const       clear_memory
+,   char const *    expr
+,   char const *    file
+,   char const *    func
+,   int const       line
+)
+{
+    require(count) ;
+    require(byte_size) ;
+    size_t const total = count * byte_size ;
+    void * p = SDL_malloc(total) ;
+    require(p) ;
+    // if(!p)
+    // {
+    //     log_output_impl(
+    //         file
+    //     ,   func
+    //     ,   line
+    //     ,   LOG_PRI_ERROR
+    //     ,   "allocating array failed! %s (%p) total " "(" PRIu64 ") bytes (cleared=%d)"
+    //     ,   expr
+    //     ,   p
+    //     ,   (uint64_t)total
+    //     ,   clear_memory
+    //     ) ;
+
+    //     return NULL ;
+    // }
+
+    if(clear_memory)
+    {
+        SDL_memset(p, 0, total) ;
+    }
+
+    log_output_impl(
+        file
+    ,   func
+    ,   line
+    ,   LOG_PRI_DEBUG
+    ,   "allocating array type=%s (count=%u) (size=%u) (ptr=%p) (total bytes=%u) (cleared=%u)"
+    ,   expr
+    ,   (uint32_t)count
+    ,   (uint32_t)byte_size
+    ,   p
+    ,   (uint32_t)total
+    ,   (uint32_t)clear_memory
+    ) ;
+
+    return p ;
 }

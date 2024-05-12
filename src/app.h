@@ -41,5 +41,33 @@ uint64_t
 get_app_time() ;
 
 
+void *
+alloc_memory_impl(
+    size_t const    byte_count
+,   int const       clear_memory
+,   char const *    expr
+,   char const *    file
+,   char const *    func
+,   int const       line
+) ;
+
+
+void *
+alloc_array_impl(
+    size_t const    count
+,   size_t const    byte_size
+,   int const       clear_memory
+,   char const *    expr
+,   char const *    file
+,   char const *    func
+,   int const       line
+) ;
+
+
+
+#define alloc_memory(t, bs) ((t*)alloc_memory_impl(bs, 0, #t, __FILE__, __func__, __LINE__))
+#define alloc_array(t, n)   ((t*)alloc_array_impl(n, sizeof(t), 0, #t, __FILE__, __func__, __LINE__))
+
+
 extern app * app_ ;
 

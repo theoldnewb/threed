@@ -86,6 +86,21 @@ do_test2()
     printf("check okay.\n") ;
 }
 
+
+void
+do_test3()
+{
+    int n = 0 ;
+    if(check(n = dummy(0)))
+    {
+        printf("n=%d, check failed.\n", n) ;
+        return ;
+    }
+
+    printf("n=%d, check okay.\n", n) ;
+}
+
+
 int
 main(
     int     argc
@@ -94,5 +109,6 @@ main(
 {
     do_test() ;
     do_test2() ;
+    do_test3() ;
     return 0 ;
 }
