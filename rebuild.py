@@ -3,21 +3,21 @@
 import os
 import shutil
 import subprocess
+import pathlib
 
 BUILD_DIR_NAME="build"
 TPL_DIR="../tpl"
 BUILD_CONFIG="Debug"
-SCRIPT_PATH=os.path.dirname(os.path.realpath(__file__))
-
+SCRIPT_PATH=pathlib.Path(__file__).parent
 
 def main():
     print("Hello, World!")
     print("SCRIPT_PATH=%s" % SCRIPT_PATH)
-    build_dir = os.path.join(SCRIPT_PATH, BUILD_DIR_NAME)
+    build_dir = SCRIPT_PATH / BUILD_DIR_NAME
     src_dir = SCRIPT_PATH
     print("build_dir=%s, src_dir=%s" % (build_dir, src_dir))
 
-    if os.path.isdir(build_dir):
+    if build_dir.is_dir():
         shutil.rmtree(build_dir)
 
     bldcfg = "-DCMAKE_BUILD_TYPE=%s" % BUILD_CONFIG

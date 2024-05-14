@@ -38,12 +38,17 @@ destroy_log_file() ;
 #define log_debug_str(a)    log_debug("%s=%s", #a, a)
 #define log_debug_ptr(a)    log_debug("%s=%p", #a, a)
 #define log_debug_u64(a)    log_debug("%s=%" SDL_PRIu64 , #a, a)
-#define log_debug_u32(a)    log_debug("%s=%u", #a, a)
+#define log_debug_u32(a)    log_debug("%s=%u (%x)", #a, a, a)
+#define log_debug_s32(a)    log_debug("%s=%d", #a, a)
+#define log_debug_f32(a)    log_debug("%s=%f", #a, a)
 #else
 #define log_debug(fmt, ...) def_noop
 #define log_debug_str(a)    def_noop
 #define log_debug_ptr(a)    def_noop
+#define log_debug_u64(a)    def_noop
 #define log_debug_u32(a)    def_noop
+#define log_debug_s32(a)    def_noop
+#define log_debug_f32(a)    def_noop
 #endif
 
 

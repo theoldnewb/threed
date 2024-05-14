@@ -6,6 +6,16 @@
 
 #define max_vulkan_desired_extensions   8
 #define max_vulkan_desired_layers       8
+#define max_vulkan_physical_devices     16
+
+
+typedef struct vulkan_physical_device_info
+{
+    VkPhysicalDevice            device_ ;
+    VkPhysicalDeviceProperties  properties_ ;
+    VkPhysicalDeviceFeatures    features_ ;
+
+} vulkan_physical_device_info ;
 
 
 typedef struct vulkan_context
@@ -32,6 +42,11 @@ typedef struct vulkan_context
     VkDebugUtilsMessengerEXT            debug_messenger_ ;
     PFN_vkCreateDebugUtilsMessengerEXT  create_debug_messenger_func_ ;
     PFN_vkDestroyDebugUtilsMessengerEXT destroy_debug_messenger_func_ ;
+
+    uint32_t                    physical_devices_count_ ;
+    VkPhysicalDevice            physical_devices_[max_vulkan_physical_devices] ;
+    vulkan_physical_device_info physical_devices_info_[max_vulkan_physical_devices] ;
+
 
 } vulkan_context ;
 

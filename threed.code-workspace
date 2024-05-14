@@ -3,11 +3,5 @@
 		{
 			"path": "."
 		}
-	],
-	"settings": {
-		"files.associations": {
-			"sdl_vulkan.h": "c",
-			"stddef.h": "c"
-		}
-	}
+	]
 }
