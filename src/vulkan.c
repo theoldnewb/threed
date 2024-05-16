@@ -22,6 +22,9 @@ static char const vk_create_debug_utils_messenger_ext_name[]    = "vkCreateDebug
 static char const vk_destroy_debug_utils_messenger_ext_name[]   = "vkDestroyDebugUtilsMessengerEXT" ;
 
 
+
+#define max_dump_buffer 4096
+
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 //
@@ -620,6 +623,331 @@ dump_physical_device_features(
     log_debug_u32(physical_device_features->inheritedQueries) ;
 }
 
+
+static char const *
+dump_queue_flag_bit(
+    VkQueueFlagBits const queue_flag_bit
+)
+{
+    // typedef enum VkQueueFlagBits {
+    //     VK_QUEUE_GRAPHICS_BIT = 0x00000001,
+    //     VK_QUEUE_COMPUTE_BIT = 0x00000002,
+    //     VK_QUEUE_TRANSFER_BIT = 0x00000004,
+    //     VK_QUEUE_SPARSE_BINDING_BIT = 0x00000008,
+    //   // Provided by VK_VERSION_1_1
+    //     VK_QUEUE_PROTECTED_BIT = 0x00000010,
+    //   // Provided by VK_KHR_video_decode_queue
+    //     VK_QUEUE_VIDEO_DECODE_BIT_KHR = 0x00000020,
+    //   // Provided by VK_KHR_video_encode_queue
+    //     VK_QUEUE_VIDEO_ENCODE_BIT_KHR = 0x00000040,
+    //   // Provided by VK_NV_optical_flow
+    //     VK_QUEUE_OPTICAL_FLOW_BIT_NV = 0x00000100,
+    // } VkQueueFlagBits;
+    switch(queue_flag_bit)
+    {
+    case VK_QUEUE_GRAPHICS_BIT:         return "VK_QUEUE_GRAPHICS_BIT" ;
+    case VK_QUEUE_COMPUTE_BIT:          return "VK_QUEUE_COMPUTE_BIT" ;
+    case VK_QUEUE_TRANSFER_BIT:         return "VK_QUEUE_TRANSFER_BIT" ;
+    case VK_QUEUE_SPARSE_BINDING_BIT:   return "VK_QUEUE_SPARSE_BINDING_BIT" ;
+    case VK_QUEUE_PROTECTED_BIT:        return "VK_QUEUE_PROTECTED_BIT" ;
+    case VK_QUEUE_VIDEO_DECODE_BIT_KHR: return "VK_QUEUE_VIDEO_DECODE_BIT_KHR" ;
+    case VK_QUEUE_VIDEO_ENCODE_BIT_KHR: return "VK_QUEUE_VIDEO_ENCODE_BIT_KHR" ;
+    case VK_QUEUE_OPTICAL_FLOW_BIT_NV:  return "VK_QUEUE_OPTICAL_FLOW_BIT_NV" ;
+    default:                            return "Unknown Queue Flag Bit" ;
+    }
+}
+
+
+static char const *
+dump_queue_flag_bits(
+    VkQueueFlagBits const queue_flag_bits
+)
+{
+    VkQueueFlagBits const all_queue_flag_bits[] =
+    {
+        VK_QUEUE_GRAPHICS_BIT
+    ,   VK_QUEUE_COMPUTE_BIT
+    ,   VK_QUEUE_TRANSFER_BIT
+    ,   VK_QUEUE_SPARSE_BINDING_BIT
+    ,   VK_QUEUE_PROTECTED_BIT
+    ,   VK_QUEUE_VIDEO_DECODE_BIT_KHR
+    ,   VK_QUEUE_VIDEO_ENCODE_BIT_KHR
+    ,   VK_QUEUE_OPTICAL_FLOW_BIT_NV
+    } ;
+    static uint32_t const all_queue_flag_bits_count = array_count(all_queue_flag_bits) ;
+
+    static char dump_buffer[max_dump_buffer] = { 0 } ;
+    SDL_memset(dump_buffer, 0, max_dump_buffer) ;
+    size_t n = 0 ;
+    for(
+        uint32_t i = 0
+    ;   i < all_queue_flag_bits_count
+    ;   ++i
+    )
+    {
+        if(queue_flag_bits & all_queue_flag_bits[i])
+        {
+            n = SDL_strlcat(dump_buffer, dump_queue_flag_bit(all_queue_flag_bits[i]), max_dump_buffer) ;
+            require(n < max_dump_buffer) ;
+            n = SDL_strlcat(dump_buffer, " | ", max_dump_buffer) ;
+            require(n < max_dump_buffer) ;
+        }
+    }
+    return dump_buffer ;
+}
+
+
+
+static void
+dump_queue_family_property(
+    VkQueueFamilyProperties const * queue_family_properties
+)
+{
+    require(queue_family_properties) ;
+    // typedef struct VkQueueFamilyProperties {
+    //     VkQueueFlags    queueFlags;
+    //     uint32_t        queueCount;
+    //     uint32_t        timestampValidBits;
+    //     VkExtent3D      minImageTransferGranularity;
+    // } VkQueueFamilyProperties;
+    // typedef struct VkExtent3D {
+    //     uint32_t    width;
+    //     uint32_t    height;
+    //     uint32_t    depth;
+    // } VkExtent3D;
+
+    log_debug_str(dump_queue_flag_bits(queue_family_properties->queueFlags)) ;
+    log_debug_u32(queue_family_properties->queueCount) ;
+    log_debug_u32(queue_family_properties->timestampValidBits) ;
+    log_debug_u32(queue_family_properties->minImageTransferGranularity.width) ;
+    log_debug_u32(queue_family_properties->minImageTransferGranularity.height) ;
+    log_debug_u32(queue_family_properties->minImageTransferGranularity.depth) ;
+}
+
+
+static void
+dump_queue_family_properties(
+    VkQueueFamilyProperties const * queue_family_properties
+,   uint32_t const                  queue_family_properties_count
+)
+{
+    for(
+        uint32_t i = 0
+    ;   i < queue_family_properties_count
+    ;   ++i
+    )
+    {
+        require(queue_family_properties) ;
+        dump_queue_family_property(&queue_family_properties[i]) ;
+    }
+}
+
+
+static char const *
+dump_memory_property_flags_bit(
+    VkMemoryPropertyFlagBits const flag
+)
+{
+    switch(flag)
+    {
+    case VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT:           return "VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT" ;
+    case VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT:           return "VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT" ;
+    case VK_MEMORY_PROPERTY_HOST_COHERENT_BIT:          return "VK_MEMORY_PROPERTY_HOST_COHERENT_BIT" ;
+    case VK_MEMORY_PROPERTY_HOST_CACHED_BIT:            return "VK_MEMORY_PROPERTY_HOST_CACHED_BIT" ;
+    case VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT:       return "VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT" ;
+    case VK_MEMORY_PROPERTY_PROTECTED_BIT:              return "VK_MEMORY_PROPERTY_PROTECTED_BIT" ;
+    case VK_MEMORY_PROPERTY_DEVICE_COHERENT_BIT_AMD:    return "VK_MEMORY_PROPERTY_DEVICE_COHERENT_BIT_AMD" ;
+    case VK_MEMORY_PROPERTY_DEVICE_UNCACHED_BIT_AMD:    return "VK_MEMORY_PROPERTY_DEVICE_UNCACHED_BIT_AMD" ;
+    case VK_MEMORY_PROPERTY_RDMA_CAPABLE_BIT_NV:        return "VK_MEMORY_PROPERTY_RDMA_CAPABLE_BIT_NV" ;
+    default:                                            return "Unknown Memory Property Flag Bit" ;
+    }
+}
+
+
+static char const *
+dump_memory_property_flags_bits(
+    VkMemoryPropertyFlagBits const memory_property_flag_bits
+)
+{
+    VkMemoryPropertyFlagBits const all_memory_property_flag_bits[] =
+    {
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+    ,   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+    ,   VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+    ,   VK_MEMORY_PROPERTY_HOST_CACHED_BIT
+    ,   VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT
+    ,   VK_MEMORY_PROPERTY_PROTECTED_BIT
+    ,   VK_MEMORY_PROPERTY_DEVICE_COHERENT_BIT_AMD
+    ,   VK_MEMORY_PROPERTY_DEVICE_UNCACHED_BIT_AMD
+    ,   VK_MEMORY_PROPERTY_RDMA_CAPABLE_BIT_NV
+    } ;
+    uint32_t const all_memory_property_flag_bits_count = array_count(all_memory_property_flag_bits) ;
+
+    static char dump_buffer[max_dump_buffer] = { 0 } ;
+    SDL_memset(dump_buffer, 0, max_dump_buffer) ;
+    size_t n = 0 ;
+    for(
+        uint32_t i = 0
+    ;   i < all_memory_property_flag_bits_count
+    ;   ++i
+    )
+    {
+        if(memory_property_flag_bits & all_memory_property_flag_bits[i])
+        {
+            n = SDL_strlcat(dump_buffer, dump_memory_property_flags_bit(all_memory_property_flag_bits[i]), max_dump_buffer) ;
+            require(n < max_dump_buffer) ;
+            n = SDL_strlcat(dump_buffer, " | ", max_dump_buffer) ;
+            require(n < max_dump_buffer) ;
+        }
+    }
+    return dump_buffer ;
+}
+
+
+static void
+dump_memory_type(
+    VkMemoryType const * memory_type
+)
+{
+    require(memory_type) ;
+    log_debug_u32(memory_type->propertyFlags) ;
+    log_debug_str(dump_memory_property_flags_bits(memory_type->propertyFlags)) ;
+    log_debug_u32(memory_type->heapIndex) ;
+}
+
+
+static char const *
+dump_memory_heap_flag_bit(
+    VkMemoryHeapFlagBits const memory_heap_flag_bit
+)
+{
+    switch(memory_heap_flag_bit)
+    {
+    case VK_MEMORY_HEAP_DEVICE_LOCAL_BIT:           return "VK_MEMORY_HEAP_DEVICE_LOCAL_BIT" ;
+    case VK_MEMORY_HEAP_MULTI_INSTANCE_BIT:         return "VK_MEMORY_HEAP_MULTI_INSTANCE_BIT" ;
+    //case VK_MEMORY_HEAP_MULTI_INSTANCE_BIT_KHR:   return "VK_MEMORY_HEAP_MULTI_INSTANCE_BIT_KHR" ;
+    default:                                        return "Unknown Memory Heap Flag Bit" ;
+    }
+}
+
+
+static char const *
+dump_memory_heap_flags_bits(
+    VkMemoryHeapFlagBits const memory_heap_flag_bits
+)
+{
+    VkMemoryHeapFlagBits const all_memory_heap_flag_bits[] =
+    {
+        VK_MEMORY_HEAP_DEVICE_LOCAL_BIT
+    ,   VK_MEMORY_HEAP_MULTI_INSTANCE_BIT
+    } ;
+    uint32_t const all_memory_heap_flag_bits_count = array_count(all_memory_heap_flag_bits) ;
+
+    static char dump_buffer[max_dump_buffer] = { 0 } ;
+    SDL_memset(dump_buffer, 0, max_dump_buffer) ;
+    size_t n = 0 ;
+    for(
+        uint32_t i = 0
+    ;   i < all_memory_heap_flag_bits_count
+    ;   ++i
+    )
+    {
+        if(memory_heap_flag_bits & all_memory_heap_flag_bits[i])
+        {
+            n = SDL_strlcat(dump_buffer, dump_memory_heap_flag_bit(all_memory_heap_flag_bits[i]), max_dump_buffer) ;
+            require(n < max_dump_buffer) ;
+            n = SDL_strlcat(dump_buffer, " | ", max_dump_buffer) ;
+            require(n < max_dump_buffer) ;
+        }
+    }
+    return dump_buffer ;
+}
+
+
+static void
+dump_memory_heap(
+    VkMemoryHeap const * memory_heap
+)
+{
+    require(memory_heap) ;
+    log_debug_u64(memory_heap->size) ;
+    log_debug_u32(memory_heap->flags) ;
+    log_debug_str(dump_memory_heap_flags_bits(memory_heap->flags)) ;
+}
+
+
+static void
+dump_physical_device_memory_properties(
+    VkPhysicalDeviceMemoryProperties const * physical_device_memory_properties
+)
+{
+    require(physical_device_memory_properties) ;
+
+    // typedef struct VkPhysicalDeviceMemoryProperties {
+    //     uint32_t        memoryTypeCount;
+    //     VkMemoryType    memoryTypes[VK_MAX_MEMORY_TYPES];
+    //     uint32_t        memoryHeapCount;
+    //     VkMemoryHeap    memoryHeaps[VK_MAX_MEMORY_HEAPS];
+    // } VkPhysicalDeviceMemoryProperties;
+
+    // typedef struct VkMemoryType {
+    //     VkMemoryPropertyFlags    propertyFlags;
+    //     uint32_t                 heapIndex;
+    // } VkMemoryType;
+
+    // typedef struct VkMemoryHeap {
+    //     VkDeviceSize         size;
+    //     VkMemoryHeapFlags    flags;
+    // } VkMemoryHeap;
+
+    // typedef enum VkMemoryPropertyFlagBits {
+    //     VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT = 0x00000001,
+    //     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT = 0x00000002,
+    //     VK_MEMORY_PROPERTY_HOST_COHERENT_BIT = 0x00000004,
+    //     VK_MEMORY_PROPERTY_HOST_CACHED_BIT = 0x00000008,
+    //     VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT = 0x00000010,
+    //   // Provided by VK_VERSION_1_1
+    //     VK_MEMORY_PROPERTY_PROTECTED_BIT = 0x00000020,
+    //   // Provided by VK_AMD_device_coherent_memory
+    //     VK_MEMORY_PROPERTY_DEVICE_COHERENT_BIT_AMD = 0x00000040,
+    //   // Provided by VK_AMD_device_coherent_memory
+    //     VK_MEMORY_PROPERTY_DEVICE_UNCACHED_BIT_AMD = 0x00000080,
+    //   // Provided by VK_NV_external_memory_rdma
+    //     VK_MEMORY_PROPERTY_RDMA_CAPABLE_BIT_NV = 0x00000100,
+    // } VkMemoryPropertyFlagBits;
+
+    // typedef enum VkMemoryHeapFlagBits {
+    //     VK_MEMORY_HEAP_DEVICE_LOCAL_BIT = 0x00000001,
+    //   // Provided by VK_VERSION_1_1
+    //     VK_MEMORY_HEAP_MULTI_INSTANCE_BIT = 0x00000002,
+    //   // Provided by VK_KHR_device_group_creation
+    //     VK_MEMORY_HEAP_MULTI_INSTANCE_BIT_KHR = VK_MEMORY_HEAP_MULTI_INSTANCE_BIT,
+    // } VkMemoryHeapFlagBits;
+
+    log_debug_u32(physical_device_memory_properties->memoryTypeCount) ;
+    for(
+        uint32_t i = 0
+    ;   i < physical_device_memory_properties->memoryTypeCount
+    ;   ++i
+    )
+    {
+        log_debug_u32(i) ;
+        dump_memory_type(&physical_device_memory_properties->memoryTypes[i]) ;
+    }
+
+    log_debug_u32(physical_device_memory_properties->memoryHeapCount) ;
+    for(
+        uint32_t i = 0
+    ;   i < physical_device_memory_properties->memoryHeapCount
+    ;   ++i
+    )
+    {
+        log_debug_u32(i) ;
+        dump_memory_heap(&physical_device_memory_properties->memoryHeaps[i]) ;
+    }
+}
+
+
 static bool
 has_extension(
     VkExtensionProperties const *   haystack
@@ -1135,7 +1463,7 @@ create_physical_devices(
 }
 
 
-static void
+static bool
 fill_physical_device_info(
     vulkan_physical_device_info *   out_physical_device_info
 ,   VkPhysicalDevice                device
@@ -1162,6 +1490,73 @@ fill_physical_device_info(
         device
     ,   &out_physical_device_info->features_
     ) ;
+
+    // void vkGetPhysicalDeviceMemoryProperties(
+    //     VkPhysicalDevice                            physicalDevice,
+    //     VkPhysicalDeviceMemoryProperties*           pMemoryProperties);
+    vkGetPhysicalDeviceMemoryProperties(
+        device
+    ,   &out_physical_device_info->memory_properties_
+    ) ;
+
+    // void vkGetPhysicalDeviceQueueFamilyProperties(
+    //     VkPhysicalDevice                            physicalDevice,
+    //     uint32_t*                                   pQueueFamilyPropertyCount,
+    //     VkQueueFamilyProperties*                    pQueueFamilyProperties);
+    //     vkGetPhysicalDeviceQueueFamilyProperties()
+    vkGetPhysicalDeviceQueueFamilyProperties(
+        device
+    ,   &out_physical_device_info->queue_family_properties_count_
+    ,   NULL
+    ) ;
+
+    log_debug_u32(out_physical_device_info->queue_family_properties_count_) ;
+    require(out_physical_device_info->queue_family_properties_count_ < max_vulkan_queue_family_properties)
+    out_physical_device_info->queue_family_properties_count_ = min_u32(out_physical_device_info->queue_family_properties_count_, max_vulkan_queue_family_properties) ;
+
+    vkGetPhysicalDeviceQueueFamilyProperties(
+        device
+    ,   &out_physical_device_info->queue_family_properties_count_
+    ,   out_physical_device_info->queue_family_properties_
+    ) ;
+
+
+    // VkResult vkEnumerateDeviceExtensionProperties(
+    //     VkPhysicalDevice                            physicalDevice,
+    //     const char*                                 pLayerName,
+    //     uint32_t*                                   pPropertyCount,
+    //     VkExtensionProperties*                      pProperties);
+    if(check_vulkan(vkEnumerateDeviceExtensionProperties(
+                device
+            ,   NULL
+            ,   &out_physical_device_info->device_extensions_count_
+            ,   NULL
+            )
+        )
+    )
+    {
+        return false ;
+    }
+
+    log_debug_u32(sizeof(VkExtensionProperties)) ;
+    log_debug_u32(out_physical_device_info->device_extensions_count_) ;
+    require(out_physical_device_info->device_extensions_count_ < max_vulkan_device_extensions)
+    out_physical_device_info->device_extensions_count_ = min_u32(out_physical_device_info->device_extensions_count_, max_vulkan_device_extensions) ;
+
+    if(check_vulkan(vkEnumerateDeviceExtensionProperties(
+                device
+            ,   NULL
+            ,   &out_physical_device_info->device_extensions_count_
+            ,   out_physical_device_info->device_extensions_
+            )
+        )
+    )
+    {
+        return false ;
+    }
+
+
+    return true ;
 }
 
 
@@ -1181,14 +1576,23 @@ fill_physical_devices_info(
     ;   ++i
     )
     {
-        fill_physical_device_info(
-            &out_physical_device_info[i]
-        ,   devices[i]
-        ) ;
-
         log_debug_u32(i) ;
+
+        if(check(fill_physical_device_info(
+                    &out_physical_device_info[i]
+                ,   devices[i]
+                )
+            )
+        )
+        {
+            require(0) ;
+        }
+
         dump_physical_device_properties(&out_physical_device_info[i].properties_) ;
         dump_physical_device_features(&out_physical_device_info[i].features_) ;
+        dump_physical_device_memory_properties(&out_physical_device_info[i].memory_properties_) ;
+        dump_queue_family_properties(out_physical_device_info[i].queue_family_properties_, out_physical_device_info->queue_family_properties_count_) ;
+        dump_extension_properties(out_physical_device_info[i].device_extensions_, out_physical_device_info->device_extensions_count_) ;
     }
 
 }

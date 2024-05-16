@@ -4,16 +4,26 @@
 #include <vulkan/vulkan.h>
 
 
-#define max_vulkan_desired_extensions   8
-#define max_vulkan_desired_layers       8
-#define max_vulkan_physical_devices     16
+#define max_vulkan_desired_extensions       8
+#define max_vulkan_desired_layers           8
+#define max_vulkan_physical_devices         16
+#define max_vulkan_queue_family_properties  16
+#define max_vulkan_device_extensions        512
 
 
 typedef struct vulkan_physical_device_info
 {
-    VkPhysicalDevice            device_ ;
-    VkPhysicalDeviceProperties  properties_ ;
-    VkPhysicalDeviceFeatures    features_ ;
+    VkPhysicalDevice                    device_ ;
+    VkPhysicalDeviceProperties          properties_ ;
+    VkPhysicalDeviceFeatures            features_ ;
+    VkPhysicalDeviceMemoryProperties    memory_properties_ ;
+
+    VkQueueFamilyProperties     queue_family_properties_[max_vulkan_queue_family_properties] ;
+    uint32_t                    queue_family_properties_count_ ;
+
+    VkExtensionProperties       device_extensions_[max_vulkan_device_extensions] ;
+    uint32_t                    device_extensions_count_ ;
+
 
 } vulkan_physical_device_info ;
 
