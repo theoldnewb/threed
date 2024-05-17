@@ -20,6 +20,7 @@ static char const vk_layer_khronos_validation_name[]            = "VK_LAYER_KHRO
 static char const vk_ext_debug_utils_extension_name[]           = VK_EXT_DEBUG_UTILS_EXTENSION_NAME ;
 static char const vk_create_debug_utils_messenger_ext_name[]    = "vkCreateDebugUtilsMessengerEXT" ;
 static char const vk_destroy_debug_utils_messenger_ext_name[]   = "vkDestroyDebugUtilsMessengerEXT" ;
+static char const vk_khr_swapchain_extension_name[]             = VK_KHR_SWAPCHAIN_EXTENSION_NAME ;
 
 
 
@@ -948,6 +949,1121 @@ dump_physical_device_memory_properties(
 }
 
 
+static char const *
+dump_surface_transform_flag_bit_khr(
+    VkSurfaceTransformFlagBitsKHR const bit
+)
+{
+
+    // typedef enum VkSurfaceTransformFlagBitsKHR {
+    //     VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR = 0x00000001,
+    //     VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR = 0x00000002,
+    //     VK_SURFACE_TRANSFORM_ROTATE_180_BIT_KHR = 0x00000004,
+    //     VK_SURFACE_TRANSFORM_ROTATE_270_BIT_KHR = 0x00000008,
+    //     VK_SURFACE_TRANSFORM_HORIZONTAL_MIRROR_BIT_KHR = 0x00000010,
+    //     VK_SURFACE_TRANSFORM_HORIZONTAL_MIRROR_ROTATE_90_BIT_KHR = 0x00000020,
+    //     VK_SURFACE_TRANSFORM_HORIZONTAL_MIRROR_ROTATE_180_BIT_KHR = 0x00000040,
+    //     VK_SURFACE_TRANSFORM_HORIZONTAL_MIRROR_ROTATE_270_BIT_KHR = 0x00000080,
+    //     VK_SURFACE_TRANSFORM_INHERIT_BIT_KHR = 0x00000100,
+    // } VkSurfaceTransformFlagBitsKHR;
+
+    switch(bit)
+    {
+    case VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR:                     return "VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR" ;
+    case VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR:                    return "VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR" ;
+    case VK_SURFACE_TRANSFORM_ROTATE_180_BIT_KHR:                   return "VK_SURFACE_TRANSFORM_ROTATE_180_BIT_KHR" ;
+    case VK_SURFACE_TRANSFORM_ROTATE_270_BIT_KHR:                   return "VK_SURFACE_TRANSFORM_ROTATE_270_BIT_KHR" ;
+    case VK_SURFACE_TRANSFORM_HORIZONTAL_MIRROR_BIT_KHR:            return "VK_SURFACE_TRANSFORM_HORIZONTAL_MIRROR_BIT_KHR" ;
+    case VK_SURFACE_TRANSFORM_HORIZONTAL_MIRROR_ROTATE_90_BIT_KHR:  return "VK_SURFACE_TRANSFORM_HORIZONTAL_MIRROR_ROTATE_90_BIT_KHR" ;
+    case VK_SURFACE_TRANSFORM_HORIZONTAL_MIRROR_ROTATE_180_BIT_KHR: return "VK_SURFACE_TRANSFORM_HORIZONTAL_MIRROR_ROTATE_180_BIT_KH" ;
+    case VK_SURFACE_TRANSFORM_HORIZONTAL_MIRROR_ROTATE_270_BIT_KHR: return "VK_SURFACE_TRANSFORM_HORIZONTAL_MIRROR_ROTATE_270_BIT_KH" ;
+    case VK_SURFACE_TRANSFORM_INHERIT_BIT_KHR:                      return "VK_SURFACE_TRANSFORM_INHERIT_BIT_KHR" ;
+    default:                                                        return "Unknoen Surface Transform Bit" ;
+    }
+}
+
+
+static char const *
+dump_surface_transform_flag_bits_khr(
+    VkSurfaceTransformFlagBitsKHR const bits
+)
+{
+
+    VkSurfaceTransformFlagBitsKHR const all_bits[] =
+    {
+        VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR
+    ,   VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR
+    ,   VK_SURFACE_TRANSFORM_ROTATE_180_BIT_KHR
+    ,   VK_SURFACE_TRANSFORM_ROTATE_270_BIT_KHR
+    ,   VK_SURFACE_TRANSFORM_HORIZONTAL_MIRROR_BIT_KHR
+    ,   VK_SURFACE_TRANSFORM_HORIZONTAL_MIRROR_ROTATE_90_BIT_KHR
+    ,   VK_SURFACE_TRANSFORM_HORIZONTAL_MIRROR_ROTATE_180_BIT_KHR
+    ,   VK_SURFACE_TRANSFORM_HORIZONTAL_MIRROR_ROTATE_270_BIT_KHR
+    ,   VK_SURFACE_TRANSFORM_INHERIT_BIT_KHR
+    } ;
+    uint32_t const all_bits_count = array_count(all_bits) ;
+
+    static char dump_buffer[max_dump_buffer] = { 0 } ;
+    SDL_memset(dump_buffer, 0, max_dump_buffer) ;
+    size_t n = 0 ;
+
+    for(
+        uint32_t i = 0
+    ;   i < all_bits_count
+    ;   ++i
+    )
+    {
+        if(bits & all_bits[i])
+        {
+            n = SDL_strlcat(dump_buffer, dump_surface_transform_flag_bit_khr(all_bits[i]), max_dump_buffer) ;
+            require(n < max_dump_buffer) ;
+            n = SDL_strlcat(dump_buffer, " | ", max_dump_buffer) ;
+            require(n < max_dump_buffer) ;
+        }
+    }
+    return dump_buffer ;
+}
+
+
+static char const *
+dump_composite_alpha_flag_bit_khr(
+    VkCompositeAlphaFlagBitsKHR const bit
+)
+{
+
+    // typedef enum VkCompositeAlphaFlagBitsKHR {
+    //     VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR = 0x00000001,
+    //     VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR = 0x00000002,
+    //     VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR = 0x00000004,
+    //     VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR = 0x00000008,
+    // } VkCompositeAlphaFlagBitsKHR;
+
+    switch(bit)
+    {
+    case VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR:             return "VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR" ;
+    case VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR:     return "VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR" ;
+    case VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR:    return "VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR" ;
+    case VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR:            return "VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR" ;
+    default:                                            return "Unknown Composite Alpha Flag Bit" ;
+    }
+}
+
+
+static char const *
+dump_composite_alpha_flag_bits_khr(
+    VkSurfaceTransformFlagBitsKHR const bits
+)
+{
+    VkCompositeAlphaFlagBitsKHR const all_bits[] =
+    {
+        VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR
+    ,   VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR
+    ,   VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR
+    ,   VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR
+    } ;
+    uint32_t const all_bits_count = array_count(all_bits) ;
+
+    static char dump_buffer[max_dump_buffer] = { 0 } ;
+    SDL_memset(dump_buffer, 0, max_dump_buffer) ;
+    size_t n = 0 ;
+
+    for(
+        uint32_t i = 0
+    ;   i < all_bits_count
+    ;   ++i
+    )
+    {
+        if(bits & all_bits[i])
+        {
+            n = SDL_strlcat(dump_buffer, dump_composite_alpha_flag_bit_khr(all_bits[i]), max_dump_buffer) ;
+            require(n < max_dump_buffer) ;
+            n = SDL_strlcat(dump_buffer, " | ", max_dump_buffer) ;
+            require(n < max_dump_buffer) ;
+        }
+    }
+    return dump_buffer ;
+}
+
+
+static char const *
+dump_image_usage_flag_bit(
+    VkImageUsageFlagBits const bit
+)
+{
+
+    // typedef enum VkImageUsageFlagBits {
+    //     VK_IMAGE_USAGE_TRANSFER_SRC_BIT = 0x00000001,
+    //     VK_IMAGE_USAGE_TRANSFER_DST_BIT = 0x00000002,
+    //     VK_IMAGE_USAGE_SAMPLED_BIT = 0x00000004,
+    //     VK_IMAGE_USAGE_STORAGE_BIT = 0x00000008,
+    //     VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT = 0x00000010,
+    //     VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT = 0x00000020,
+    //     VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT = 0x00000040,
+    //     VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT = 0x00000080,
+    // // Provided by VK_KHR_video_decode_queue
+    //     VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR = 0x00000400,
+    // // Provided by VK_KHR_video_decode_queue
+    //     VK_IMAGE_USAGE_VIDEO_DECODE_SRC_BIT_KHR = 0x00000800,
+    // // Provided by VK_KHR_video_decode_queue
+    //     VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR = 0x00001000,
+    // // Provided by VK_EXT_fragment_density_map
+    //     VK_IMAGE_USAGE_FRAGMENT_DENSITY_MAP_BIT_EXT = 0x00000200,
+    // // Provided by VK_KHR_fragment_shading_rate
+    //     VK_IMAGE_USAGE_FRAGMENT_SHADING_RATE_ATTACHMENT_BIT_KHR = 0x00000100,
+    // // Provided by VK_EXT_host_image_copy
+    //     VK_IMAGE_USAGE_HOST_TRANSFER_BIT_EXT = 0x00400000,
+    // // Provided by VK_KHR_video_encode_queue
+    //     VK_IMAGE_USAGE_VIDEO_ENCODE_DST_BIT_KHR = 0x00002000,
+    // // Provided by VK_KHR_video_encode_queue
+    //     VK_IMAGE_USAGE_VIDEO_ENCODE_SRC_BIT_KHR = 0x00004000,
+    // // Provided by VK_KHR_video_encode_queue
+    //     VK_IMAGE_USAGE_VIDEO_ENCODE_DPB_BIT_KHR = 0x00008000,
+    // // Provided by VK_EXT_attachment_feedback_loop_layout
+    //     VK_IMAGE_USAGE_ATTACHMENT_FEEDBACK_LOOP_BIT_EXT = 0x00080000,
+    // // Provided by VK_HUAWEI_invocation_mask
+    //     VK_IMAGE_USAGE_INVOCATION_MASK_BIT_HUAWEI = 0x00040000,
+    // // Provided by VK_QCOM_image_processing
+    //     VK_IMAGE_USAGE_SAMPLE_WEIGHT_BIT_QCOM = 0x00100000,
+    // // Provided by VK_QCOM_image_processing
+    //     VK_IMAGE_USAGE_SAMPLE_BLOCK_MATCH_BIT_QCOM = 0x00200000,
+    // // Provided by VK_NV_shading_rate_image
+    //     VK_IMAGE_USAGE_SHADING_RATE_IMAGE_BIT_NV = VK_IMAGE_USAGE_FRAGMENT_SHADING_RATE_ATTACHMENT_BIT_KHR,
+    // } VkImageUsageFlagBits;
+
+    switch(bit)
+    {
+    case VK_IMAGE_USAGE_TRANSFER_SRC_BIT:                           return "VK_IMAGE_USAGE_TRANSFER_SRC_BIT" ;
+    case VK_IMAGE_USAGE_TRANSFER_DST_BIT:                           return "VK_IMAGE_USAGE_TRANSFER_DST_BIT" ;
+    case VK_IMAGE_USAGE_SAMPLED_BIT:                                return "VK_IMAGE_USAGE_SAMPLED_BIT" ;
+    case VK_IMAGE_USAGE_STORAGE_BIT:                                return "VK_IMAGE_USAGE_STORAGE_BIT" ;
+    case VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT:                       return "VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT" ;
+    case VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT:               return "VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT" ;
+    case VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT:                   return "VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT" ;
+    case VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT:                       return "VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT" ;
+    case VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR:                   return "VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR" ;
+    case VK_IMAGE_USAGE_VIDEO_DECODE_SRC_BIT_KHR:                   return "VK_IMAGE_USAGE_VIDEO_DECODE_SRC_BIT_KHR" ;
+    case VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR:                   return "VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR" ;
+    case VK_IMAGE_USAGE_FRAGMENT_DENSITY_MAP_BIT_EXT:               return "VK_IMAGE_USAGE_FRAGMENT_DENSITY_MAP_BIT_EXT" ;
+    case VK_IMAGE_USAGE_FRAGMENT_SHADING_RATE_ATTACHMENT_BIT_KHR:   return "VK_IMAGE_USAGE_FRAGMENT_SHADING_RATE_ATTACHMENT_BIT_KHR" ;
+    case VK_IMAGE_USAGE_HOST_TRANSFER_BIT_EXT:                      return "VK_IMAGE_USAGE_HOST_TRANSFER_BIT_EXT" ;
+    case VK_IMAGE_USAGE_VIDEO_ENCODE_DST_BIT_KHR:                   return "VK_IMAGE_USAGE_VIDEO_ENCODE_DST_BIT_KHR" ;
+    case VK_IMAGE_USAGE_VIDEO_ENCODE_SRC_BIT_KHR:                   return "VK_IMAGE_USAGE_VIDEO_ENCODE_SRC_BIT_KHR" ;
+    case VK_IMAGE_USAGE_VIDEO_ENCODE_DPB_BIT_KHR:                   return "VK_IMAGE_USAGE_VIDEO_ENCODE_DPB_BIT_KHR" ;
+    case VK_IMAGE_USAGE_ATTACHMENT_FEEDBACK_LOOP_BIT_EXT:           return "VK_IMAGE_USAGE_ATTACHMENT_FEEDBACK_LOOP_BIT_EXT" ;
+    case VK_IMAGE_USAGE_INVOCATION_MASK_BIT_HUAWEI:                 return "VK_IMAGE_USAGE_INVOCATION_MASK_BIT_HUAWEI" ;
+    case VK_IMAGE_USAGE_SAMPLE_WEIGHT_BIT_QCOM:                     return "VK_IMAGE_USAGE_SAMPLE_WEIGHT_BIT_QCOM" ;
+    case VK_IMAGE_USAGE_SAMPLE_BLOCK_MATCH_BIT_QCOM:                return "VK_IMAGE_USAGE_SAMPLE_BLOCK_MATCH_BIT_QCOM" ;
+    default:                                                        return "Unknown Image usage Flag Bit" ;
+    }
+}
+
+
+static char const *
+dump_image_usage_flag_bits(
+    VkImageUsageFlagBits const bits
+)
+{
+    VkImageUsageFlagBits const all_bits[] =
+    {
+        VK_IMAGE_USAGE_TRANSFER_SRC_BIT
+    ,   VK_IMAGE_USAGE_TRANSFER_DST_BIT
+    ,   VK_IMAGE_USAGE_SAMPLED_BIT
+    ,   VK_IMAGE_USAGE_STORAGE_BIT
+    ,   VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
+    ,   VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
+    ,   VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT
+    ,   VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT
+    ,   VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR
+    ,   VK_IMAGE_USAGE_VIDEO_DECODE_SRC_BIT_KHR
+    ,   VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR
+    ,   VK_IMAGE_USAGE_FRAGMENT_DENSITY_MAP_BIT_EXT
+    ,   VK_IMAGE_USAGE_FRAGMENT_SHADING_RATE_ATTACHMENT_BIT_KHR
+    ,   VK_IMAGE_USAGE_HOST_TRANSFER_BIT_EXT
+    ,   VK_IMAGE_USAGE_VIDEO_ENCODE_DST_BIT_KHR
+    ,   VK_IMAGE_USAGE_VIDEO_ENCODE_SRC_BIT_KHR
+    ,   VK_IMAGE_USAGE_VIDEO_ENCODE_DPB_BIT_KHR
+    ,   VK_IMAGE_USAGE_ATTACHMENT_FEEDBACK_LOOP_BIT_EXT
+    ,   VK_IMAGE_USAGE_INVOCATION_MASK_BIT_HUAWEI
+    ,   VK_IMAGE_USAGE_SAMPLE_WEIGHT_BIT_QCOM
+    ,   VK_IMAGE_USAGE_SAMPLE_BLOCK_MATCH_BIT_QCOM
+    } ;
+    uint32_t const all_bits_count = array_count(all_bits) ;
+
+    static char dump_buffer[max_dump_buffer] = { 0 } ;
+    SDL_memset(dump_buffer, 0, max_dump_buffer) ;
+    size_t n = 0 ;
+
+    for(
+        uint32_t i = 0
+    ;   i < all_bits_count
+    ;   ++i
+    )
+    {
+        if(bits & all_bits[i])
+        {
+            n = SDL_strlcat(dump_buffer, dump_image_usage_flag_bit(all_bits[i]), max_dump_buffer) ;
+            require(n < max_dump_buffer) ;
+            n = SDL_strlcat(dump_buffer, " | ", max_dump_buffer) ;
+            require(n < max_dump_buffer) ;
+        }
+    }
+    return dump_buffer ;
+}
+
+
+static void
+dump_surface_capabilities(
+    VkSurfaceCapabilitiesKHR const * surface_capabilities
+)
+{
+    require(surface_capabilities) ;
+    // typedef struct VkSurfaceCapabilitiesKHR {
+    //     uint32_t                         minImageCount;
+    //     uint32_t                         maxImageCount;
+    //     VkExtent2D                       currentExtent;
+    //     VkExtent2D                       minImageExtent;
+    //     VkExtent2D                       maxImageExtent;
+    //     uint32_t                         maxImageArrayLayers;
+    //     VkSurfaceTransformFlagsKHR       supportedTransforms;
+    //     VkSurfaceTransformFlagBitsKHR    currentTransform;
+    //     VkCompositeAlphaFlagsKHR         supportedCompositeAlpha;
+    //     VkImageUsageFlags                supportedUsageFlags;
+    // } VkSurfaceCapabilitiesKHR;
+    // typedef struct VkExtent2D {
+    //     uint32_t    width;
+    //     uint32_t    height;
+    // } VkExtent2D;
+
+    log_debug_u32(surface_capabilities->minImageCount) ;
+    log_debug_u32(surface_capabilities->maxImageCount) ;
+    log_debug_u32(surface_capabilities->currentExtent.width) ;
+    log_debug_u32(surface_capabilities->currentExtent.height) ;
+    log_debug_u32(surface_capabilities->minImageExtent.width) ;
+    log_debug_u32(surface_capabilities->minImageExtent.height) ;
+    log_debug_u32(surface_capabilities->maxImageExtent.width) ;
+    log_debug_u32(surface_capabilities->maxImageExtent.height) ;
+    log_debug_u32(surface_capabilities->maxImageArrayLayers) ;
+
+    log_debug_u32(surface_capabilities->supportedTransforms) ;
+    log_debug_str(dump_surface_transform_flag_bits_khr(surface_capabilities->supportedTransforms)) ;
+    log_debug_u32(surface_capabilities->currentTransform) ;
+    log_debug_str(dump_surface_transform_flag_bits_khr(surface_capabilities->currentTransform)) ;
+    log_debug_u32(surface_capabilities->supportedCompositeAlpha) ;
+    log_debug_str(dump_composite_alpha_flag_bits_khr(surface_capabilities->supportedCompositeAlpha)) ;
+
+    log_debug_u32(surface_capabilities->supportedUsageFlags) ;
+    log_debug_str(dump_image_usage_flag_bits(surface_capabilities->supportedUsageFlags)) ;
+}
+
+
+static char const *
+dump_vk_format(
+    VkFormat const format
+)
+{
+
+    // typedef enum VkFormat {
+    //     VK_FORMAT_UNDEFINED = 0,
+    //     VK_FORMAT_R4G4_UNORM_PACK8 = 1,
+    //     VK_FORMAT_R4G4B4A4_UNORM_PACK16 = 2,
+    //     VK_FORMAT_B4G4R4A4_UNORM_PACK16 = 3,
+    //     VK_FORMAT_R5G6B5_UNORM_PACK16 = 4,
+    //     VK_FORMAT_B5G6R5_UNORM_PACK16 = 5,
+    //     VK_FORMAT_R5G5B5A1_UNORM_PACK16 = 6,
+    //     VK_FORMAT_B5G5R5A1_UNORM_PACK16 = 7,
+    //     VK_FORMAT_A1R5G5B5_UNORM_PACK16 = 8,
+    //     VK_FORMAT_R8_UNORM = 9,
+    //     VK_FORMAT_R8_SNORM = 10,
+    //     VK_FORMAT_R8_USCALED = 11,
+    //     VK_FORMAT_R8_SSCALED = 12,
+    //     VK_FORMAT_R8_UINT = 13,
+    //     VK_FORMAT_R8_SINT = 14,
+    //     VK_FORMAT_R8_SRGB = 15,
+    //     VK_FORMAT_R8G8_UNORM = 16,
+    //     VK_FORMAT_R8G8_SNORM = 17,
+    //     VK_FORMAT_R8G8_USCALED = 18,
+    //     VK_FORMAT_R8G8_SSCALED = 19,
+    //     VK_FORMAT_R8G8_UINT = 20,
+    //     VK_FORMAT_R8G8_SINT = 21,
+    //     VK_FORMAT_R8G8_SRGB = 22,
+    //     VK_FORMAT_R8G8B8_UNORM = 23,
+    //     VK_FORMAT_R8G8B8_SNORM = 24,
+    //     VK_FORMAT_R8G8B8_USCALED = 25,
+    //     VK_FORMAT_R8G8B8_SSCALED = 26,
+    //     VK_FORMAT_R8G8B8_UINT = 27,
+    //     VK_FORMAT_R8G8B8_SINT = 28,
+    //     VK_FORMAT_R8G8B8_SRGB = 29,
+    //     VK_FORMAT_B8G8R8_UNORM = 30,
+    //     VK_FORMAT_B8G8R8_SNORM = 31,
+    //     VK_FORMAT_B8G8R8_USCALED = 32,
+    //     VK_FORMAT_B8G8R8_SSCALED = 33,
+    //     VK_FORMAT_B8G8R8_UINT = 34,
+    //     VK_FORMAT_B8G8R8_SINT = 35,
+    //     VK_FORMAT_B8G8R8_SRGB = 36,
+    //     VK_FORMAT_R8G8B8A8_UNORM = 37,
+    //     VK_FORMAT_R8G8B8A8_SNORM = 38,
+    //     VK_FORMAT_R8G8B8A8_USCALED = 39,
+    //     VK_FORMAT_R8G8B8A8_SSCALED = 40,
+    //     VK_FORMAT_R8G8B8A8_UINT = 41,
+    //     VK_FORMAT_R8G8B8A8_SINT = 42,
+    //     VK_FORMAT_R8G8B8A8_SRGB = 43,
+    //     VK_FORMAT_B8G8R8A8_UNORM = 44,
+    //     VK_FORMAT_B8G8R8A8_SNORM = 45,
+    //     VK_FORMAT_B8G8R8A8_USCALED = 46,
+    //     VK_FORMAT_B8G8R8A8_SSCALED = 47,
+    //     VK_FORMAT_B8G8R8A8_UINT = 48,
+    //     VK_FORMAT_B8G8R8A8_SINT = 49,
+    //     VK_FORMAT_B8G8R8A8_SRGB = 50,
+    //     VK_FORMAT_A8B8G8R8_UNORM_PACK32 = 51,
+    //     VK_FORMAT_A8B8G8R8_SNORM_PACK32 = 52,
+    //     VK_FORMAT_A8B8G8R8_USCALED_PACK32 = 53,
+    //     VK_FORMAT_A8B8G8R8_SSCALED_PACK32 = 54,
+    //     VK_FORMAT_A8B8G8R8_UINT_PACK32 = 55,
+    //     VK_FORMAT_A8B8G8R8_SINT_PACK32 = 56,
+    //     VK_FORMAT_A8B8G8R8_SRGB_PACK32 = 57,
+    //     VK_FORMAT_A2R10G10B10_UNORM_PACK32 = 58,
+    //     VK_FORMAT_A2R10G10B10_SNORM_PACK32 = 59,
+    //     VK_FORMAT_A2R10G10B10_USCALED_PACK32 = 60,
+    //     VK_FORMAT_A2R10G10B10_SSCALED_PACK32 = 61,
+    //     VK_FORMAT_A2R10G10B10_UINT_PACK32 = 62,
+    //     VK_FORMAT_A2R10G10B10_SINT_PACK32 = 63,
+    //     VK_FORMAT_A2B10G10R10_UNORM_PACK32 = 64,
+    //     VK_FORMAT_A2B10G10R10_SNORM_PACK32 = 65,
+    //     VK_FORMAT_A2B10G10R10_USCALED_PACK32 = 66,
+    //     VK_FORMAT_A2B10G10R10_SSCALED_PACK32 = 67,
+    //     VK_FORMAT_A2B10G10R10_UINT_PACK32 = 68,
+    //     VK_FORMAT_A2B10G10R10_SINT_PACK32 = 69,
+    //     VK_FORMAT_R16_UNORM = 70,
+    //     VK_FORMAT_R16_SNORM = 71,
+    //     VK_FORMAT_R16_USCALED = 72,
+    //     VK_FORMAT_R16_SSCALED = 73,
+    //     VK_FORMAT_R16_UINT = 74,
+    //     VK_FORMAT_R16_SINT = 75,
+    //     VK_FORMAT_R16_SFLOAT = 76,
+    //     VK_FORMAT_R16G16_UNORM = 77,
+    //     VK_FORMAT_R16G16_SNORM = 78,
+    //     VK_FORMAT_R16G16_USCALED = 79,
+    //     VK_FORMAT_R16G16_SSCALED = 80,
+    //     VK_FORMAT_R16G16_UINT = 81,
+    //     VK_FORMAT_R16G16_SINT = 82,
+    //     VK_FORMAT_R16G16_SFLOAT = 83,
+    //     VK_FORMAT_R16G16B16_UNORM = 84,
+    //     VK_FORMAT_R16G16B16_SNORM = 85,
+    //     VK_FORMAT_R16G16B16_USCALED = 86,
+    //     VK_FORMAT_R16G16B16_SSCALED = 87,
+    //     VK_FORMAT_R16G16B16_UINT = 88,
+    //     VK_FORMAT_R16G16B16_SINT = 89,
+    //     VK_FORMAT_R16G16B16_SFLOAT = 90,
+    //     VK_FORMAT_R16G16B16A16_UNORM = 91,
+    //     VK_FORMAT_R16G16B16A16_SNORM = 92,
+    //     VK_FORMAT_R16G16B16A16_USCALED = 93,
+    //     VK_FORMAT_R16G16B16A16_SSCALED = 94,
+    //     VK_FORMAT_R16G16B16A16_UINT = 95,
+    //     VK_FORMAT_R16G16B16A16_SINT = 96,
+    //     VK_FORMAT_R16G16B16A16_SFLOAT = 97,
+    //     VK_FORMAT_R32_UINT = 98,
+    //     VK_FORMAT_R32_SINT = 99,
+    //     VK_FORMAT_R32_SFLOAT = 100,
+    //     VK_FORMAT_R32G32_UINT = 101,
+    //     VK_FORMAT_R32G32_SINT = 102,
+    //     VK_FORMAT_R32G32_SFLOAT = 103,
+    //     VK_FORMAT_R32G32B32_UINT = 104,
+    //     VK_FORMAT_R32G32B32_SINT = 105,
+    //     VK_FORMAT_R32G32B32_SFLOAT = 106,
+    //     VK_FORMAT_R32G32B32A32_UINT = 107,
+    //     VK_FORMAT_R32G32B32A32_SINT = 108,
+    //     VK_FORMAT_R32G32B32A32_SFLOAT = 109,
+    //     VK_FORMAT_R64_UINT = 110,
+    //     VK_FORMAT_R64_SINT = 111,
+    //     VK_FORMAT_R64_SFLOAT = 112,
+    //     VK_FORMAT_R64G64_UINT = 113,
+    //     VK_FORMAT_R64G64_SINT = 114,
+    //     VK_FORMAT_R64G64_SFLOAT = 115,
+    //     VK_FORMAT_R64G64B64_UINT = 116,
+    //     VK_FORMAT_R64G64B64_SINT = 117,
+    //     VK_FORMAT_R64G64B64_SFLOAT = 118,
+    //     VK_FORMAT_R64G64B64A64_UINT = 119,
+    //     VK_FORMAT_R64G64B64A64_SINT = 120,
+    //     VK_FORMAT_R64G64B64A64_SFLOAT = 121,
+    //     VK_FORMAT_B10G11R11_UFLOAT_PACK32 = 122,
+    //     VK_FORMAT_E5B9G9R9_UFLOAT_PACK32 = 123,
+    //     VK_FORMAT_D16_UNORM = 124,
+    //     VK_FORMAT_X8_D24_UNORM_PACK32 = 125,
+    //     VK_FORMAT_D32_SFLOAT = 126,
+    //     VK_FORMAT_S8_UINT = 127,
+    //     VK_FORMAT_D16_UNORM_S8_UINT = 128,
+    //     VK_FORMAT_D24_UNORM_S8_UINT = 129,
+    //     VK_FORMAT_D32_SFLOAT_S8_UINT = 130,
+    //     VK_FORMAT_BC1_RGB_UNORM_BLOCK = 131,
+    //     VK_FORMAT_BC1_RGB_SRGB_BLOCK = 132,
+    //     VK_FORMAT_BC1_RGBA_UNORM_BLOCK = 133,
+    //     VK_FORMAT_BC1_RGBA_SRGB_BLOCK = 134,
+    //     VK_FORMAT_BC2_UNORM_BLOCK = 135,
+    //     VK_FORMAT_BC2_SRGB_BLOCK = 136,
+    //     VK_FORMAT_BC3_UNORM_BLOCK = 137,
+    //     VK_FORMAT_BC3_SRGB_BLOCK = 138,
+    //     VK_FORMAT_BC4_UNORM_BLOCK = 139,
+    //     VK_FORMAT_BC4_SNORM_BLOCK = 140,
+    //     VK_FORMAT_BC5_UNORM_BLOCK = 141,
+    //     VK_FORMAT_BC5_SNORM_BLOCK = 142,
+    //     VK_FORMAT_BC6H_UFLOAT_BLOCK = 143,
+    //     VK_FORMAT_BC6H_SFLOAT_BLOCK = 144,
+    //     VK_FORMAT_BC7_UNORM_BLOCK = 145,
+    //     VK_FORMAT_BC7_SRGB_BLOCK = 146,
+    //     VK_FORMAT_ETC2_R8G8B8_UNORM_BLOCK = 147,
+    //     VK_FORMAT_ETC2_R8G8B8_SRGB_BLOCK = 148,
+    //     VK_FORMAT_ETC2_R8G8B8A1_UNORM_BLOCK = 149,
+    //     VK_FORMAT_ETC2_R8G8B8A1_SRGB_BLOCK = 150,
+    //     VK_FORMAT_ETC2_R8G8B8A8_UNORM_BLOCK = 151,
+    //     VK_FORMAT_ETC2_R8G8B8A8_SRGB_BLOCK = 152,
+    //     VK_FORMAT_EAC_R11_UNORM_BLOCK = 153,
+    //     VK_FORMAT_EAC_R11_SNORM_BLOCK = 154,
+    //     VK_FORMAT_EAC_R11G11_UNORM_BLOCK = 155,
+    //     VK_FORMAT_EAC_R11G11_SNORM_BLOCK = 156,
+    //     VK_FORMAT_ASTC_4x4_UNORM_BLOCK = 157,
+    //     VK_FORMAT_ASTC_4x4_SRGB_BLOCK = 158,
+    //     VK_FORMAT_ASTC_5x4_UNORM_BLOCK = 159,
+    //     VK_FORMAT_ASTC_5x4_SRGB_BLOCK = 160,
+    //     VK_FORMAT_ASTC_5x5_UNORM_BLOCK = 161,
+    //     VK_FORMAT_ASTC_5x5_SRGB_BLOCK = 162,
+    //     VK_FORMAT_ASTC_6x5_UNORM_BLOCK = 163,
+    //     VK_FORMAT_ASTC_6x5_SRGB_BLOCK = 164,
+    //     VK_FORMAT_ASTC_6x6_UNORM_BLOCK = 165,
+    //     VK_FORMAT_ASTC_6x6_SRGB_BLOCK = 166,
+    //     VK_FORMAT_ASTC_8x5_UNORM_BLOCK = 167,
+    //     VK_FORMAT_ASTC_8x5_SRGB_BLOCK = 168,
+    //     VK_FORMAT_ASTC_8x6_UNORM_BLOCK = 169,
+    //     VK_FORMAT_ASTC_8x6_SRGB_BLOCK = 170,
+    //     VK_FORMAT_ASTC_8x8_UNORM_BLOCK = 171,
+    //     VK_FORMAT_ASTC_8x8_SRGB_BLOCK = 172,
+    //     VK_FORMAT_ASTC_10x5_UNORM_BLOCK = 173,
+    //     VK_FORMAT_ASTC_10x5_SRGB_BLOCK = 174,
+    //     VK_FORMAT_ASTC_10x6_UNORM_BLOCK = 175,
+    //     VK_FORMAT_ASTC_10x6_SRGB_BLOCK = 176,
+    //     VK_FORMAT_ASTC_10x8_UNORM_BLOCK = 177,
+    //     VK_FORMAT_ASTC_10x8_SRGB_BLOCK = 178,
+    //     VK_FORMAT_ASTC_10x10_UNORM_BLOCK = 179,
+    //     VK_FORMAT_ASTC_10x10_SRGB_BLOCK = 180,
+    //     VK_FORMAT_ASTC_12x10_UNORM_BLOCK = 181,
+    //     VK_FORMAT_ASTC_12x10_SRGB_BLOCK = 182,
+    //     VK_FORMAT_ASTC_12x12_UNORM_BLOCK = 183,
+    //     VK_FORMAT_ASTC_12x12_SRGB_BLOCK = 184,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_G8B8G8R8_422_UNORM = 1000156000,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_B8G8R8G8_422_UNORM = 1000156001,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_G8_B8_R8_3PLANE_420_UNORM = 1000156002,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_G8_B8R8_2PLANE_420_UNORM = 1000156003,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_G8_B8_R8_3PLANE_422_UNORM = 1000156004,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_G8_B8R8_2PLANE_422_UNORM = 1000156005,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_G8_B8_R8_3PLANE_444_UNORM = 1000156006,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_R10X6_UNORM_PACK16 = 1000156007,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_R10X6G10X6_UNORM_2PACK16 = 1000156008,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_R10X6G10X6B10X6A10X6_UNORM_4PACK16 = 1000156009,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_G10X6B10X6G10X6R10X6_422_UNORM_4PACK16 = 1000156010,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_B10X6G10X6R10X6G10X6_422_UNORM_4PACK16 = 1000156011,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_G10X6_B10X6_R10X6_3PLANE_420_UNORM_3PACK16 = 1000156012,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_G10X6_B10X6R10X6_2PLANE_420_UNORM_3PACK16 = 1000156013,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_G10X6_B10X6_R10X6_3PLANE_422_UNORM_3PACK16 = 1000156014,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_G10X6_B10X6R10X6_2PLANE_422_UNORM_3PACK16 = 1000156015,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_G10X6_B10X6_R10X6_3PLANE_444_UNORM_3PACK16 = 1000156016,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_R12X4_UNORM_PACK16 = 1000156017,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_R12X4G12X4_UNORM_2PACK16 = 1000156018,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_R12X4G12X4B12X4A12X4_UNORM_4PACK16 = 1000156019,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_G12X4B12X4G12X4R12X4_422_UNORM_4PACK16 = 1000156020,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_B12X4G12X4R12X4G12X4_422_UNORM_4PACK16 = 1000156021,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_G12X4_B12X4_R12X4_3PLANE_420_UNORM_3PACK16 = 1000156022,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_G12X4_B12X4R12X4_2PLANE_420_UNORM_3PACK16 = 1000156023,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_G12X4_B12X4_R12X4_3PLANE_422_UNORM_3PACK16 = 1000156024,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_G12X4_B12X4R12X4_2PLANE_422_UNORM_3PACK16 = 1000156025,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_G12X4_B12X4_R12X4_3PLANE_444_UNORM_3PACK16 = 1000156026,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_G16B16G16R16_422_UNORM = 1000156027,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_B16G16R16G16_422_UNORM = 1000156028,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_G16_B16_R16_3PLANE_420_UNORM = 1000156029,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_G16_B16R16_2PLANE_420_UNORM = 1000156030,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_G16_B16_R16_3PLANE_422_UNORM = 1000156031,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_G16_B16R16_2PLANE_422_UNORM = 1000156032,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_G16_B16_R16_3PLANE_444_UNORM = 1000156033,
+    // // Provided by VK_VERSION_1_3
+    //     VK_FORMAT_G8_B8R8_2PLANE_444_UNORM = 1000330000,
+    // // Provided by VK_VERSION_1_3
+    //     VK_FORMAT_G10X6_B10X6R10X6_2PLANE_444_UNORM_3PACK16 = 1000330001,
+    // // Provided by VK_VERSION_1_3
+    //     VK_FORMAT_G12X4_B12X4R12X4_2PLANE_444_UNORM_3PACK16 = 1000330002,
+    // // Provided by VK_VERSION_1_3
+    //     VK_FORMAT_G16_B16R16_2PLANE_444_UNORM = 1000330003,
+    // // Provided by VK_VERSION_1_3
+    //     VK_FORMAT_A4R4G4B4_UNORM_PACK16 = 1000340000,
+    // // Provided by VK_VERSION_1_3
+    //     VK_FORMAT_A4B4G4R4_UNORM_PACK16 = 1000340001,
+    // // Provided by VK_VERSION_1_3
+    //     VK_FORMAT_ASTC_4x4_SFLOAT_BLOCK = 1000066000,
+    // // Provided by VK_VERSION_1_3
+    //     VK_FORMAT_ASTC_5x4_SFLOAT_BLOCK = 1000066001,
+    // // Provided by VK_VERSION_1_3
+    //     VK_FORMAT_ASTC_5x5_SFLOAT_BLOCK = 1000066002,
+    // // Provided by VK_VERSION_1_3
+    //     VK_FORMAT_ASTC_6x5_SFLOAT_BLOCK = 1000066003,
+    // // Provided by VK_VERSION_1_3
+    //     VK_FORMAT_ASTC_6x6_SFLOAT_BLOCK = 1000066004,
+    // // Provided by VK_VERSION_1_3
+    //     VK_FORMAT_ASTC_8x5_SFLOAT_BLOCK = 1000066005,
+    // // Provided by VK_VERSION_1_3
+    //     VK_FORMAT_ASTC_8x6_SFLOAT_BLOCK = 1000066006,
+    // // Provided by VK_VERSION_1_3
+    //     VK_FORMAT_ASTC_8x8_SFLOAT_BLOCK = 1000066007,
+    // // Provided by VK_VERSION_1_3
+    //     VK_FORMAT_ASTC_10x5_SFLOAT_BLOCK = 1000066008,
+    // // Provided by VK_VERSION_1_3
+    //     VK_FORMAT_ASTC_10x6_SFLOAT_BLOCK = 1000066009,
+    // // Provided by VK_VERSION_1_3
+    //     VK_FORMAT_ASTC_10x8_SFLOAT_BLOCK = 1000066010,
+    // // Provided by VK_VERSION_1_3
+    //     VK_FORMAT_ASTC_10x10_SFLOAT_BLOCK = 1000066011,
+    // // Provided by VK_VERSION_1_3
+    //     VK_FORMAT_ASTC_12x10_SFLOAT_BLOCK = 1000066012,
+    // // Provided by VK_VERSION_1_3
+    //     VK_FORMAT_ASTC_12x12_SFLOAT_BLOCK = 1000066013,
+    // // Provided by VK_IMG_format_pvrtc
+    //     VK_FORMAT_PVRTC1_2BPP_UNORM_BLOCK_IMG = 1000054000,
+    // // Provided by VK_IMG_format_pvrtc
+    //     VK_FORMAT_PVRTC1_4BPP_UNORM_BLOCK_IMG = 1000054001,
+    // // Provided by VK_IMG_format_pvrtc
+    //     VK_FORMAT_PVRTC2_2BPP_UNORM_BLOCK_IMG = 1000054002,
+    // // Provided by VK_IMG_format_pvrtc
+    //     VK_FORMAT_PVRTC2_4BPP_UNORM_BLOCK_IMG = 1000054003,
+    // // Provided by VK_IMG_format_pvrtc
+    //     VK_FORMAT_PVRTC1_2BPP_SRGB_BLOCK_IMG = 1000054004,
+    // // Provided by VK_IMG_format_pvrtc
+    //     VK_FORMAT_PVRTC1_4BPP_SRGB_BLOCK_IMG = 1000054005,
+    // // Provided by VK_IMG_format_pvrtc
+    //     VK_FORMAT_PVRTC2_2BPP_SRGB_BLOCK_IMG = 1000054006,
+    // // Provided by VK_IMG_format_pvrtc
+    //     VK_FORMAT_PVRTC2_4BPP_SRGB_BLOCK_IMG = 1000054007,
+    // // Provided by VK_NV_optical_flow
+    //     VK_FORMAT_R16G16_SFIXED5_NV = 1000464000,
+    //       VK_FORMAT_R16G16_S10_5_NV   = 1000464000,
+    // // Provided by VK_KHR_maintenance5
+    //     VK_FORMAT_A1B5G5R5_UNORM_PACK16_KHR = 1000470000,
+    // // Provided by VK_KHR_maintenance5
+    //     VK_FORMAT_A8_UNORM_KHR = 1000470001,
+    // // Provided by VK_EXT_texture_compression_astc_hdr
+    //     VK_FORMAT_ASTC_4x4_SFLOAT_BLOCK_EXT = VK_FORMAT_ASTC_4x4_SFLOAT_BLOCK,
+    // // Provided by VK_EXT_texture_compression_astc_hdr
+    //     VK_FORMAT_ASTC_5x4_SFLOAT_BLOCK_EXT = VK_FORMAT_ASTC_5x4_SFLOAT_BLOCK,
+    // // Provided by VK_EXT_texture_compression_astc_hdr
+    //     VK_FORMAT_ASTC_5x5_SFLOAT_BLOCK_EXT = VK_FORMAT_ASTC_5x5_SFLOAT_BLOCK,
+    // // Provided by VK_EXT_texture_compression_astc_hdr
+    //     VK_FORMAT_ASTC_6x5_SFLOAT_BLOCK_EXT = VK_FORMAT_ASTC_6x5_SFLOAT_BLOCK,
+    // // Provided by VK_EXT_texture_compression_astc_hdr
+    //     VK_FORMAT_ASTC_6x6_SFLOAT_BLOCK_EXT = VK_FORMAT_ASTC_6x6_SFLOAT_BLOCK,
+    // // Provided by VK_EXT_texture_compression_astc_hdr
+    //     VK_FORMAT_ASTC_8x5_SFLOAT_BLOCK_EXT = VK_FORMAT_ASTC_8x5_SFLOAT_BLOCK,
+    // // Provided by VK_EXT_texture_compression_astc_hdr
+    //     VK_FORMAT_ASTC_8x6_SFLOAT_BLOCK_EXT = VK_FORMAT_ASTC_8x6_SFLOAT_BLOCK,
+    // // Provided by VK_EXT_texture_compression_astc_hdr
+    //     VK_FORMAT_ASTC_8x8_SFLOAT_BLOCK_EXT = VK_FORMAT_ASTC_8x8_SFLOAT_BLOCK,
+    // // Provided by VK_EXT_texture_compression_astc_hdr
+    //     VK_FORMAT_ASTC_10x5_SFLOAT_BLOCK_EXT = VK_FORMAT_ASTC_10x5_SFLOAT_BLOCK,
+    // // Provided by VK_EXT_texture_compression_astc_hdr
+    //     VK_FORMAT_ASTC_10x6_SFLOAT_BLOCK_EXT = VK_FORMAT_ASTC_10x6_SFLOAT_BLOCK,
+    // // Provided by VK_EXT_texture_compression_astc_hdr
+    //     VK_FORMAT_ASTC_10x8_SFLOAT_BLOCK_EXT = VK_FORMAT_ASTC_10x8_SFLOAT_BLOCK,
+    // // Provided by VK_EXT_texture_compression_astc_hdr
+    //     VK_FORMAT_ASTC_10x10_SFLOAT_BLOCK_EXT = VK_FORMAT_ASTC_10x10_SFLOAT_BLOCK,
+    // // Provided by VK_EXT_texture_compression_astc_hdr
+    //     VK_FORMAT_ASTC_12x10_SFLOAT_BLOCK_EXT = VK_FORMAT_ASTC_12x10_SFLOAT_BLOCK,
+    // // Provided by VK_EXT_texture_compression_astc_hdr
+    //     VK_FORMAT_ASTC_12x12_SFLOAT_BLOCK_EXT = VK_FORMAT_ASTC_12x12_SFLOAT_BLOCK,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_G8B8G8R8_422_UNORM_KHR = VK_FORMAT_G8B8G8R8_422_UNORM,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_B8G8R8G8_422_UNORM_KHR = VK_FORMAT_B8G8R8G8_422_UNORM,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_G8_B8_R8_3PLANE_420_UNORM_KHR = VK_FORMAT_G8_B8_R8_3PLANE_420_UNORM,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_G8_B8R8_2PLANE_420_UNORM_KHR = VK_FORMAT_G8_B8R8_2PLANE_420_UNORM,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_G8_B8_R8_3PLANE_422_UNORM_KHR = VK_FORMAT_G8_B8_R8_3PLANE_422_UNORM,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_G8_B8R8_2PLANE_422_UNORM_KHR = VK_FORMAT_G8_B8R8_2PLANE_422_UNORM,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_G8_B8_R8_3PLANE_444_UNORM_KHR = VK_FORMAT_G8_B8_R8_3PLANE_444_UNORM,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_R10X6_UNORM_PACK16_KHR = VK_FORMAT_R10X6_UNORM_PACK16,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_R10X6G10X6_UNORM_2PACK16_KHR = VK_FORMAT_R10X6G10X6_UNORM_2PACK16,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_R10X6G10X6B10X6A10X6_UNORM_4PACK16_KHR = VK_FORMAT_R10X6G10X6B10X6A10X6_UNORM_4PACK16,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_G10X6B10X6G10X6R10X6_422_UNORM_4PACK16_KHR = VK_FORMAT_G10X6B10X6G10X6R10X6_422_UNORM_4PACK16,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_B10X6G10X6R10X6G10X6_422_UNORM_4PACK16_KHR = VK_FORMAT_B10X6G10X6R10X6G10X6_422_UNORM_4PACK16,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_G10X6_B10X6_R10X6_3PLANE_420_UNORM_3PACK16_KHR = VK_FORMAT_G10X6_B10X6_R10X6_3PLANE_420_UNORM_3PACK16,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_G10X6_B10X6R10X6_2PLANE_420_UNORM_3PACK16_KHR = VK_FORMAT_G10X6_B10X6R10X6_2PLANE_420_UNORM_3PACK16,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_G10X6_B10X6_R10X6_3PLANE_422_UNORM_3PACK16_KHR = VK_FORMAT_G10X6_B10X6_R10X6_3PLANE_422_UNORM_3PACK16,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_G10X6_B10X6R10X6_2PLANE_422_UNORM_3PACK16_KHR = VK_FORMAT_G10X6_B10X6R10X6_2PLANE_422_UNORM_3PACK16,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_G10X6_B10X6_R10X6_3PLANE_444_UNORM_3PACK16_KHR = VK_FORMAT_G10X6_B10X6_R10X6_3PLANE_444_UNORM_3PACK16,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_R12X4_UNORM_PACK16_KHR = VK_FORMAT_R12X4_UNORM_PACK16,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_R12X4G12X4_UNORM_2PACK16_KHR = VK_FORMAT_R12X4G12X4_UNORM_2PACK16,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_R12X4G12X4B12X4A12X4_UNORM_4PACK16_KHR = VK_FORMAT_R12X4G12X4B12X4A12X4_UNORM_4PACK16,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_G12X4B12X4G12X4R12X4_422_UNORM_4PACK16_KHR = VK_FORMAT_G12X4B12X4G12X4R12X4_422_UNORM_4PACK16,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_B12X4G12X4R12X4G12X4_422_UNORM_4PACK16_KHR = VK_FORMAT_B12X4G12X4R12X4G12X4_422_UNORM_4PACK16,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_G12X4_B12X4_R12X4_3PLANE_420_UNORM_3PACK16_KHR = VK_FORMAT_G12X4_B12X4_R12X4_3PLANE_420_UNORM_3PACK16,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_G12X4_B12X4R12X4_2PLANE_420_UNORM_3PACK16_KHR = VK_FORMAT_G12X4_B12X4R12X4_2PLANE_420_UNORM_3PACK16,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_G12X4_B12X4_R12X4_3PLANE_422_UNORM_3PACK16_KHR = VK_FORMAT_G12X4_B12X4_R12X4_3PLANE_422_UNORM_3PACK16,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_G12X4_B12X4R12X4_2PLANE_422_UNORM_3PACK16_KHR = VK_FORMAT_G12X4_B12X4R12X4_2PLANE_422_UNORM_3PACK16,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_G12X4_B12X4_R12X4_3PLANE_444_UNORM_3PACK16_KHR = VK_FORMAT_G12X4_B12X4_R12X4_3PLANE_444_UNORM_3PACK16,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_G16B16G16R16_422_UNORM_KHR = VK_FORMAT_G16B16G16R16_422_UNORM,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_B16G16R16G16_422_UNORM_KHR = VK_FORMAT_B16G16R16G16_422_UNORM,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_G16_B16_R16_3PLANE_420_UNORM_KHR = VK_FORMAT_G16_B16_R16_3PLANE_420_UNORM,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_G16_B16R16_2PLANE_420_UNORM_KHR = VK_FORMAT_G16_B16R16_2PLANE_420_UNORM,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_G16_B16_R16_3PLANE_422_UNORM_KHR = VK_FORMAT_G16_B16_R16_3PLANE_422_UNORM,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_G16_B16R16_2PLANE_422_UNORM_KHR = VK_FORMAT_G16_B16R16_2PLANE_422_UNORM,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_G16_B16_R16_3PLANE_444_UNORM_KHR = VK_FORMAT_G16_B16_R16_3PLANE_444_UNORM,
+    // // Provided by VK_EXT_ycbcr_2plane_444_formats
+    //     VK_FORMAT_G8_B8R8_2PLANE_444_UNORM_EXT = VK_FORMAT_G8_B8R8_2PLANE_444_UNORM,
+    // // Provided by VK_EXT_ycbcr_2plane_444_formats
+    //     VK_FORMAT_G10X6_B10X6R10X6_2PLANE_444_UNORM_3PACK16_EXT = VK_FORMAT_G10X6_B10X6R10X6_2PLANE_444_UNORM_3PACK16,
+    // // Provided by VK_EXT_ycbcr_2plane_444_formats
+    //     VK_FORMAT_G12X4_B12X4R12X4_2PLANE_444_UNORM_3PACK16_EXT = VK_FORMAT_G12X4_B12X4R12X4_2PLANE_444_UNORM_3PACK16,
+    // // Provided by VK_EXT_ycbcr_2plane_444_formats
+    //     VK_FORMAT_G16_B16R16_2PLANE_444_UNORM_EXT = VK_FORMAT_G16_B16R16_2PLANE_444_UNORM,
+    // // Provided by VK_EXT_4444_formats
+    //     VK_FORMAT_A4R4G4B4_UNORM_PACK16_EXT = VK_FORMAT_A4R4G4B4_UNORM_PACK16,
+    // // Provided by VK_EXT_4444_formats
+    //     VK_FORMAT_A4B4G4R4_UNORM_PACK16_EXT = VK_FORMAT_A4B4G4R4_UNORM_PACK16,
+    // // Provided by VK_NV_optical_flow
+    //     VK_FORMAT_R16G16_S10_5_NV = VK_FORMAT_R16G16_SFIXED5_NV,
+    // } VkFormat;
+
+    switch(format)
+    {
+    case VK_FORMAT_UNDEFINED:                                   return "VK_FORMAT_UNDEFINED" ;
+    case VK_FORMAT_R4G4_UNORM_PACK8:                            return "VK_FORMAT_R4G4_UNORM_PACK8" ;
+    case VK_FORMAT_R4G4B4A4_UNORM_PACK16:                       return "VK_FORMAT_R4G4B4A4_UNORM_PACK16" ;
+    case VK_FORMAT_B4G4R4A4_UNORM_PACK16:                       return "VK_FORMAT_B4G4R4A4_UNORM_PACK16" ;
+    case VK_FORMAT_R5G6B5_UNORM_PACK16:                         return "VK_FORMAT_R5G6B5_UNORM_PACK16" ;
+    case VK_FORMAT_B5G6R5_UNORM_PACK16:                         return "VK_FORMAT_B5G6R5_UNORM_PACK16" ;
+    case VK_FORMAT_R5G5B5A1_UNORM_PACK16:                       return "VK_FORMAT_R5G5B5A1_UNORM_PACK16" ;
+    case VK_FORMAT_B5G5R5A1_UNORM_PACK16:                       return "VK_FORMAT_B5G5R5A1_UNORM_PACK16" ;
+    case VK_FORMAT_A1R5G5B5_UNORM_PACK16:                       return "VK_FORMAT_A1R5G5B5_UNORM_PACK16" ;
+    case VK_FORMAT_R8_UNORM:                                    return "VK_FORMAT_R8_UNORM" ;
+    case VK_FORMAT_R8_SNORM:                                    return "VK_FORMAT_R8_SNORM" ;
+    case VK_FORMAT_R8_USCALED:                                  return "VK_FORMAT_R8_USCALED" ;
+    case VK_FORMAT_R8_SSCALED:                                  return "VK_FORMAT_R8_SSCALED" ;
+    case VK_FORMAT_R8_UINT:                                     return "VK_FORMAT_R8_UINT" ;
+    case VK_FORMAT_R8_SINT:                                     return "VK_FORMAT_R8_SINT" ;
+    case VK_FORMAT_R8_SRGB:                                     return "VK_FORMAT_R8_SRGB" ;
+    case VK_FORMAT_R8G8_UNORM:                                  return "VK_FORMAT_R8G8_UNORM" ;
+    case VK_FORMAT_R8G8_SNORM:                                  return "VK_FORMAT_R8G8_SNORM" ;
+    case VK_FORMAT_R8G8_USCALED:                                return "VK_FORMAT_R8G8_USCALED" ;
+    case VK_FORMAT_R8G8_SSCALED:                                return "VK_FORMAT_R8G8_SSCALED" ;
+    case VK_FORMAT_R8G8_UINT:                                   return "VK_FORMAT_R8G8_UINT" ;
+    case VK_FORMAT_R8G8_SINT:                                   return "VK_FORMAT_R8G8_SINT" ;
+    case VK_FORMAT_R8G8_SRGB:                                   return "VK_FORMAT_R8G8_SRGB" ;
+    case VK_FORMAT_R8G8B8_UNORM:                                return "VK_FORMAT_R8G8B8_UNORM" ;
+    case VK_FORMAT_R8G8B8_SNORM:                                return "VK_FORMAT_R8G8B8_SNORM" ;
+    case VK_FORMAT_R8G8B8_USCALED:                              return "VK_FORMAT_R8G8B8_USCALED" ;
+    case VK_FORMAT_R8G8B8_SSCALED:                              return "VK_FORMAT_R8G8B8_SSCALED" ;
+    case VK_FORMAT_R8G8B8_UINT:                                 return "VK_FORMAT_R8G8B8_UINT" ;
+    case VK_FORMAT_R8G8B8_SINT:                                 return "VK_FORMAT_R8G8B8_SINT" ;
+    case VK_FORMAT_R8G8B8_SRGB:                                 return "VK_FORMAT_R8G8B8_SRGB" ;
+    case VK_FORMAT_B8G8R8_UNORM:                                return "VK_FORMAT_B8G8R8_UNORM" ;
+    case VK_FORMAT_B8G8R8_SNORM:                                return "VK_FORMAT_B8G8R8_SNORM" ;
+    case VK_FORMAT_B8G8R8_USCALED:                              return "VK_FORMAT_B8G8R8_USCALED" ;
+    case VK_FORMAT_B8G8R8_SSCALED:                              return "VK_FORMAT_B8G8R8_SSCALED" ;
+    case VK_FORMAT_B8G8R8_UINT:                                 return "VK_FORMAT_B8G8R8_UINT" ;
+    case VK_FORMAT_B8G8R8_SINT:                                 return "VK_FORMAT_B8G8R8_SINT" ;
+    case VK_FORMAT_B8G8R8_SRGB:                                 return "VK_FORMAT_B8G8R8_SRGB" ;
+    case VK_FORMAT_R8G8B8A8_UNORM:                              return "VK_FORMAT_R8G8B8A8_UNORM" ;
+    case VK_FORMAT_R8G8B8A8_SNORM:                              return "VK_FORMAT_R8G8B8A8_SNORM" ;
+    case VK_FORMAT_R8G8B8A8_USCALED:                            return "VK_FORMAT_R8G8B8A8_USCALED" ;
+    case VK_FORMAT_R8G8B8A8_SSCALED:                            return "VK_FORMAT_R8G8B8A8_SSCALED" ;
+    case VK_FORMAT_R8G8B8A8_UINT:                               return "VK_FORMAT_R8G8B8A8_UINT" ;
+    case VK_FORMAT_R8G8B8A8_SINT:                               return "VK_FORMAT_R8G8B8A8_SINT" ;
+    case VK_FORMAT_R8G8B8A8_SRGB:                               return "VK_FORMAT_R8G8B8A8_SRGB" ;
+    case VK_FORMAT_B8G8R8A8_UNORM:                              return "VK_FORMAT_B8G8R8A8_UNORM" ;
+    case VK_FORMAT_B8G8R8A8_SNORM:                              return "VK_FORMAT_B8G8R8A8_SNORM" ;
+    case VK_FORMAT_B8G8R8A8_USCALED:                            return "VK_FORMAT_B8G8R8A8_USCALED" ;
+    case VK_FORMAT_B8G8R8A8_SSCALED:                            return "VK_FORMAT_B8G8R8A8_SSCALED" ;
+    case VK_FORMAT_B8G8R8A8_UINT:                               return "VK_FORMAT_B8G8R8A8_UINT" ;
+    case VK_FORMAT_B8G8R8A8_SINT:                               return "VK_FORMAT_B8G8R8A8_SINT" ;
+    case VK_FORMAT_B8G8R8A8_SRGB:                               return "VK_FORMAT_B8G8R8A8_SRGB" ;
+    case VK_FORMAT_A8B8G8R8_UNORM_PACK32:                       return "VK_FORMAT_A8B8G8R8_UNORM_PACK32" ;
+    case VK_FORMAT_A8B8G8R8_SNORM_PACK32:                       return "VK_FORMAT_A8B8G8R8_SNORM_PACK32" ;
+    case VK_FORMAT_A8B8G8R8_USCALED_PACK32:                     return "VK_FORMAT_A8B8G8R8_USCALED_PACK32" ;
+    case VK_FORMAT_A8B8G8R8_SSCALED_PACK32:                     return "VK_FORMAT_A8B8G8R8_SSCALED_PACK32" ;
+    case VK_FORMAT_A8B8G8R8_UINT_PACK32:                        return "VK_FORMAT_A8B8G8R8_UINT_PACK32" ;
+    case VK_FORMAT_A8B8G8R8_SINT_PACK32:                        return "VK_FORMAT_A8B8G8R8_SINT_PACK32" ;
+    case VK_FORMAT_A8B8G8R8_SRGB_PACK32:                        return "VK_FORMAT_A8B8G8R8_SRGB_PACK32" ;
+    case VK_FORMAT_A2R10G10B10_UNORM_PACK32:                    return "VK_FORMAT_A2R10G10B10_UNORM_PACK32" ;
+    case VK_FORMAT_A2R10G10B10_SNORM_PACK32:                    return "VK_FORMAT_A2R10G10B10_SNORM_PACK32" ;
+    case VK_FORMAT_A2R10G10B10_USCALED_PACK32:                  return "VK_FORMAT_A2R10G10B10_USCALED_PACK32" ;
+    case VK_FORMAT_A2R10G10B10_SSCALED_PACK32:                  return "VK_FORMAT_A2R10G10B10_SSCALED_PACK32" ;
+    case VK_FORMAT_A2R10G10B10_UINT_PACK32:                     return "VK_FORMAT_A2R10G10B10_UINT_PACK32" ;
+    case VK_FORMAT_A2R10G10B10_SINT_PACK32:                     return "VK_FORMAT_A2R10G10B10_SINT_PACK32" ;
+    case VK_FORMAT_A2B10G10R10_UNORM_PACK32:                    return "VK_FORMAT_A2B10G10R10_UNORM_PACK32" ;
+    case VK_FORMAT_A2B10G10R10_SNORM_PACK32:                    return "VK_FORMAT_A2B10G10R10_SNORM_PACK32" ;
+    case VK_FORMAT_A2B10G10R10_USCALED_PACK32:                  return "VK_FORMAT_A2B10G10R10_USCALED_PACK32" ;
+    case VK_FORMAT_A2B10G10R10_SSCALED_PACK32:                  return "VK_FORMAT_A2B10G10R10_SSCALED_PACK32" ;
+    case VK_FORMAT_A2B10G10R10_UINT_PACK32:                     return "VK_FORMAT_A2B10G10R10_UINT_PACK32" ;
+    case VK_FORMAT_A2B10G10R10_SINT_PACK32:                     return "VK_FORMAT_A2B10G10R10_SINT_PACK32" ;
+    case VK_FORMAT_R16_UNORM:                                   return "VK_FORMAT_R16_UNORM" ;
+    case VK_FORMAT_R16_SNORM:                                   return "VK_FORMAT_R16_SNORM" ;
+    case VK_FORMAT_R16_USCALED:                                 return "VK_FORMAT_R16_USCALED" ;
+    case VK_FORMAT_R16_SSCALED:                                 return "VK_FORMAT_R16_SSCALED" ;
+    case VK_FORMAT_R16_UINT:                                    return "VK_FORMAT_R16_UINT" ;
+    case VK_FORMAT_R16_SINT:                                    return "VK_FORMAT_R16_SINT" ;
+    case VK_FORMAT_R16_SFLOAT:                                  return "VK_FORMAT_R16_SFLOAT" ;
+    case VK_FORMAT_R16G16_UNORM:                                return "VK_FORMAT_R16G16_UNORM" ;
+    case VK_FORMAT_R16G16_SNORM:                                return "VK_FORMAT_R16G16_SNORM" ;
+    case VK_FORMAT_R16G16_USCALED:                              return "VK_FORMAT_R16G16_USCALED" ;
+    case VK_FORMAT_R16G16_SSCALED:                              return "VK_FORMAT_R16G16_SSCALED" ;
+    case VK_FORMAT_R16G16_UINT:                                 return "VK_FORMAT_R16G16_UINT" ;
+    case VK_FORMAT_R16G16_SINT:                                 return "VK_FORMAT_R16G16_SINT" ;
+    case VK_FORMAT_R16G16_SFLOAT:                               return "VK_FORMAT_R16G16_SFLOAT" ;
+    case VK_FORMAT_R16G16B16_UNORM:                             return "VK_FORMAT_R16G16B16_UNORM" ;
+    case VK_FORMAT_R16G16B16_SNORM:                             return "VK_FORMAT_R16G16B16_SNORM" ;
+    case VK_FORMAT_R16G16B16_USCALED:                           return "VK_FORMAT_R16G16B16_USCALED" ;
+    case VK_FORMAT_R16G16B16_SSCALED:                           return "VK_FORMAT_R16G16B16_SSCALED" ;
+    case VK_FORMAT_R16G16B16_UINT:                              return "VK_FORMAT_R16G16B16_UINT" ;
+    case VK_FORMAT_R16G16B16_SINT:                              return "VK_FORMAT_R16G16B16_SINT" ;
+    case VK_FORMAT_R16G16B16_SFLOAT:                            return "VK_FORMAT_R16G16B16_SFLOAT" ;
+    case VK_FORMAT_R16G16B16A16_UNORM:                          return "VK_FORMAT_R16G16B16A16_UNORM" ;
+    case VK_FORMAT_R16G16B16A16_SNORM:                          return "VK_FORMAT_R16G16B16A16_SNORM" ;
+    case VK_FORMAT_R16G16B16A16_USCALED:                        return "VK_FORMAT_R16G16B16A16_USCALED" ;
+    case VK_FORMAT_R16G16B16A16_SSCALED:                        return "VK_FORMAT_R16G16B16A16_SSCALED" ;
+    case VK_FORMAT_R16G16B16A16_UINT:                           return "VK_FORMAT_R16G16B16A16_UINT" ;
+    case VK_FORMAT_R16G16B16A16_SINT:                           return "VK_FORMAT_R16G16B16A16_SINT" ;
+    case VK_FORMAT_R16G16B16A16_SFLOAT:                         return "VK_FORMAT_R16G16B16A16_SFLOAT" ;
+    case VK_FORMAT_R32_UINT:                                    return "VK_FORMAT_R32_UINT" ;
+    case VK_FORMAT_R32_SINT:                                    return "VK_FORMAT_R32_SINT" ;
+    case VK_FORMAT_R32_SFLOAT:                                  return "VK_FORMAT_R32_SFLOAT" ;
+    case VK_FORMAT_R32G32_UINT:                                 return "VK_FORMAT_R32G32_UINT" ;
+    case VK_FORMAT_R32G32_SINT:                                 return "VK_FORMAT_R32G32_SINT" ;
+    case VK_FORMAT_R32G32_SFLOAT:                               return "VK_FORMAT_R32G32_SFLOAT" ;
+    case VK_FORMAT_R32G32B32_UINT:                              return "VK_FORMAT_R32G32B32_UINT" ;
+    case VK_FORMAT_R32G32B32_SINT:                              return "VK_FORMAT_R32G32B32_SINT" ;
+    case VK_FORMAT_R32G32B32_SFLOAT:                            return "VK_FORMAT_R32G32B32_SFLOAT" ;
+    case VK_FORMAT_R32G32B32A32_UINT:                           return "VK_FORMAT_R32G32B32A32_UINT" ;
+    case VK_FORMAT_R32G32B32A32_SINT:                           return "VK_FORMAT_R32G32B32A32_SINT" ;
+    case VK_FORMAT_R32G32B32A32_SFLOAT:                         return "VK_FORMAT_R32G32B32A32_SFLOAT" ;
+    case VK_FORMAT_R64_UINT:                                    return "VK_FORMAT_R64_UINT" ;
+    case VK_FORMAT_R64_SINT:                                    return "VK_FORMAT_R64_SINT" ;
+    case VK_FORMAT_R64_SFLOAT:                                  return "VK_FORMAT_R64_SFLOAT" ;
+    case VK_FORMAT_R64G64_UINT:                                 return "VK_FORMAT_R64G64_UINT" ;
+    case VK_FORMAT_R64G64_SINT:                                 return "VK_FORMAT_R64G64_SINT" ;
+    case VK_FORMAT_R64G64_SFLOAT:                               return "VK_FORMAT_R64G64_SFLOAT" ;
+    case VK_FORMAT_R64G64B64_UINT:                              return "VK_FORMAT_R64G64B64_UINT" ;
+    case VK_FORMAT_R64G64B64_SINT:                              return "VK_FORMAT_R64G64B64_SINT" ;
+    case VK_FORMAT_R64G64B64_SFLOAT:                            return "VK_FORMAT_R64G64B64_SFLOAT" ;
+    case VK_FORMAT_R64G64B64A64_UINT:                           return "VK_FORMAT_R64G64B64A64_UINT" ;
+    case VK_FORMAT_R64G64B64A64_SINT:                           return "VK_FORMAT_R64G64B64A64_SINT" ;
+    case VK_FORMAT_R64G64B64A64_SFLOAT:                         return "VK_FORMAT_R64G64B64A64_SFLOAT" ;
+    case VK_FORMAT_B10G11R11_UFLOAT_PACK32:                     return "VK_FORMAT_B10G11R11_UFLOAT_PACK32" ;
+    case VK_FORMAT_E5B9G9R9_UFLOAT_PACK32:                      return "VK_FORMAT_E5B9G9R9_UFLOAT_PACK32" ;
+    case VK_FORMAT_D16_UNORM:                                   return "VK_FORMAT_D16_UNORM" ;
+    case VK_FORMAT_X8_D24_UNORM_PACK32:                         return "VK_FORMAT_X8_D24_UNORM_PACK32" ;
+    case VK_FORMAT_D32_SFLOAT:                                  return "VK_FORMAT_D32_SFLOAT" ;
+    case VK_FORMAT_S8_UINT:                                     return "VK_FORMAT_S8_UINT" ;
+    case VK_FORMAT_D16_UNORM_S8_UINT:                           return "VK_FORMAT_D16_UNORM_S8_UINT" ;
+    case VK_FORMAT_D24_UNORM_S8_UINT:                           return "VK_FORMAT_D24_UNORM_S8_UINT" ;
+    case VK_FORMAT_D32_SFLOAT_S8_UINT:                          return "VK_FORMAT_D32_SFLOAT_S8_UINT" ;
+    case VK_FORMAT_BC1_RGB_UNORM_BLOCK:                         return "VK_FORMAT_BC1_RGB_UNORM_BLOCK" ;
+    case VK_FORMAT_BC1_RGB_SRGB_BLOCK:                          return "VK_FORMAT_BC1_RGB_SRGB_BLOCK" ;
+    case VK_FORMAT_BC1_RGBA_UNORM_BLOCK:                        return "VK_FORMAT_BC1_RGBA_UNORM_BLOCK" ;
+    case VK_FORMAT_BC1_RGBA_SRGB_BLOCK:                         return "VK_FORMAT_BC1_RGBA_SRGB_BLOCK" ;
+    case VK_FORMAT_BC2_UNORM_BLOCK:                             return "VK_FORMAT_BC2_UNORM_BLOCK" ;
+    case VK_FORMAT_BC2_SRGB_BLOCK:                              return "VK_FORMAT_BC2_SRGB_BLOCK" ;
+    case VK_FORMAT_BC3_UNORM_BLOCK:                             return "VK_FORMAT_BC3_UNORM_BLOCK" ;
+    case VK_FORMAT_BC3_SRGB_BLOCK:                              return "VK_FORMAT_BC3_SRGB_BLOCK" ;
+    case VK_FORMAT_BC4_UNORM_BLOCK:                             return "VK_FORMAT_BC4_UNORM_BLOCK" ;
+    case VK_FORMAT_BC4_SNORM_BLOCK:                             return "VK_FORMAT_BC4_SNORM_BLOCK" ;
+    case VK_FORMAT_BC5_UNORM_BLOCK:                             return "VK_FORMAT_BC5_UNORM_BLOCK" ;
+    case VK_FORMAT_BC5_SNORM_BLOCK:                             return "VK_FORMAT_BC5_SNORM_BLOCK" ;
+    case VK_FORMAT_BC6H_UFLOAT_BLOCK:                           return "VK_FORMAT_BC6H_UFLOAT_BLOCK" ;
+    case VK_FORMAT_BC6H_SFLOAT_BLOCK:                           return "VK_FORMAT_BC6H_SFLOAT_BLOCK" ;
+    case VK_FORMAT_BC7_UNORM_BLOCK:                             return "VK_FORMAT_BC7_UNORM_BLOCK" ;
+    case VK_FORMAT_BC7_SRGB_BLOCK:                              return "VK_FORMAT_BC7_SRGB_BLOCK" ;
+    case VK_FORMAT_ETC2_R8G8B8_UNORM_BLOCK:                     return "VK_FORMAT_ETC2_R8G8B8_UNORM_BLOCK" ;
+    case VK_FORMAT_ETC2_R8G8B8_SRGB_BLOCK:                      return "VK_FORMAT_ETC2_R8G8B8_SRGB_BLOCK" ;
+    case VK_FORMAT_ETC2_R8G8B8A1_UNORM_BLOCK:                   return "VK_FORMAT_ETC2_R8G8B8A1_UNORM_BLOCK" ;
+    case VK_FORMAT_ETC2_R8G8B8A1_SRGB_BLOCK:                    return "VK_FORMAT_ETC2_R8G8B8A1_SRGB_BLOCK" ;
+    case VK_FORMAT_ETC2_R8G8B8A8_UNORM_BLOCK:                   return "VK_FORMAT_ETC2_R8G8B8A8_UNORM_BLOCK" ;
+    case VK_FORMAT_ETC2_R8G8B8A8_SRGB_BLOCK:                    return "VK_FORMAT_ETC2_R8G8B8A8_SRGB_BLOCK" ;
+    case VK_FORMAT_EAC_R11_UNORM_BLOCK:                         return "VK_FORMAT_EAC_R11_UNORM_BLOCK" ;
+    case VK_FORMAT_EAC_R11_SNORM_BLOCK:                         return "VK_FORMAT_EAC_R11_SNORM_BLOCK" ;
+    case VK_FORMAT_EAC_R11G11_UNORM_BLOCK:                      return "VK_FORMAT_EAC_R11G11_UNORM_BLOCK" ;
+    case VK_FORMAT_EAC_R11G11_SNORM_BLOCK:                      return "VK_FORMAT_EAC_R11G11_SNORM_BLOCK" ;
+    case VK_FORMAT_ASTC_4x4_UNORM_BLOCK:                        return "VK_FORMAT_ASTC_4x4_UNORM_BLOCK" ;
+    case VK_FORMAT_ASTC_4x4_SRGB_BLOCK:                         return "VK_FORMAT_ASTC_4x4_SRGB_BLOCK" ;
+    case VK_FORMAT_ASTC_5x4_UNORM_BLOCK:                        return "VK_FORMAT_ASTC_5x4_UNORM_BLOCK" ;
+    case VK_FORMAT_ASTC_5x4_SRGB_BLOCK:                         return "VK_FORMAT_ASTC_5x4_SRGB_BLOCK" ;
+    case VK_FORMAT_ASTC_5x5_UNORM_BLOCK:                        return "VK_FORMAT_ASTC_5x5_UNORM_BLOCK" ;
+    case VK_FORMAT_ASTC_5x5_SRGB_BLOCK:                         return "VK_FORMAT_ASTC_5x5_SRGB_BLOCK" ;
+    case VK_FORMAT_ASTC_6x5_UNORM_BLOCK:                        return "VK_FORMAT_ASTC_6x5_UNORM_BLOCK" ;
+    case VK_FORMAT_ASTC_6x5_SRGB_BLOCK:                         return "VK_FORMAT_ASTC_6x5_SRGB_BLOCK" ;
+    case VK_FORMAT_ASTC_6x6_UNORM_BLOCK:                        return "VK_FORMAT_ASTC_6x6_UNORM_BLOCK" ;
+    case VK_FORMAT_ASTC_6x6_SRGB_BLOCK:                         return "VK_FORMAT_ASTC_6x6_SRGB_BLOCK" ;
+    case VK_FORMAT_ASTC_8x5_UNORM_BLOCK:                        return "VK_FORMAT_ASTC_8x5_UNORM_BLOCK" ;
+    case VK_FORMAT_ASTC_8x5_SRGB_BLOCK:                         return "VK_FORMAT_ASTC_8x5_SRGB_BLOCK" ;
+    case VK_FORMAT_ASTC_8x6_UNORM_BLOCK:                        return "VK_FORMAT_ASTC_8x6_UNORM_BLOCK" ;
+    case VK_FORMAT_ASTC_8x6_SRGB_BLOCK:                         return "VK_FORMAT_ASTC_8x6_SRGB_BLOCK" ;
+    case VK_FORMAT_ASTC_8x8_UNORM_BLOCK:                        return "VK_FORMAT_ASTC_8x8_UNORM_BLOCK" ;
+    case VK_FORMAT_ASTC_8x8_SRGB_BLOCK:                         return "VK_FORMAT_ASTC_8x8_SRGB_BLOCK" ;
+    case VK_FORMAT_ASTC_10x5_UNORM_BLOCK:                       return "VK_FORMAT_ASTC_10x5_UNORM_BLOCK" ;
+    case VK_FORMAT_ASTC_10x5_SRGB_BLOCK:                        return "VK_FORMAT_ASTC_10x5_SRGB_BLOCK" ;
+    case VK_FORMAT_ASTC_10x6_UNORM_BLOCK:                       return "VK_FORMAT_ASTC_10x6_UNORM_BLOCK" ;
+    case VK_FORMAT_ASTC_10x6_SRGB_BLOCK:                        return "VK_FORMAT_ASTC_10x6_SRGB_BLOCK" ;
+    case VK_FORMAT_ASTC_10x8_UNORM_BLOCK:                       return "VK_FORMAT_ASTC_10x8_UNORM_BLOCK" ;
+    case VK_FORMAT_ASTC_10x8_SRGB_BLOCK:                        return "VK_FORMAT_ASTC_10x8_SRGB_BLOCK" ;
+    case VK_FORMAT_ASTC_10x10_UNORM_BLOCK:                      return "VK_FORMAT_ASTC_10x10_UNORM_BLOCK" ;
+    case VK_FORMAT_ASTC_10x10_SRGB_BLOCK:                       return "VK_FORMAT_ASTC_10x10_SRGB_BLOCK" ;
+    case VK_FORMAT_ASTC_12x10_UNORM_BLOCK:                      return "VK_FORMAT_ASTC_12x10_UNORM_BLOCK" ;
+    case VK_FORMAT_ASTC_12x10_SRGB_BLOCK:                       return "VK_FORMAT_ASTC_12x10_SRGB_BLOCK" ;
+    case VK_FORMAT_ASTC_12x12_UNORM_BLOCK:                      return "VK_FORMAT_ASTC_12x12_UNORM_BLOCK" ;
+    case VK_FORMAT_ASTC_12x12_SRGB_BLOCK:                       return "VK_FORMAT_ASTC_12x12_SRGB_BLOCK" ;
+    case VK_FORMAT_G8B8G8R8_422_UNORM:                          return "VK_FORMAT_G8B8G8R8_422_UNORM" ;
+    case VK_FORMAT_B8G8R8G8_422_UNORM:                          return "VK_FORMAT_B8G8R8G8_422_UNORM" ;
+    case VK_FORMAT_G8_B8_R8_3PLANE_420_UNORM:                   return "VK_FORMAT_G8_B8_R8_3PLANE_420_UNORM" ;
+    case VK_FORMAT_G8_B8R8_2PLANE_420_UNORM:                    return "VK_FORMAT_G8_B8R8_2PLANE_420_UNORM" ;
+    case VK_FORMAT_G8_B8_R8_3PLANE_422_UNORM:                   return "VK_FORMAT_G8_B8_R8_3PLANE_422_UNORM" ;
+    case VK_FORMAT_G8_B8R8_2PLANE_422_UNORM:                    return "VK_FORMAT_G8_B8R8_2PLANE_422_UNORM" ;
+    case VK_FORMAT_G8_B8_R8_3PLANE_444_UNORM:                   return "VK_FORMAT_G8_B8_R8_3PLANE_444_UNORM" ;
+    case VK_FORMAT_R10X6_UNORM_PACK16:                          return "VK_FORMAT_R10X6_UNORM_PACK16" ;
+    case VK_FORMAT_R10X6G10X6_UNORM_2PACK16:                    return "VK_FORMAT_R10X6G10X6_UNORM_2PACK16" ;
+    case VK_FORMAT_R10X6G10X6B10X6A10X6_UNORM_4PACK16:          return "VK_FORMAT_R10X6G10X6B10X6A10X6_UNORM_4PACK16" ;
+    case VK_FORMAT_G10X6B10X6G10X6R10X6_422_UNORM_4PACK16:      return "VK_FORMAT_G10X6B10X6G10X6R10X6_422_UNORM_4PACK16" ;
+    case VK_FORMAT_B10X6G10X6R10X6G10X6_422_UNORM_4PACK16:      return "VK_FORMAT_B10X6G10X6R10X6G10X6_422_UNORM_4PACK16" ;
+    case VK_FORMAT_G10X6_B10X6_R10X6_3PLANE_420_UNORM_3PACK16:  return "VK_FORMAT_G10X6_B10X6_R10X6_3PLANE_420_UNORM_3PACK16" ;
+    case VK_FORMAT_G10X6_B10X6R10X6_2PLANE_420_UNORM_3PACK16:   return "VK_FORMAT_G10X6_B10X6R10X6_2PLANE_420_UNORM_3PACK16" ;
+    case VK_FORMAT_G10X6_B10X6_R10X6_3PLANE_422_UNORM_3PACK16:  return "VK_FORMAT_G10X6_B10X6_R10X6_3PLANE_422_UNORM_3PACK16" ;
+    case VK_FORMAT_G10X6_B10X6R10X6_2PLANE_422_UNORM_3PACK16:   return "VK_FORMAT_G10X6_B10X6R10X6_2PLANE_422_UNORM_3PACK16" ;
+    case VK_FORMAT_G10X6_B10X6_R10X6_3PLANE_444_UNORM_3PACK16:  return "VK_FORMAT_G10X6_B10X6_R10X6_3PLANE_444_UNORM_3PACK16" ;
+    case VK_FORMAT_R12X4_UNORM_PACK16:                          return "VK_FORMAT_R12X4_UNORM_PACK16" ;
+    case VK_FORMAT_R12X4G12X4_UNORM_2PACK16:                    return "VK_FORMAT_R12X4G12X4_UNORM_2PACK16" ;
+    case VK_FORMAT_R12X4G12X4B12X4A12X4_UNORM_4PACK16:          return "VK_FORMAT_R12X4G12X4B12X4A12X4_UNORM_4PACK16" ;
+    case VK_FORMAT_G12X4B12X4G12X4R12X4_422_UNORM_4PACK16:      return "VK_FORMAT_G12X4B12X4G12X4R12X4_422_UNORM_4PACK16" ;
+    case VK_FORMAT_B12X4G12X4R12X4G12X4_422_UNORM_4PACK16:      return "VK_FORMAT_B12X4G12X4R12X4G12X4_422_UNORM_4PACK16" ;
+    case VK_FORMAT_G12X4_B12X4_R12X4_3PLANE_420_UNORM_3PACK16:  return "VK_FORMAT_G12X4_B12X4_R12X4_3PLANE_420_UNORM_3PACK16" ;
+    case VK_FORMAT_G12X4_B12X4R12X4_2PLANE_420_UNORM_3PACK16:   return "VK_FORMAT_G12X4_B12X4R12X4_2PLANE_420_UNORM_3PACK16" ;
+    case VK_FORMAT_G12X4_B12X4_R12X4_3PLANE_422_UNORM_3PACK16:  return "VK_FORMAT_G12X4_B12X4_R12X4_3PLANE_422_UNORM_3PACK16" ;
+    case VK_FORMAT_G12X4_B12X4R12X4_2PLANE_422_UNORM_3PACK16:   return "VK_FORMAT_G12X4_B12X4R12X4_2PLANE_422_UNORM_3PACK16" ;
+    case VK_FORMAT_G12X4_B12X4_R12X4_3PLANE_444_UNORM_3PACK16:  return "VK_FORMAT_G12X4_B12X4_R12X4_3PLANE_444_UNORM_3PACK16" ;
+    case VK_FORMAT_G16B16G16R16_422_UNORM:                      return "VK_FORMAT_G16B16G16R16_422_UNORM" ;
+    case VK_FORMAT_B16G16R16G16_422_UNORM:                      return "VK_FORMAT_B16G16R16G16_422_UNORM" ;
+    case VK_FORMAT_G16_B16_R16_3PLANE_420_UNORM:                return "VK_FORMAT_G16_B16_R16_3PLANE_420_UNORM" ;
+    case VK_FORMAT_G16_B16R16_2PLANE_420_UNORM:                 return "VK_FORMAT_G16_B16R16_2PLANE_420_UNORM" ;
+    case VK_FORMAT_G16_B16_R16_3PLANE_422_UNORM:                return "VK_FORMAT_G16_B16_R16_3PLANE_422_UNORM" ;
+    case VK_FORMAT_G16_B16R16_2PLANE_422_UNORM:                 return "VK_FORMAT_G16_B16R16_2PLANE_422_UNORM" ;
+    case VK_FORMAT_G16_B16_R16_3PLANE_444_UNORM:                return "VK_FORMAT_G16_B16_R16_3PLANE_444_UNORM" ;
+    case VK_FORMAT_G8_B8R8_2PLANE_444_UNORM:                    return "VK_FORMAT_G8_B8R8_2PLANE_444_UNORM" ;
+    case VK_FORMAT_G10X6_B10X6R10X6_2PLANE_444_UNORM_3PACK16:   return "VK_FORMAT_G10X6_B10X6R10X6_2PLANE_444_UNORM_3PACK16" ;
+    case VK_FORMAT_G12X4_B12X4R12X4_2PLANE_444_UNORM_3PACK16:   return "VK_FORMAT_G12X4_B12X4R12X4_2PLANE_444_UNORM_3PACK16" ;
+    case VK_FORMAT_G16_B16R16_2PLANE_444_UNORM:                 return "VK_FORMAT_G16_B16R16_2PLANE_444_UNORM" ;
+    case VK_FORMAT_A4R4G4B4_UNORM_PACK16:                       return "VK_FORMAT_A4R4G4B4_UNORM_PACK16" ;
+    case VK_FORMAT_A4B4G4R4_UNORM_PACK16:                       return "VK_FORMAT_A4B4G4R4_UNORM_PACK16" ;
+    case VK_FORMAT_ASTC_4x4_SFLOAT_BLOCK:                       return "VK_FORMAT_ASTC_4x4_SFLOAT_BLOCK" ;
+    case VK_FORMAT_ASTC_5x4_SFLOAT_BLOCK:                       return "VK_FORMAT_ASTC_5x4_SFLOAT_BLOCK" ;
+    case VK_FORMAT_ASTC_5x5_SFLOAT_BLOCK:                       return "VK_FORMAT_ASTC_5x5_SFLOAT_BLOCK" ;
+    case VK_FORMAT_ASTC_6x5_SFLOAT_BLOCK:                       return "VK_FORMAT_ASTC_6x5_SFLOAT_BLOCK" ;
+    case VK_FORMAT_ASTC_6x6_SFLOAT_BLOCK:                       return "VK_FORMAT_ASTC_6x6_SFLOAT_BLOCK" ;
+    case VK_FORMAT_ASTC_8x5_SFLOAT_BLOCK:                       return "VK_FORMAT_ASTC_8x5_SFLOAT_BLOCK" ;
+    case VK_FORMAT_ASTC_8x6_SFLOAT_BLOCK:                       return "VK_FORMAT_ASTC_8x6_SFLOAT_BLOCK" ;
+    case VK_FORMAT_ASTC_8x8_SFLOAT_BLOCK:                       return "VK_FORMAT_ASTC_8x8_SFLOAT_BLOCK" ;
+    case VK_FORMAT_ASTC_10x5_SFLOAT_BLOCK:                      return "VK_FORMAT_ASTC_10x5_SFLOAT_BLOCK" ;
+    case VK_FORMAT_ASTC_10x6_SFLOAT_BLOCK:                      return "VK_FORMAT_ASTC_10x6_SFLOAT_BLOCK" ;
+    case VK_FORMAT_ASTC_10x8_SFLOAT_BLOCK:                      return "VK_FORMAT_ASTC_10x8_SFLOAT_BLOCK" ;
+    case VK_FORMAT_ASTC_10x10_SFLOAT_BLOCK:                     return "VK_FORMAT_ASTC_10x10_SFLOAT_BLOCK" ;
+    case VK_FORMAT_ASTC_12x10_SFLOAT_BLOCK:                     return "VK_FORMAT_ASTC_12x10_SFLOAT_BLOCK" ;
+    case VK_FORMAT_ASTC_12x12_SFLOAT_BLOCK:                     return "VK_FORMAT_ASTC_12x12_SFLOAT_BLOCK" ;
+    case VK_FORMAT_PVRTC1_2BPP_UNORM_BLOCK_IMG:                 return "VK_FORMAT_PVRTC1_2BPP_UNORM_BLOCK_IMG" ;
+    case VK_FORMAT_PVRTC1_4BPP_UNORM_BLOCK_IMG:                 return "VK_FORMAT_PVRTC1_4BPP_UNORM_BLOCK_IMG" ;
+    case VK_FORMAT_PVRTC2_2BPP_UNORM_BLOCK_IMG:                 return "VK_FORMAT_PVRTC2_2BPP_UNORM_BLOCK_IMG" ;
+    case VK_FORMAT_PVRTC2_4BPP_UNORM_BLOCK_IMG:                 return "VK_FORMAT_PVRTC2_4BPP_UNORM_BLOCK_IMG" ;
+    case VK_FORMAT_PVRTC1_2BPP_SRGB_BLOCK_IMG:                  return "VK_FORMAT_PVRTC1_2BPP_SRGB_BLOCK_IMG" ;
+    case VK_FORMAT_PVRTC1_4BPP_SRGB_BLOCK_IMG:                  return "VK_FORMAT_PVRTC1_4BPP_SRGB_BLOCK_IMG" ;
+    case VK_FORMAT_PVRTC2_2BPP_SRGB_BLOCK_IMG:                  return "VK_FORMAT_PVRTC2_2BPP_SRGB_BLOCK_IMG" ;
+    case VK_FORMAT_PVRTC2_4BPP_SRGB_BLOCK_IMG:                  return "VK_FORMAT_PVRTC2_4BPP_SRGB_BLOCK_IMG" ;
+    case VK_FORMAT_R16G16_S10_5_NV:                             return "VK_FORMAT_R16G16_S10_5_NV" ;
+    case VK_FORMAT_A1B5G5R5_UNORM_PACK16_KHR:                   return "VK_FORMAT_A1B5G5R5_UNORM_PACK16_KHR" ;
+    case VK_FORMAT_A8_UNORM_KHR:                                return "VK_FORMAT_A8_UNORM_KHR" ;
+    default:                                                    return "Unknown Format" ;
+    }
+}
+
+
+static char const *
+dump_color_space(
+    VkColorSpaceKHR const color_space
+)
+{
+    // // Provided by VK_KHR_surface
+    // typedef enum VkColorSpaceKHR {
+    //     VK_COLOR_SPACE_SRGB_NONLINEAR_KHR = 0,
+    //   // Provided by VK_EXT_swapchain_colorspace
+    //     VK_COLOR_SPACE_DISPLAY_P3_NONLINEAR_EXT = 1000104001,
+    //   // Provided by VK_EXT_swapchain_colorspace
+    //     VK_COLOR_SPACE_EXTENDED_SRGB_LINEAR_EXT = 1000104002,
+    //   // Provided by VK_EXT_swapchain_colorspace
+    //     VK_COLOR_SPACE_DISPLAY_P3_LINEAR_EXT = 1000104003,
+    //   // Provided by VK_EXT_swapchain_colorspace
+    //     VK_COLOR_SPACE_DCI_P3_NONLINEAR_EXT = 1000104004,
+    //   // Provided by VK_EXT_swapchain_colorspace
+    //     VK_COLOR_SPACE_BT709_LINEAR_EXT = 1000104005,
+    //   // Provided by VK_EXT_swapchain_colorspace
+    //     VK_COLOR_SPACE_BT709_NONLINEAR_EXT = 1000104006,
+    //   // Provided by VK_EXT_swapchain_colorspace
+    //     VK_COLOR_SPACE_BT2020_LINEAR_EXT = 1000104007,
+    //   // Provided by VK_EXT_swapchain_colorspace
+    //     VK_COLOR_SPACE_HDR10_ST2084_EXT = 1000104008,
+    //   // Provided by VK_EXT_swapchain_colorspace
+    //     VK_COLOR_SPACE_DOLBYVISION_EXT = 1000104009,
+    //   // Provided by VK_EXT_swapchain_colorspace
+    //     VK_COLOR_SPACE_HDR10_HLG_EXT = 1000104010,
+    //   // Provided by VK_EXT_swapchain_colorspace
+    //     VK_COLOR_SPACE_ADOBERGB_LINEAR_EXT = 1000104011,
+    //   // Provided by VK_EXT_swapchain_colorspace
+    //     VK_COLOR_SPACE_ADOBERGB_NONLINEAR_EXT = 1000104012,
+    //   // Provided by VK_EXT_swapchain_colorspace
+    //     VK_COLOR_SPACE_PASS_THROUGH_EXT = 1000104013,
+    //   // Provided by VK_EXT_swapchain_colorspace
+    //     VK_COLOR_SPACE_EXTENDED_SRGB_NONLINEAR_EXT = 1000104014,
+    //   // Provided by VK_AMD_display_native_hdr
+    //     VK_COLOR_SPACE_DISPLAY_NATIVE_AMD = 1000213000,
+    //     VK_COLORSPACE_SRGB_NONLINEAR_KHR = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
+    //   // Provided by VK_EXT_swapchain_colorspace
+    //     VK_COLOR_SPACE_DCI_P3_LINEAR_EXT = VK_COLOR_SPACE_DISPLAY_P3_LINEAR_EXT,
+    // } VkColorSpaceKHR;
+
+    switch(color_space)
+    {
+    case VK_COLOR_SPACE_SRGB_NONLINEAR_KHR:             return "VK_COLOR_SPACE_SRGB_NONLINEAR_KHR" ;
+    case VK_COLOR_SPACE_DISPLAY_P3_NONLINEAR_EXT:       return "VK_COLOR_SPACE_DISPLAY_P3_NONLINEAR_EXT" ;
+    case VK_COLOR_SPACE_EXTENDED_SRGB_LINEAR_EXT:       return "VK_COLOR_SPACE_EXTENDED_SRGB_LINEAR_EXT" ;
+    case VK_COLOR_SPACE_DISPLAY_P3_LINEAR_EXT:          return "VK_COLOR_SPACE_DISPLAY_P3_LINEAR_EXT" ;
+    case VK_COLOR_SPACE_DCI_P3_NONLINEAR_EXT:           return "VK_COLOR_SPACE_DCI_P3_NONLINEAR_EXT" ;
+    case VK_COLOR_SPACE_BT709_LINEAR_EXT:               return "VK_COLOR_SPACE_BT709_LINEAR_EXT" ;
+    case VK_COLOR_SPACE_BT709_NONLINEAR_EXT:            return "VK_COLOR_SPACE_BT709_NONLINEAR_EXT" ;
+    case VK_COLOR_SPACE_BT2020_LINEAR_EXT:              return "VK_COLOR_SPACE_BT2020_LINEAR_EXT" ;
+    case VK_COLOR_SPACE_HDR10_ST2084_EXT:               return "VK_COLOR_SPACE_HDR10_ST2084_EXT" ;
+    case VK_COLOR_SPACE_DOLBYVISION_EXT:                return "VK_COLOR_SPACE_DOLBYVISION_EXT" ;
+    case VK_COLOR_SPACE_HDR10_HLG_EXT:                  return "VK_COLOR_SPACE_HDR10_HLG_EXT" ;
+    case VK_COLOR_SPACE_ADOBERGB_LINEAR_EXT:            return "VK_COLOR_SPACE_ADOBERGB_LINEAR_EXT" ;
+    case VK_COLOR_SPACE_ADOBERGB_NONLINEAR_EXT:         return "VK_COLOR_SPACE_ADOBERGB_NONLINEAR_EXT" ;
+    case VK_COLOR_SPACE_PASS_THROUGH_EXT:               return "VK_COLOR_SPACE_PASS_THROUGH_EXT" ;
+    case VK_COLOR_SPACE_EXTENDED_SRGB_NONLINEAR_EXT:    return "VK_COLOR_SPACE_EXTENDED_SRGB_NONLINEAR_EXT" ;
+    case VK_COLOR_SPACE_DISPLAY_NATIVE_AMD:             return "VK_COLOR_SPACE_DISPLAY_NATIVE_AMD" ;
+    //case VK_COLORSPACE_SRGB_NONLINEAR_KHR:              return "VK_COLORSPACE_SRGB_NONLINEAR_KHR" ;
+    //case VK_COLOR_SPACE_DCI_P3_LINEAR_EXT:              return "VK_COLOR_SPACE_DCI_P3_LINEAR_EXT" ;
+    default:                                            return "Unknow Color Space" ;
+    }
+}
+
+
+static void
+dump_surface_format_khr(
+    VkSurfaceFormatKHR const * surface_format
+)
+{
+    require(surface_format) ;
+
+    // typedef struct VkSurfaceFormatKHR {
+    //     VkFormat           format;
+    //     VkColorSpaceKHR    colorSpace;
+    // } VkSurfaceFormatKHR;
+
+    log_debug_u32(surface_format->format) ;
+    log_debug_u32(surface_format->colorSpace) ;
+    log_debug_str(dump_vk_format(surface_format->format)) ;
+    log_debug_str(dump_color_space(surface_format->colorSpace)) ;
+}
+
+
+
+static char const *
+dump_present_mode_khr(
+    VkPresentModeKHR const present_mode
+)
+{
+    // typedef enum VkPresentModeKHR {
+    //     VK_PRESENT_MODE_IMMEDIATE_KHR = 0,
+    //     VK_PRESENT_MODE_MAILBOX_KHR = 1,
+    //     VK_PRESENT_MODE_FIFO_KHR = 2,
+    //     VK_PRESENT_MODE_FIFO_RELAXED_KHR = 3,
+    // // Provided by VK_KHR_shared_presentable_image
+    //     VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR = 1000111000,
+    // // Provided by VK_KHR_shared_presentable_image
+    //     VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR = 1000111001,
+    // } VkPresentModeKHR;
+    switch(present_mode)
+    {
+    case VK_PRESENT_MODE_IMMEDIATE_KHR:                 return "VK_PRESENT_MODE_IMMEDIATE_KHR" ;
+    case VK_PRESENT_MODE_MAILBOX_KHR:                   return "VK_PRESENT_MODE_MAILBOX_KHR" ;
+    case VK_PRESENT_MODE_FIFO_KHR:                      return "VK_PRESENT_MODE_FIFO_KHR" ;
+    case VK_PRESENT_MODE_FIFO_RELAXED_KHR:              return "VK_PRESENT_MODE_FIFO_RELAXED_KHR" ;
+    case VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR:     return "VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR" ;
+    case VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR: return "VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR" ;
+    default:                                            return "Unknown Present Mode" ;
+    }
+}
+
+
 static bool
 has_extension(
     VkExtensionProperties const *   haystack
@@ -1415,6 +2531,32 @@ create_vulkan_instance(
 
 
 static bool
+create_surface(
+    VkSurfaceKHR *  out_surface
+,   VkInstance      instance
+)
+{
+    require(out_surface) ;
+    require(instance) ;
+    require(app_) ;
+    require(app_->window_) ;
+
+    if(check_sdl(SDL_TRUE == SDL_Vulkan_CreateSurface(
+                app_->window_
+            ,   instance
+            ,   NULL
+            ,   out_surface
+            )
+        )
+    )
+    {
+        return false ;
+    }
+    require(*out_surface) ;
+    return true ;
+}
+
+static bool
 create_physical_devices(
     VkPhysicalDevice *  out_physical_devices
 ,   uint32_t *          out_physical_devices_count
@@ -1464,21 +2606,292 @@ create_physical_devices(
 
 
 static bool
+is_queue_family_complete(
+    vulkan_queue_family_indices const * queue_family_indices
+)
+{
+    require(queue_family_indices) ;
+
+    return
+        queue_family_indices->graphics_family_valid_
+    &&  queue_family_indices->present_family_valid_
+        ;
+}
+
+
+static bool
+find_queue_families(
+    vulkan_queue_family_indices *   out_queue_family_indices
+,   VkPhysicalDevice const          physical_device
+,   VkQueueFamilyProperties const * queue_family_properties
+,   uint32_t const                  queue_family_properties_count
+,   VkSurfaceKHR const              surface
+)
+{
+    require(out_queue_family_indices) ;
+    require(physical_device) ;
+    require(queue_family_properties) ;
+    require(surface) ;
+
+    SDL_memset(out_queue_family_indices, 0, sizeof(vulkan_queue_family_indices)) ;
+
+    for(
+        uint32_t i = 0
+    ;   i < queue_family_properties_count
+    ;   ++i
+    )
+    {
+        VkQueueFamilyProperties const * qfp = &queue_family_properties[i] ;
+        if(qfp->queueFlags & VK_QUEUE_GRAPHICS_BIT)
+        {
+            out_queue_family_indices->graphics_family_          = i ;
+            out_queue_family_indices->graphics_family_valid_    = true ;
+        }
+
+        VkBool32 present_support = VK_FALSE ;
+        VkResult const present_support_okay = vkGetPhysicalDeviceSurfaceSupportKHR(
+            physical_device
+        ,   i
+        ,   surface
+        ,   &present_support
+        ) ;
+
+        if(VK_SUCCESS == present_support_okay)
+        {
+            if(present_support)
+            {
+                out_queue_family_indices->present_family_          = i ;
+                out_queue_family_indices->present_family_valid_    = true ;
+            }
+        }
+        else
+        {
+            log_debug(
+                "Error during vkGetPhysicalDeviceSurfaceSupportKHR queue_index=%d, device=%p, surface=%p, VkResult=%d"
+            ,   i
+            ,   physical_device
+            ,   surface
+            ,   present_support_okay
+            ) ;
+        }
+
+        if(is_queue_family_complete(out_queue_family_indices))
+        {
+            return true ;
+        }
+    }
+
+    log_debug("Physical Device %p does not support queue families for surface %p"
+        , physical_device
+        , surface
+    ) ;
+
+    return false ;
+}
+
+
+static void
+add_to_unique_queue_families_indices(
+    uint32_t *      unique_queue_families_indices
+,   uint32_t *      unique_queue_families_indices_count
+,   uint32_t const  unique_queue_families_index
+)
+{
+    require(unique_queue_families_indices) ;
+    require(unique_queue_families_indices_count) ;
+    require(*unique_queue_families_indices_count < max_vulkan_unique_queue_family_indices) ;
+
+    for(
+        uint32_t i = 0
+    ;   i < *unique_queue_families_indices_count
+    ;   ++i
+    )
+    {
+        if(unique_queue_families_index == unique_queue_families_indices[i])
+        {
+            return ;
+        }
+    }
+    unique_queue_families_indices[(*unique_queue_families_indices_count)++] = unique_queue_families_index ;
+}
+
+
+static void
+add_to_desired_device_extension(
+    char const **           desired_device_extensions
+,   uint32_t *              desired_device_extensions_count
+,   char const *            desired_extension
+)
+{
+    require(desired_device_extensions) ;
+    require(desired_device_extensions_count) ;
+    require(*desired_device_extensions_count < max_vulkan_desired_device_extensions) ;
+    require(desired_extension) ;
+    require(*desired_extension) ;
+
+    desired_device_extensions[(*desired_device_extensions_count)++] = desired_extension ;
+}
+
+
+static VkSampleCountFlagBits
+get_max_usuable_sample_count(
+    VkPhysicalDeviceProperties const * pdp
+)
+{
+    require(pdp) ;
+
+    VkSampleCountFlagBits const counts =
+        pdp->limits.framebufferColorSampleCounts
+    &   pdp->limits.framebufferDepthSampleCounts
+    ;
+
+    if(counts & VK_SAMPLE_COUNT_64_BIT)
+    {
+        return VK_SAMPLE_COUNT_64_BIT ;
+    }
+
+    if(counts & VK_SAMPLE_COUNT_32_BIT)
+    {
+        return VK_SAMPLE_COUNT_32_BIT ;
+    }
+
+    if(counts & VK_SAMPLE_COUNT_16_BIT)
+    {
+        return VK_SAMPLE_COUNT_16_BIT ;
+    }
+
+    if(counts & VK_SAMPLE_COUNT_8_BIT)
+    {
+        return VK_SAMPLE_COUNT_8_BIT ;
+    }
+
+    if(counts & VK_SAMPLE_COUNT_4_BIT)
+    {
+        return VK_SAMPLE_COUNT_4_BIT ;
+    }
+
+    if(counts & VK_SAMPLE_COUNT_2_BIT)
+    {
+        return VK_SAMPLE_COUNT_2_BIT ;
+    }
+
+    return VK_SAMPLE_COUNT_1_BIT ;
+}
+
+
+static bool
+create_swapchain_support_details(
+    vulkan_swapchain_support_details *  out_scsd
+,   VkPhysicalDevice const              physical_device
+,   VkSurfaceKHR const                  surface
+)
+{
+    require(out_scsd) ;
+    require(physical_device) ;
+    require(surface) ;
+
+    // VkResult vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
+    //     VkPhysicalDevice                            physicalDevice,
+    //     VkSurfaceKHR                                surface,
+    //     VkSurfaceCapabilitiesKHR*                   pSurfaceCapabilities);
+    if(check_vulkan(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
+                physical_device
+            ,   surface
+            ,   &out_scsd->capabilities_
+            )
+        )
+    )
+    {
+        return false ;
+    }
+
+
+    // VkResult vkGetPhysicalDeviceSurfaceFormatsKHR(
+    //     VkPhysicalDevice                            physicalDevice,
+    //     VkSurfaceKHR                                surface,
+    //     uint32_t*                                   pSurfaceFormatCount,
+    //     VkSurfaceFormatKHR*                         pSurfaceFormats);
+    if(check_vulkan(vkGetPhysicalDeviceSurfaceFormatsKHR(
+                physical_device
+            ,   surface
+            ,   &out_scsd->formats_count_
+            ,   NULL
+            )
+        )
+    )
+    {
+        return false ;
+    }
+
+    require(out_scsd->formats_count_ < max_vulkan_surface_formats) ;
+    out_scsd->formats_count_ = min_u32(out_scsd->formats_count_, max_vulkan_surface_formats) ;
+
+    if(check_vulkan(vkGetPhysicalDeviceSurfaceFormatsKHR(
+                physical_device
+            ,   surface
+            ,   &out_scsd->formats_count_
+            ,   out_scsd->formats_
+            )
+        )
+    )
+    {
+        return false ;
+    }
+
+
+    // VkResult vkGetPhysicalDeviceSurfacePresentModesKHR(
+    //     VkPhysicalDevice                            physicalDevice,
+    //     VkSurfaceKHR                                surface,
+    //     uint32_t*                                   pPresentModeCount,
+    //     VkPresentModeKHR*                           pPresentModes);
+    if(check_vulkan(vkGetPhysicalDeviceSurfacePresentModesKHR(
+                physical_device
+            ,   surface
+            ,   &out_scsd->modes_count_
+            ,   NULL
+            )
+        )
+    )
+    {
+        return false ;
+    }
+
+    require(out_scsd->modes_count_ < max_vulkan_present_modes) ;
+    out_scsd->modes_count_ = min_u32(out_scsd->modes_count_, max_vulkan_present_modes) ;
+
+    if(check_vulkan(vkGetPhysicalDeviceSurfacePresentModesKHR(
+                physical_device
+            ,   surface
+            ,   &out_scsd->modes_count_
+            ,   out_scsd->modes_
+            )
+        )
+    )
+    {
+        return false ;
+    }
+
+    return true ;
+}
+
+
+static bool
 fill_physical_device_info(
     vulkan_physical_device_info *   out_physical_device_info
-,   VkPhysicalDevice                device
+,   VkPhysicalDevice                physical_device
+,   VkSurfaceKHR const              surface
 )
 {
     require(out_physical_device_info) ;
-    require(device) ;
+    require(physical_device) ;
 
-    out_physical_device_info->device_ = device ;
+    out_physical_device_info->device_ = physical_device ;
 
     // void vkGetPhysicalDeviceProperties(
     //     VkPhysicalDevice                            physicalDevice,
     //     VkPhysicalDeviceProperties*                 pProperties);
     vkGetPhysicalDeviceProperties(
-        device
+        physical_device
     ,   &out_physical_device_info->properties_
     ) ;
 
@@ -1487,7 +2900,7 @@ fill_physical_device_info(
     //     VkPhysicalDevice                            physicalDevice,
     //     VkPhysicalDeviceFeatures*                   pFeatures);
     vkGetPhysicalDeviceFeatures(
-        device
+        physical_device
     ,   &out_physical_device_info->features_
     ) ;
 
@@ -1495,7 +2908,7 @@ fill_physical_device_info(
     //     VkPhysicalDevice                            physicalDevice,
     //     VkPhysicalDeviceMemoryProperties*           pMemoryProperties);
     vkGetPhysicalDeviceMemoryProperties(
-        device
+        physical_device
     ,   &out_physical_device_info->memory_properties_
     ) ;
 
@@ -1505,17 +2918,20 @@ fill_physical_device_info(
     //     VkQueueFamilyProperties*                    pQueueFamilyProperties);
     //     vkGetPhysicalDeviceQueueFamilyProperties()
     vkGetPhysicalDeviceQueueFamilyProperties(
-        device
+        physical_device
     ,   &out_physical_device_info->queue_family_properties_count_
     ,   NULL
     ) ;
 
     log_debug_u32(out_physical_device_info->queue_family_properties_count_) ;
-    require(out_physical_device_info->queue_family_properties_count_ < max_vulkan_queue_family_properties)
-    out_physical_device_info->queue_family_properties_count_ = min_u32(out_physical_device_info->queue_family_properties_count_, max_vulkan_queue_family_properties) ;
+    require(out_physical_device_info->queue_family_properties_count_ < max_vulkan_queue_family_properties) ;
+    out_physical_device_info->queue_family_properties_count_ = min_u32(
+        out_physical_device_info->queue_family_properties_count_
+    ,   max_vulkan_queue_family_properties
+    ) ;
 
     vkGetPhysicalDeviceQueueFamilyProperties(
-        device
+        physical_device
     ,   &out_physical_device_info->queue_family_properties_count_
     ,   out_physical_device_info->queue_family_properties_
     ) ;
@@ -1527,7 +2943,7 @@ fill_physical_device_info(
     //     uint32_t*                                   pPropertyCount,
     //     VkExtensionProperties*                      pProperties);
     if(check_vulkan(vkEnumerateDeviceExtensionProperties(
-                device
+                physical_device
             ,   NULL
             ,   &out_physical_device_info->device_extensions_count_
             ,   NULL
@@ -1544,7 +2960,7 @@ fill_physical_device_info(
     out_physical_device_info->device_extensions_count_ = min_u32(out_physical_device_info->device_extensions_count_, max_vulkan_device_extensions) ;
 
     if(check_vulkan(vkEnumerateDeviceExtensionProperties(
-                device
+                physical_device
             ,   NULL
             ,   &out_physical_device_info->device_extensions_count_
             ,   out_physical_device_info->device_extensions_
@@ -1555,9 +2971,94 @@ fill_physical_device_info(
         return false ;
     }
 
+    out_physical_device_info->queue_families_indices_complete_ = find_queue_families(
+        &out_physical_device_info->queue_families_indices_
+    ,   physical_device
+    ,   out_physical_device_info->queue_family_properties_
+    ,   out_physical_device_info->queue_family_properties_count_
+    ,   surface
+    ) ;
+
+    if(out_physical_device_info->queue_families_indices_complete_)
+    {
+        add_to_unique_queue_families_indices(
+            out_physical_device_info->unique_queue_families_indices_
+        ,   &out_physical_device_info->unique_queue_families_indices_count_
+        ,   out_physical_device_info->queue_families_indices_.graphics_family_
+        ) ;
+
+        add_to_unique_queue_families_indices(
+            out_physical_device_info->unique_queue_families_indices_
+        ,   &out_physical_device_info->unique_queue_families_indices_count_
+        ,   out_physical_device_info->queue_families_indices_.present_family_
+        ) ;
+    }
+
+    add_to_desired_device_extension(
+        out_physical_device_info->desired_device_extensions_
+    ,   &out_physical_device_info->desired_device_extensions_count_
+    ,   vk_khr_swapchain_extension_name
+    ) ;
+
+
+    out_physical_device_info->desired_device_extensions_okay_ = has_all_extensions(
+        out_physical_device_info->device_extensions_
+    ,   out_physical_device_info->device_extensions_count_
+    ,   out_physical_device_info->desired_device_extensions_
+    ,   out_physical_device_info->desired_device_extensions_count_
+    ) ;
+
+    out_physical_device_info->max_usable_sample_count_ = get_max_usuable_sample_count(
+        &out_physical_device_info->properties_
+    ) ;
+
+    out_physical_device_info->sample_count_ = VK_SAMPLE_COUNT_1_BIT ;
+
+    if(check(create_swapchain_support_details(
+                &out_physical_device_info->swapchain_support_details_
+            ,   physical_device
+            ,   surface
+            )
+        )
+    )
+    {
+        return false ;
+    }
 
     return true ;
 }
+
+
+// static void
+// rate_device_suitability(
+//     uint32_t *                          out_score
+// ,   VkPhysicalDeviceProperties const *  properties
+// ,   VkPhysicalDeviceFeatures const *    features
+// )
+// {
+//     require(out_score) ;
+//     require(properties) ;
+//     require(features) ;
+
+//     uint32_t score = 0 ;
+
+//     *out_score = score ;
+
+//     if(!features->geometryShader)
+//     {
+//         return ;
+//     }
+
+//     if(properties->deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+//     {
+//         score += 1000 ;
+//     }
+
+//     score += properties->limits.maxImageDimension2D ;
+
+//     *out_score = score ;
+// }
+
 
 
 static void
@@ -1565,6 +3066,7 @@ fill_physical_devices_info(
     vulkan_physical_device_info *   out_physical_device_info
 ,   VkPhysicalDevice *              devices
 ,   uint32_t const                  devices_count
+,   VkSurfaceKHR const              surface
 )
 {
     require(out_physical_device_info) ;
@@ -1581,21 +3083,97 @@ fill_physical_devices_info(
         if(check(fill_physical_device_info(
                     &out_physical_device_info[i]
                 ,   devices[i]
+                ,   surface
                 )
             )
         )
         {
             require(0) ;
         }
-
-        dump_physical_device_properties(&out_physical_device_info[i].properties_) ;
-        dump_physical_device_features(&out_physical_device_info[i].features_) ;
-        dump_physical_device_memory_properties(&out_physical_device_info[i].memory_properties_) ;
-        dump_queue_family_properties(out_physical_device_info[i].queue_family_properties_, out_physical_device_info->queue_family_properties_count_) ;
-        dump_extension_properties(out_physical_device_info[i].device_extensions_, out_physical_device_info->device_extensions_count_) ;
     }
 
 }
+
+
+static void
+dump_physical_device_info(
+    vulkan_physical_device_info const * physical_device_info
+,   uint32_t const                      physical_device_info_count
+)
+{
+    for(
+        uint32_t i = 0
+    ;   i < physical_device_info_count
+    ;   ++i
+    )
+    {
+        vulkan_physical_device_info const * pdi = &physical_device_info[i] ;
+        dump_physical_device_properties(&pdi->properties_) ;
+        dump_physical_device_features(&pdi->features_) ;
+        dump_physical_device_memory_properties(&pdi->memory_properties_) ;
+        dump_queue_family_properties(pdi->queue_family_properties_, pdi->queue_family_properties_count_) ;
+        dump_extension_properties(pdi->device_extensions_, pdi->device_extensions_count_) ;
+        log_debug_u32(pdi->queue_families_indices_complete_) ;
+
+        log_debug_u32(pdi->unique_queue_families_indices_count_) ;
+        for(
+            uint32_t j = 0
+        ;   j < pdi->unique_queue_families_indices_count_
+        ;   ++j
+        )
+        {
+            log_debug_u32(j) ;
+            log_debug_u32(pdi->unique_queue_families_indices_[j]) ;
+        }
+
+        log_debug_u32(pdi->desired_device_extensions_okay_) ;
+        log_debug_u32(pdi->desired_device_extensions_count_) ;
+        log_debug_u32(pdi->max_usable_sample_count_) ;
+        log_debug_u32(pdi->swapchain_support_details_.formats_count_) ;
+        log_debug_u32(pdi->swapchain_support_details_.modes_count_) ;
+
+        dump_surface_capabilities(&pdi->swapchain_support_details_.capabilities_) ;
+
+        for(
+            uint32_t j = 0
+        ;   j < pdi->swapchain_support_details_.formats_count_
+        ;   ++j
+        )
+        {
+            log_debug_u32(j) ;
+            dump_surface_format_khr(&pdi->swapchain_support_details_.formats_[j]) ;
+        }
+
+        for(
+            uint32_t j = 0
+        ;   j < pdi->swapchain_support_details_.modes_count_
+        ;   ++j
+        )
+        {
+            log_debug_u32(j) ;
+            log_debug_str(dump_present_mode_khr(pdi->swapchain_support_details_.modes_[j])) ;
+        }
+    }
+}
+
+
+// static bool
+// create_queue_families(
+//     vulkan_physical_device_info *   physical_device_info
+// ,   uint32_t const                  physical_device_info_count
+// )
+// {
+//     for(
+//         uint32_t i = 0
+//     ;   i < physical_device_info_count
+//     ;   ++i
+//     )
+//     {
+//         vulkan_physical_device_info * pdi = &physical_device_info[i] ;
+
+//     }
+// }
+
 
 
 static bool
@@ -1605,6 +3183,12 @@ destroy_vulkan_instance(
 {
     require(vc) ;
     begin_timed_block() ;
+
+    if(vc->surface_)
+    {
+        vkDestroySurfaceKHR(vc->instance_, vc->surface_, NULL) ;
+        vc->surface_ = NULL ;
+    }
 
     destroy_debug_messenger(
         &vc->debug_messenger_
@@ -1757,6 +3341,17 @@ create_vulkan()
         return false ;
     }
 
+    if(check(create_surface(
+                &vc_->surface_
+            ,   vc_->instance_
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
     if(check(create_physical_devices(
                 vc_->physical_devices_
             ,   &vc_->physical_devices_count_
@@ -1774,6 +3369,12 @@ create_vulkan()
     fill_physical_devices_info(
         vc_->physical_devices_info_
     ,   vc_->physical_devices_
+    ,   vc_->physical_devices_count_
+    ,   vc_->surface_
+    ) ;
+
+    dump_physical_device_info(
+        vc_->physical_devices_info_
     ,   vc_->physical_devices_count_
     ) ;
 
