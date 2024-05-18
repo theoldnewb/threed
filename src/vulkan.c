@@ -23,6 +23,18 @@ static char const vk_destroy_debug_utils_messenger_ext_name[]   = "vkDestroyDebu
 static char const vk_khr_swapchain_extension_name[]             = VK_KHR_SWAPCHAIN_EXTENSION_NAME ;
 
 
+static VkFormat const desired_formats[] =
+{
+    VK_FORMAT_B8G8R8A8_UNORM
+,   VK_FORMAT_B8G8R8A8_SRGB
+,   VK_FORMAT_D32_SFLOAT
+,   VK_FORMAT_D32_SFLOAT_S8_UINT
+,   VK_FORMAT_D24_UNORM_S8_UINT
+} ;
+static uint32_t const desired_formats_count = array_count(desired_formats) ;
+static_require(array_count(desired_formats) < max_vulkan_desired_format_properties, "fix me!") ;
+
+
 
 #define max_dump_buffer 4096
 
@@ -2064,6 +2076,209 @@ dump_present_mode_khr(
 }
 
 
+static char const *
+dump_format_feature_flag_bit(
+    VkFormatFeatureFlagBits const bit
+)
+{
+    // typedef enum VkFormatFeatureFlagBits {
+    //     VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT = 0x00000001,
+    //     VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT = 0x00000002,
+    //     VK_FORMAT_FEATURE_STORAGE_IMAGE_ATOMIC_BIT = 0x00000004,
+    //     VK_FORMAT_FEATURE_UNIFORM_TEXEL_BUFFER_BIT = 0x00000008,
+    //     VK_FORMAT_FEATURE_STORAGE_TEXEL_BUFFER_BIT = 0x00000010,
+    //     VK_FORMAT_FEATURE_STORAGE_TEXEL_BUFFER_ATOMIC_BIT = 0x00000020,
+    //     VK_FORMAT_FEATURE_VERTEX_BUFFER_BIT = 0x00000040,
+    //     VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT = 0x00000080,
+    //     VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BLEND_BIT = 0x00000100,
+    //     VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT = 0x00000200,
+    //     VK_FORMAT_FEATURE_BLIT_SRC_BIT = 0x00000400,
+    //     VK_FORMAT_FEATURE_BLIT_DST_BIT = 0x00000800,
+    //     VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT = 0x00001000,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_FEATURE_TRANSFER_SRC_BIT = 0x00004000,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_FEATURE_TRANSFER_DST_BIT = 0x00008000,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_FEATURE_MIDPOINT_CHROMA_SAMPLES_BIT = 0x00020000,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_LINEAR_FILTER_BIT = 0x00040000,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_SEPARATE_RECONSTRUCTION_FILTER_BIT = 0x00080000,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_BIT = 0x00100000,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_FORCEABLE_BIT = 0x00200000,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_FEATURE_DISJOINT_BIT = 0x00400000,
+    // // Provided by VK_VERSION_1_1
+    //     VK_FORMAT_FEATURE_COSITED_CHROMA_SAMPLES_BIT = 0x00800000,
+    // // Provided by VK_VERSION_1_2
+    //     VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_MINMAX_BIT = 0x00010000,
+    // // Provided by VK_KHR_video_decode_queue
+    //     VK_FORMAT_FEATURE_VIDEO_DECODE_OUTPUT_BIT_KHR = 0x02000000,
+    // // Provided by VK_KHR_video_decode_queue
+    //     VK_FORMAT_FEATURE_VIDEO_DECODE_DPB_BIT_KHR = 0x04000000,
+    // // Provided by VK_KHR_acceleration_structure
+    //     VK_FORMAT_FEATURE_ACCELERATION_STRUCTURE_VERTEX_BUFFER_BIT_KHR = 0x20000000,
+    // // Provided by VK_EXT_filter_cubic
+    //     VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_CUBIC_BIT_EXT = 0x00002000,
+    // // Provided by VK_EXT_fragment_density_map
+    //     VK_FORMAT_FEATURE_FRAGMENT_DENSITY_MAP_BIT_EXT = 0x01000000,
+    // // Provided by VK_KHR_fragment_shading_rate
+    //     VK_FORMAT_FEATURE_FRAGMENT_SHADING_RATE_ATTACHMENT_BIT_KHR = 0x40000000,
+    // // Provided by VK_KHR_video_encode_queue
+    //     VK_FORMAT_FEATURE_VIDEO_ENCODE_INPUT_BIT_KHR = 0x08000000,
+    // // Provided by VK_KHR_video_encode_queue
+    //     VK_FORMAT_FEATURE_VIDEO_ENCODE_DPB_BIT_KHR = 0x10000000,
+    // // Provided by VK_IMG_filter_cubic
+    //     VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_CUBIC_BIT_IMG = VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_CUBIC_BIT_EXT,
+    // // Provided by VK_KHR_maintenance1
+    //     VK_FORMAT_FEATURE_TRANSFER_SRC_BIT_KHR = VK_FORMAT_FEATURE_TRANSFER_SRC_BIT,
+    // // Provided by VK_KHR_maintenance1
+    //     VK_FORMAT_FEATURE_TRANSFER_DST_BIT_KHR = VK_FORMAT_FEATURE_TRANSFER_DST_BIT,
+    // // Provided by VK_EXT_sampler_filter_minmax
+    //     VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_MINMAX_BIT_EXT = VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_MINMAX_BIT,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_FEATURE_MIDPOINT_CHROMA_SAMPLES_BIT_KHR = VK_FORMAT_FEATURE_MIDPOINT_CHROMA_SAMPLES_BIT,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_LINEAR_FILTER_BIT_KHR = VK_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_LINEAR_FILTER_BIT,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_SEPARATE_RECONSTRUCTION_FILTER_BIT_KHR = VK_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_SEPARATE_RECONSTRUCTION_FILTER_BIT,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_BIT_KHR = VK_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_BIT,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_FORCEABLE_BIT_KHR = VK_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_FORCEABLE_BIT,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_FEATURE_DISJOINT_BIT_KHR = VK_FORMAT_FEATURE_DISJOINT_BIT,
+    // // Provided by VK_KHR_sampler_ycbcr_conversion
+    //     VK_FORMAT_FEATURE_COSITED_CHROMA_SAMPLES_BIT_KHR = VK_FORMAT_FEATURE_COSITED_CHROMA_SAMPLES_BIT,
+    // } VkFormatFeatureFlagBits;
+
+    switch(bit)
+    {
+    case VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT:                                                           return "VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT" ;
+    case VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT:                                                           return "VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT" ;
+    case VK_FORMAT_FEATURE_STORAGE_IMAGE_ATOMIC_BIT:                                                    return "VK_FORMAT_FEATURE_STORAGE_IMAGE_ATOMIC_BIT" ;
+    case VK_FORMAT_FEATURE_UNIFORM_TEXEL_BUFFER_BIT:                                                    return "VK_FORMAT_FEATURE_UNIFORM_TEXEL_BUFFER_BIT" ;
+    case VK_FORMAT_FEATURE_STORAGE_TEXEL_BUFFER_BIT:                                                    return "VK_FORMAT_FEATURE_STORAGE_TEXEL_BUFFER_BIT" ;
+    case VK_FORMAT_FEATURE_STORAGE_TEXEL_BUFFER_ATOMIC_BIT:                                             return "VK_FORMAT_FEATURE_STORAGE_TEXEL_BUFFER_ATOMIC_BIT" ;
+    case VK_FORMAT_FEATURE_VERTEX_BUFFER_BIT:                                                           return "VK_FORMAT_FEATURE_VERTEX_BUFFER_BIT" ;
+    case VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT:                                                        return "VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT" ;
+    case VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BLEND_BIT:                                                  return "VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BLEND_BIT" ;
+    case VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT:                                                return "VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT" ;
+    case VK_FORMAT_FEATURE_BLIT_SRC_BIT:                                                                return "VK_FORMAT_FEATURE_BLIT_SRC_BIT" ;
+    case VK_FORMAT_FEATURE_BLIT_DST_BIT:                                                                return "VK_FORMAT_FEATURE_BLIT_DST_BIT" ;
+    case VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT:                                             return "VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT" ;
+    case VK_FORMAT_FEATURE_TRANSFER_SRC_BIT:                                                            return "VK_FORMAT_FEATURE_TRANSFER_SRC_BIT" ;
+    case VK_FORMAT_FEATURE_TRANSFER_DST_BIT:                                                            return "VK_FORMAT_FEATURE_TRANSFER_DST_BIT" ;
+    case VK_FORMAT_FEATURE_MIDPOINT_CHROMA_SAMPLES_BIT:                                                 return "VK_FORMAT_FEATURE_MIDPOINT_CHROMA_SAMPLES_BIT" ;
+    case VK_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_LINEAR_FILTER_BIT:                            return "VK_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_LINEAR_FILTER_BIT" ;
+    case VK_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_SEPARATE_RECONSTRUCTION_FILTER_BIT:           return "VK_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_SEPARATE_RECONSTRUCTION_FILTER_BIT" ;
+    case VK_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_BIT:           return "VK_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_BIT" ;
+    case VK_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_FORCEABLE_BIT: return "VK_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_FORCEABLE_BIT" ;
+    case VK_FORMAT_FEATURE_DISJOINT_BIT:                                                                return "VK_FORMAT_FEATURE_DISJOINT_BIT" ;
+    case VK_FORMAT_FEATURE_COSITED_CHROMA_SAMPLES_BIT:                                                  return "VK_FORMAT_FEATURE_COSITED_CHROMA_SAMPLES_BIT" ;
+    case VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_MINMAX_BIT:                                             return "VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_MINMAX_BIT" ;
+    case VK_FORMAT_FEATURE_VIDEO_DECODE_OUTPUT_BIT_KHR:                                                 return "VK_FORMAT_FEATURE_VIDEO_DECODE_OUTPUT_BIT_KHR" ;
+    case VK_FORMAT_FEATURE_VIDEO_DECODE_DPB_BIT_KHR:                                                    return "VK_FORMAT_FEATURE_VIDEO_DECODE_DPB_BIT_KHR" ;
+    case VK_FORMAT_FEATURE_ACCELERATION_STRUCTURE_VERTEX_BUFFER_BIT_KHR:                                return "VK_FORMAT_FEATURE_ACCELERATION_STRUCTURE_VERTEX_BUFFER_BIT_KHR" ;
+    case VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_CUBIC_BIT_EXT:                                          return "VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_CUBIC_BIT_EXT" ;
+    case VK_FORMAT_FEATURE_FRAGMENT_DENSITY_MAP_BIT_EXT:                                                return "VK_FORMAT_FEATURE_FRAGMENT_DENSITY_MAP_BIT_EXT" ;
+    case VK_FORMAT_FEATURE_FRAGMENT_SHADING_RATE_ATTACHMENT_BIT_KHR:                                    return "VK_FORMAT_FEATURE_FRAGMENT_SHADING_RATE_ATTACHMENT_BIT_KHR" ;
+    case VK_FORMAT_FEATURE_VIDEO_ENCODE_INPUT_BIT_KHR:                                                  return "VK_FORMAT_FEATURE_VIDEO_ENCODE_INPUT_BIT_KHR" ;
+    case VK_FORMAT_FEATURE_VIDEO_ENCODE_DPB_BIT_KHR:                                                    return "VK_FORMAT_FEATURE_VIDEO_ENCODE_DPB_BIT_KHR" ;
+    default:                                                                                            return "Unknown Format Feature Bit" ;
+    }
+}
+
+
+static char const *
+dump_format_feature_flag_bits(
+    VkFormatFeatureFlagBits const bits
+)
+{
+    VkFormatFeatureFlagBits const all_bits[] =
+    {
+        VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT
+    ,   VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT
+    ,   VK_FORMAT_FEATURE_STORAGE_IMAGE_ATOMIC_BIT
+    ,   VK_FORMAT_FEATURE_UNIFORM_TEXEL_BUFFER_BIT
+    ,   VK_FORMAT_FEATURE_STORAGE_TEXEL_BUFFER_BIT
+    ,   VK_FORMAT_FEATURE_STORAGE_TEXEL_BUFFER_ATOMIC_BIT
+    ,   VK_FORMAT_FEATURE_VERTEX_BUFFER_BIT
+    ,   VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT
+    ,   VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BLEND_BIT
+    ,   VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
+    ,   VK_FORMAT_FEATURE_BLIT_SRC_BIT
+    ,   VK_FORMAT_FEATURE_BLIT_DST_BIT
+    ,   VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT
+    ,   VK_FORMAT_FEATURE_TRANSFER_SRC_BIT
+    ,   VK_FORMAT_FEATURE_TRANSFER_DST_BIT
+    ,   VK_FORMAT_FEATURE_MIDPOINT_CHROMA_SAMPLES_BIT
+    ,   VK_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_LINEAR_FILTER_BIT
+    ,   VK_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_SEPARATE_RECONSTRUCTION_FILTER_BIT
+    ,   VK_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_BIT
+    ,   VK_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_FORCEABLE_BIT
+    ,   VK_FORMAT_FEATURE_DISJOINT_BIT
+    ,   VK_FORMAT_FEATURE_COSITED_CHROMA_SAMPLES_BIT
+    ,   VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_MINMAX_BIT
+    ,   VK_FORMAT_FEATURE_VIDEO_DECODE_OUTPUT_BIT_KHR
+    ,   VK_FORMAT_FEATURE_VIDEO_DECODE_DPB_BIT_KHR
+    ,   VK_FORMAT_FEATURE_ACCELERATION_STRUCTURE_VERTEX_BUFFER_BIT_KHR
+    ,   VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_CUBIC_BIT_EXT
+    ,   VK_FORMAT_FEATURE_FRAGMENT_DENSITY_MAP_BIT_EXT
+    ,   VK_FORMAT_FEATURE_FRAGMENT_SHADING_RATE_ATTACHMENT_BIT_KHR
+    ,   VK_FORMAT_FEATURE_VIDEO_ENCODE_INPUT_BIT_KHR
+    ,   VK_FORMAT_FEATURE_VIDEO_ENCODE_DPB_BIT_KHR
+    } ;
+    uint32_t const all_bits_count = array_count(all_bits) ;
+
+    static char dump_buffer[max_dump_buffer] = { 0 } ;
+    SDL_memset(dump_buffer, 0, max_dump_buffer) ;
+    size_t n = 0 ;
+
+    for(
+        uint32_t i = 0
+    ;   i < all_bits_count
+    ;   ++i
+    )
+    {
+        if(bits & all_bits[i])
+        {
+            n = SDL_strlcat(dump_buffer, dump_format_feature_flag_bit(all_bits[i]), max_dump_buffer) ;
+            require(n < max_dump_buffer) ;
+            n = SDL_strlcat(dump_buffer, " | ", max_dump_buffer) ;
+            require(n < max_dump_buffer) ;
+        }
+    }
+    return dump_buffer ;
+}
+
+
+static void
+dump_format_properties(
+    VkFormatProperties const *  format_properties
+)
+{
+    require(format_properties) ;
+
+    // typedef struct VkFormatProperties {
+    //     VkFormatFeatureFlags    linearTilingFeatures;
+    //     VkFormatFeatureFlags    optimalTilingFeatures;
+    //     VkFormatFeatureFlags    bufferFeatures;
+    // } VkFormatProperties;
+
+    log_debug_u32(format_properties->linearTilingFeatures) ;
+    log_debug_str(dump_format_feature_flag_bits(format_properties->linearTilingFeatures)) ;
+    log_debug_u32(format_properties->optimalTilingFeatures) ;
+    log_debug_str(dump_format_feature_flag_bits(format_properties->optimalTilingFeatures)) ;
+    log_debug_u32(format_properties->bufferFeatures) ;
+    log_debug_str(dump_format_feature_flag_bits(format_properties->bufferFeatures)) ;
+}
+
+
+
 static bool
 has_extension(
     VkExtensionProperties const *   haystack
@@ -2231,6 +2446,7 @@ create_instance_extensions_properties(
 {
     require(out_instance_extensions_properties) ;
     require(out_instance_extensions_properties_count) ;
+
     begin_timed_block() ;
 
     // VkResult vkEnumerateInstanceExtensionProperties(
@@ -2839,6 +3055,25 @@ create_swapchain_support_details(
     }
 
 
+    for(
+        uint32_t i = 0
+    ;   i < out_scsd->formats_count_
+    ;   ++i
+    )
+    {
+        // void vkGetPhysicalDeviceFormatProperties(
+        //     VkPhysicalDevice                            physicalDevice,
+        //     VkFormat                                    format,
+        //     VkFormatProperties*                         pFormatProperties);
+        //     vkGetPhysicalDeviceFormatProperties()
+        vkGetPhysicalDeviceFormatProperties(
+            physical_device
+        ,   out_scsd->formats_[i].format
+        ,   &out_scsd->formats_properties_[i]
+        ) ;
+    }
+
+
     // VkResult vkGetPhysicalDeviceSurfacePresentModesKHR(
     //     VkPhysicalDevice                            physicalDevice,
     //     VkSurfaceKHR                                surface,
@@ -2873,6 +3108,176 @@ create_swapchain_support_details(
 
     return true ;
 }
+
+
+static bool
+check_if_swapchain_support_is_adequate(
+    vulkan_swapchain_support_details const * scsd
+)
+{
+    require(scsd) ;
+    bool const is_adequate =
+        boolify(scsd->formats_count_)
+    &&  boolify(scsd->modes_count_)
+    ;
+
+    return is_adequate ;
+}
+
+
+static void
+create_desired_format_properties(
+    vulkan_desired_format_properties *  out_desired_format_properties
+,   uint32_t *                          out_desired_format_properties_count
+,   VkPhysicalDevice const              physical_device
+)
+{
+    require(out_desired_format_properties) ;
+    require(out_desired_format_properties_count) ;
+    require(physical_device) ;
+
+    *out_desired_format_properties_count = desired_formats_count ;
+    for(
+        uint32_t i = 0
+    ;   i < desired_formats_count
+    ;   ++i
+    )
+    {
+        out_desired_format_properties[i].format_ = desired_formats[i] ;
+        vkGetPhysicalDeviceFormatProperties(
+            physical_device
+        ,   out_desired_format_properties[i].format_
+        ,   &out_desired_format_properties[i].properties_
+        ) ;
+    }
+}
+
+
+static bool
+find_format_properties(
+    VkFormatProperties *                        out_format_properties
+,   vulkan_desired_format_properties const *    desired_format_properties
+,   uint32_t const                              desired_format_properties_count
+,   VkFormat const                              format
+)
+{
+    require(out_format_properties) ;
+    require(desired_format_properties) ;
+    for(
+        uint32_t i = 0
+    ;   i < desired_format_properties_count
+    ;   ++i
+    )
+    {
+        if(format == desired_format_properties[i].format_)
+        {
+            *out_format_properties = desired_format_properties[i].properties_ ;
+            return true ;
+        }
+    }
+
+    return false ;
+}
+
+
+static bool
+find_supported_format(
+    VkFormat *                                  out_format
+,   vulkan_desired_format_properties const *    desired_format_properties
+,   uint32_t const                              desired_format_properties_count
+,   VkFormat const *                            candidates
+,   uint32_t const                              candidates_count
+,   VkImageTiling const                         tiling
+,   VkFormatFeatureFlags const                  features
+)
+{
+    require(out_format) ;
+    require(desired_format_properties) ;
+    require(candidates) ;
+
+    for(
+        uint32_t i = 0
+    ;   i < candidates_count
+    ;   ++i
+    )
+    {
+        VkFormatProperties props = { 0 } ;
+        VkFormat const format = candidates[i] ;
+
+        if(check(find_format_properties(
+                    &props
+                ,   desired_format_properties
+                ,   desired_format_properties_count
+                ,   format
+                )
+            )
+        )
+        {
+            return false ;
+        }
+
+        if(
+            tiling == VK_IMAGE_TILING_LINEAR
+        &&  (props.linearTilingFeatures & features) == features
+        )
+        {
+            *out_format = format ;
+            return true ;
+        }
+        else if(
+            tiling == VK_IMAGE_TILING_OPTIMAL
+        &&  (props.optimalTilingFeatures & features) == features
+        )
+        {
+            *out_format = format ;
+            return true ;
+        }
+    }
+
+    require(0) ;
+    return false ;
+}
+
+
+static bool
+find_depth_format(
+    VkFormat *                                  out_format
+,   vulkan_desired_format_properties const *    desired_format_properties
+,   uint32_t const                              desired_format_properties_count
+)
+{
+    require(out_format) ;
+    require(desired_format_properties) ;
+
+    static VkFormat const candidates[] =
+    {
+        VK_FORMAT_D32_SFLOAT
+    ,   VK_FORMAT_D32_SFLOAT_S8_UINT
+    ,   VK_FORMAT_D24_UNORM_S8_UINT
+    } ;
+    static uint32_t const candidates_count = array_count(candidates) ;
+
+    VkFormat found_format = 0 ;
+
+    if(check(find_supported_format(
+                &found_format
+            ,   desired_format_properties
+            ,   desired_format_properties_count
+            ,   candidates
+            ,   candidates_count
+            ,   VK_IMAGE_TILING_OPTIMAL
+            ,   VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
+            )
+        )
+    )
+    {
+        return false ;
+    }
+
+    *out_format = found_format ;
+    return true ;
+}
+
 
 
 static bool
@@ -3025,6 +3430,27 @@ fill_physical_device_info(
         return false ;
     }
 
+    out_physical_device_info->swapchain_support_details_okay_ = check_if_swapchain_support_is_adequate(
+        &out_physical_device_info->swapchain_support_details_
+    ) ;
+
+    create_desired_format_properties(
+        out_physical_device_info->desired_format_properties_
+    ,   &out_physical_device_info->desired_format_properties_count_
+    ,   physical_device
+    ) ;
+
+    if(check(find_depth_format(
+                &out_physical_device_info->depth_format_
+            ,   out_physical_device_info->desired_format_properties_
+            ,   out_physical_device_info->desired_format_properties_count_
+            )
+        )
+    )
+    {
+        return false ;
+    }
+
     return true ;
 }
 
@@ -3142,6 +3568,7 @@ dump_physical_device_info(
         {
             log_debug_u32(j) ;
             dump_surface_format_khr(&pdi->swapchain_support_details_.formats_[j]) ;
+            dump_format_properties(&pdi->swapchain_support_details_.formats_properties_[j]) ;
         }
 
         for(
@@ -3153,7 +3580,86 @@ dump_physical_device_info(
             log_debug_u32(j) ;
             log_debug_str(dump_present_mode_khr(pdi->swapchain_support_details_.modes_[j])) ;
         }
+
+        log_debug_u32(pdi->desired_format_properties_count_) ;
+        for(
+            uint32_t j = 0
+        ;   j < pdi->desired_format_properties_count_
+        ;   ++j
+        )
+        {
+            log_debug_u32(j) ;
+            dump_format_properties(&pdi->desired_format_properties_[j].properties_) ;
+        }
+
+        log_debug_u32(pdi->depth_format_) ;
+        log_debug_str(dump_vk_format(pdi->depth_format_)) ;
+
     }
+}
+
+
+
+static bool
+is_physical_device_suiteable(
+    vulkan_physical_device_info const * physical_device
+)
+{
+    require(physical_device) ;
+
+    VkPhysicalDeviceProperties const *  pdp = &physical_device->properties_ ;
+    VkPhysicalDeviceFeatures const *    pdf = &physical_device->features_ ;
+
+    bool const type_ok      = pdp->deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU || true ;
+    bool const shader_ok    = boolify(pdf->geometryShader) ;
+    bool const aniso_ok     = boolify(pdf->samplerAnisotropy) ;
+    bool const qf_ok        = boolify(physical_device->queue_families_indices_complete_) ;
+    bool const ext_ok       = boolify(physical_device->desired_device_extensions_okay_) ;
+    bool const swap_ok      = boolify(physical_device->swapchain_support_details_okay_) ;
+
+    bool const all_ok =
+        type_ok
+    &&  shader_ok
+    &&  aniso_ok
+    &&  qf_ok
+    &&  ext_ok
+    &&  swap_ok
+    ;
+
+    return all_ok ;
+}
+
+
+static bool
+pick_physical_device(
+    vulkan_physical_device_info **      out_physical_device
+,   vulkan_physical_device_info *       physical_devices
+,   uint32_t const                      physical_devices_count
+)
+{
+    require(out_physical_device) ;
+    require(physical_devices) ;
+    require(physical_devices_count) ;
+
+    for(
+        uint32_t i = 0
+    ;   i < physical_devices_count
+    ;   ++i
+    )
+    {
+        vulkan_physical_device_info * pd = &physical_devices[i] ;
+        if(is_physical_device_suiteable(pd))
+        {
+            *out_physical_device = pd ;
+            log_debug("picking device %s (%p) max_msaa_samples=%d", pd->properties_.deviceName, pd->device_, pd->max_usable_sample_count_) ;
+            return true ;
+        }
+    }
+
+    *out_physical_device = NULL ;
+    require(0) ;
+    return false ;
+
 }
 
 
@@ -3377,6 +3883,19 @@ create_vulkan()
         vc_->physical_devices_info_
     ,   vc_->physical_devices_count_
     ) ;
+
+    if(check(pick_physical_device(
+                &vc_->picked_physical_device_
+            ,   vc_->physical_devices_info_
+            ,   vc_->physical_devices_count_
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
 
 
     end_timed_block() ;

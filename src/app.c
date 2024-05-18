@@ -72,6 +72,23 @@ hello_sdl3()
 }
 
 
+static void
+hello_debug_test_2()
+{
+    begin_timed_block() ;
+    end_timed_block() ;
+}
+
+
+static void
+hello_debug_test()
+{
+    begin_timed_block() ;
+    hello_debug_test_2() ;
+    end_timed_block() ;
+}
+
+
 void
 hello_debug()
 {
@@ -81,6 +98,8 @@ hello_debug()
     begin_timed_block() ;
 
     SDL_Delay(30) ;
+
+    hello_debug_test() ;
 
     end_timed_block() ;
 }
@@ -427,6 +446,7 @@ main_app(
 
     if(check(create_vulkan()))
     {
+        end_timed_block() ;
         destroy_app() ;
         return 1 ;
     }
@@ -446,7 +466,7 @@ main_app(
     destroy_vulkan() ;
 
     end_timed_block() ;
-    //dump_all_debug_counter_keepers() ;
+    dump_all_debug_counter_keepers() ;
     destroy_app() ;
     return 0 ;
 }

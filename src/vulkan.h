@@ -12,13 +12,22 @@
 #define max_vulkan_unique_queue_family_indices  4
 #define max_vulkan_desired_device_extensions    8
 #define max_vulkan_surface_formats              8
-#define max_vulkan_present_modes                 8
+#define max_vulkan_present_modes                8
+#define max_vulkan_desired_format_properties    8
 
+
+typedef struct vulkan_desired_format_properties
+{
+    VkFormat            format_ ;
+    VkFormatProperties  properties_ ;
+
+} vulkan_desired_format_properties ;
 
 
 typedef struct vulkan_swapchain_support_details
 {
     VkSurfaceCapabilitiesKHR    capabilities_ ;
+    VkFormatProperties          formats_properties_[max_vulkan_surface_formats] ;
     VkSurfaceFormatKHR          formats_[max_vulkan_surface_formats] ;
     uint32_t                    formats_count_ ;
     VkPresentModeKHR            modes_[max_vulkan_present_modes] ;
@@ -65,6 +74,11 @@ typedef struct vulkan_physical_device_info
     VkSampleCountFlagBits       sample_count_ ;
 
     vulkan_swapchain_support_details    swapchain_support_details_ ;
+    VkBool32                            swapchain_support_details_okay_ ;
+    vulkan_desired_format_properties    desired_format_properties_[max_vulkan_desired_format_properties] ;
+    uint32_t                            desired_format_properties_count_ ;
+
+    VkFormat    depth_format_ ;
 
 } vulkan_physical_device_info ;
 
@@ -101,6 +115,7 @@ typedef struct vulkan_context
 
     VkSurfaceKHR    surface_ ;
 
+    vulkan_physical_device_info *   picked_physical_device_ ;
 
 } vulkan_context ;
 

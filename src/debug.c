@@ -85,6 +85,9 @@ typedef struct counter_keeper
     uint64_t            elapsed_count_ ;
     uint64_t            delta_count_[max_delta_count] ;
 
+    uintptr_t           b_stack_ptr_ ;
+    uintptr_t           e_stack_ptr_ ;
+
 } counter_keeper ;
 
 
@@ -95,6 +98,8 @@ typedef struct counter_keeper_storage
     counter_keeper      counter_keeper_[max_counter_keeper] ;
     counter_keeper *    counter_keeper_stack_[max_counter_keeper] ;
     counter_keeper *    counter_keeper_hash_[max_counter_keeper] ;
+    uint64_t            begin_count_ ;
+    uint64_t            end_count_ ;
 
 } counter_keeper_storage ;
 
@@ -103,7 +108,7 @@ typedef struct counter_keeper_storage
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 //
-static counter_keeper_storage   the_cks_ ;
+static counter_keeper_storage   the_cks_ = { 0 } ;
 static counter_keeper_storage * cks_ = &the_cks_ ;
 
 
@@ -139,6 +144,8 @@ dump_counter_keeper(
     log_debug_u64(ck->elapsed_count_/1000) ;
     log_debug_u64(ck->elapsed_count_/1000000) ;
     log_debug_u64(ck->elapsed_count_/1000000000) ;
+    log_debug_ptr((void const *)ck->b_stack_ptr_) ;
+    log_debug_ptr((void const *)ck->e_stack_ptr_) ;
 
     for(
         uint32_t i = 0
@@ -168,6 +175,9 @@ dump_all_debug_counter_keepers()
         log_debug_u32(i) ;
         dump_counter_keeper(&cks_->counter_keeper_[i]) ;
     }
+
+    log_debug_u64(cks_->begin_count_) ;
+    log_debug_u64(cks_->end_count_) ;
 }
 
 
@@ -197,6 +207,8 @@ make_counter_keeper(
     ck->hit_count_          = 0 ;
     ck->start_count_        = 0 ;
     ck->end_count_          = 0 ;
+    ck->b_stack_ptr_        = 0 ;
+    ck->e_stack_ptr_        = 0 ;
     SDL_memset(ck->delta_count_, 0, sizeof(ck->delta_count_)) ;
 
     return ck ;
@@ -324,6 +336,8 @@ begin_timed_block_impl(
 
     log_output_impl(file, func, line, LOG_PRI_DEBUG, "enter %s", func) ;
 
+    ++cks_->begin_count_ ;
+
     file_func_line_info ffli = { 0 } ;
     ffli.file_ = file ;
     ffli.func_ = func ;
@@ -345,6 +359,8 @@ begin_timed_block_impl(
 
     ck->hit_count_++ ;
     ck->start_count_ = get_app_time() ;
+    ck->b_stack_ptr_ = (uintptr_t) get_stack_ptr() ;
+    ck->e_stack_ptr_ = 0 ;
 }
 
 
@@ -360,6 +376,8 @@ end_timed_block_impl(
     require(cks_) ;
 
     log_output_impl(file, func, line, LOG_PRI_DEBUG, "leave %s", func) ;
+
+    ++cks_->end_count_ ;
 
     file_func_line_info ffli = { 0 } ;
     ffli.file_ = file ;
@@ -384,6 +402,15 @@ end_timed_block_impl(
 
     ++ck->delta_count_index_ ;
     ck->delta_count_index_ &= max_delta_count_mask ;
+
+    ck->e_stack_ptr_ = (uintptr_t) get_stack_ptr() ;
+#ifdef  __linux__
+    // if(ck->b_stack_ptr_ != ck->e_stack_ptr_)
+    // {
+    //     dump_all_debug_counter_keepers() ;
+    // }
+    //require(ck->b_stack_ptr_ == ck->e_stack_ptr_) ;
+#endif
 }
 
 
