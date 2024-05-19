@@ -14,7 +14,7 @@
 #define max_vulkan_surface_formats              8
 #define max_vulkan_present_modes                8
 #define max_vulkan_desired_format_properties    8
-
+#define max_vulkan_swapchain_images             4
 
 typedef struct vulkan_desired_format_properties
 {
@@ -116,6 +116,19 @@ typedef struct vulkan_context
     VkSurfaceKHR    surface_ ;
 
     vulkan_physical_device_info *   picked_physical_device_ ;
+
+    VkDevice device_ ;
+    VkQueue graphics_queue_ ;
+    VkQueue present_queue_ ;
+
+    VkSwapchainKHR      swapchain_ ;
+    VkSurfaceFormatKHR  swapchain_surface_format_ ;
+    VkPresentModeKHR    swapchain_present_mode_ ;
+    VkExtent2D          swapchain_extent_ ;
+    uint32_t            swapchain_images_count_ ;
+    VkImage             swapchain_images_[max_vulkan_swapchain_images] ;
+    VkImageView         swapchain_views_[max_vulkan_swapchain_images] ;
+    uint32_t            desired_swapchain_image_count_ ;
 
 } vulkan_context ;
 

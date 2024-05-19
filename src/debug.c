@@ -78,15 +78,11 @@ typedef struct counter_keeper
     counter_keeper *    parent_ ;
     uint32_t            delta_count_index_ ;
     uint32_t            indent_ ;
-
     uint64_t            hit_count_ ;
     uint64_t            start_count_ ;
     uint64_t            end_count_ ;
     uint64_t            elapsed_count_ ;
     uint64_t            delta_count_[max_delta_count] ;
-
-    uintptr_t           b_stack_ptr_ ;
-    uintptr_t           e_stack_ptr_ ;
 
 } counter_keeper ;
 
@@ -144,8 +140,6 @@ dump_counter_keeper(
     log_debug_u64(ck->elapsed_count_/1000) ;
     log_debug_u64(ck->elapsed_count_/1000000) ;
     log_debug_u64(ck->elapsed_count_/1000000000) ;
-    log_debug_ptr((void const *)ck->b_stack_ptr_) ;
-    log_debug_ptr((void const *)ck->e_stack_ptr_) ;
 
     for(
         uint32_t i = 0
@@ -207,8 +201,6 @@ make_counter_keeper(
     ck->hit_count_          = 0 ;
     ck->start_count_        = 0 ;
     ck->end_count_          = 0 ;
-    ck->b_stack_ptr_        = 0 ;
-    ck->e_stack_ptr_        = 0 ;
     SDL_memset(ck->delta_count_, 0, sizeof(ck->delta_count_)) ;
 
     return ck ;
@@ -359,8 +351,6 @@ begin_timed_block_impl(
 
     ck->hit_count_++ ;
     ck->start_count_ = get_app_time() ;
-    ck->b_stack_ptr_ = (uintptr_t) get_stack_ptr() ;
-    ck->e_stack_ptr_ = 0 ;
 }
 
 
@@ -374,6 +364,7 @@ end_timed_block_impl(
     require(file) ;
     require(func) ;
     require(cks_) ;
+
 
     log_output_impl(file, func, line, LOG_PRI_DEBUG, "leave %s", func) ;
 
@@ -402,15 +393,15 @@ end_timed_block_impl(
 
     ++ck->delta_count_index_ ;
     ck->delta_count_index_ &= max_delta_count_mask ;
+}
 
-    ck->e_stack_ptr_ = (uintptr_t) get_stack_ptr() ;
-#ifdef  __linux__
-    // if(ck->b_stack_ptr_ != ck->e_stack_ptr_)
-    // {
-    //     dump_all_debug_counter_keepers() ;
-    // }
-    //require(ck->b_stack_ptr_ == ck->e_stack_ptr_) ;
-#endif
+
+int
+check_begin_end_timed_block_mismatch()
+{
+    log_debug_u64(cks_->begin_count_) ;
+    log_debug_u64(cks_->end_count_) ;
+    return cks_->begin_count_ == cks_->end_count_ ;
 }
 
 

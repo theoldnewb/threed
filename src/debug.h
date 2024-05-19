@@ -25,6 +25,10 @@ void
 dump_all_debug_counter_keepers() ;
 
 
+int
+check_begin_end_timed_block_mismatch() ;
+
+
 #ifdef  ENABLE_TIMED_BLOCK
 #define begin_timed_block() begin_timed_block_impl(__FILE__, __func__, __LINE__)
 #define end_timed_block()   end_timed_block_impl(__FILE__, __func__, __LINE__)
