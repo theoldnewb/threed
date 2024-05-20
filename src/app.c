@@ -13,6 +13,8 @@
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_timer.h>
 #include <SDL3/SDL_filesystem.h>
+#include <SDL3/SDL_iostream.h>
+
 
 #include <cglm/mat4.h>
 #include <cglm/io.h>
@@ -176,7 +178,12 @@ bool
 update_app()
 {
     //begin_timed_block() ;
-    //SDL_Delay(10) ;
+
+    if(check(draw_vulkan()))
+    {
+        return false ;
+    }
+
     //end_timed_block() ;
     return true ;
 }
@@ -557,4 +564,111 @@ alloc_array_impl(
     ) ;
 
     return p ;
+}
+
+
+void
+free_memory_impl(
+    void *          mem
+,   char const *    expr
+,   char const *    file
+,   char const *    func
+,   int const       line
+)
+{
+    require(mem) ;
+
+    log_output_impl(
+        file
+    ,   func
+    ,   line
+    ,   LOG_PRI_DEBUG
+    ,   "freeing %s (%p)"
+    ,   expr
+    ,   mem
+    ) ;
+
+    if(mem)
+    {
+        SDL_free(mem) ;
+    }
+}
+
+
+bool
+load_file(
+    void **             out_memory
+,   uint64_t *          out_size
+,   char const * const  fullname
+)
+{
+    require(out_memory) ;
+    require(out_size) ;
+    require(fullname) ;
+    require(*fullname) ;
+    begin_timed_block() ;
+    SDL_IOStream * ios = NULL ;
+
+    if(check_sdl(ios = SDL_IOFromFile(fullname, "rb")))
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
+    Sint64 const file_size = SDL_GetIOSize(ios) ;
+    if(check_sdl(file_size >= 0))
+    {
+        if(check_sdl(0 == SDL_CloseIO(ios)))
+        {
+            end_timed_block() ;
+            return false ;
+        }
+        end_timed_block() ;
+        return false ;
+    }
+
+    void * p = NULL ;
+    Uint64 n = 0 ;
+    Uint64 const s = (Uint64)file_size ;
+    if(s)
+    {
+        p = alloc_memory(void, s) ;
+        if(check(p))
+        {
+            if(check_sdl(0 == SDL_CloseIO(ios)))
+            {
+                end_timed_block() ;
+                return false ;
+            }
+            end_timed_block() ;
+            return false ;
+        }
+
+        n = SDL_ReadIO(ios, p, s) ;
+        if(check(n == s))
+        {
+            free_memory(p) ;
+            if(check_sdl(0 == SDL_CloseIO(ios)))
+            {
+                end_timed_block() ;
+                return false ;
+            }
+            end_timed_block() ;
+            return false ;
+        }
+    }
+    require(s == n) ;
+
+    if(check_sdl(0 == SDL_CloseIO(ios)))
+    {
+        free_memory(p) ;
+        end_timed_block() ;
+        return false ;
+    }
+
+    *out_memory = p ;
+    *out_size   = n ;
+
+    end_timed_block() ;
+    return true ;
 }

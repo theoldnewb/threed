@@ -1,6 +1,9 @@
 #pragma once
 
 
+#include "defines.h"
+
+
 int
 check_impl(
     int             result
@@ -44,7 +47,7 @@ check_vulkan_impl(
 #ifdef  ENABLE_CHECK
 #define check(a)        check_impl((a)?1:0, #a, __FILE__, __func__, __LINE__)
 #define check_c(a)      check_c_impl(a, #a, __FILE__, __func__, __LINE__)
-#define check_sdl(a)    check_sdl_impl(a, #a, __FILE__, __func__, __LINE__)
+#define check_sdl(a)    check_sdl_impl(boolify(a), #a, __FILE__, __func__, __LINE__)
 #define check_vulkan(a) check_vulkan_impl(a, #a, __FILE__, __func__, __LINE__)
 #else
 #define check(a)        (!(a))

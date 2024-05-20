@@ -130,6 +130,26 @@ typedef struct vulkan_context
     VkImageView         swapchain_views_[max_vulkan_swapchain_images] ;
     uint32_t            desired_swapchain_image_count_ ;
 
+
+    void *              vert_shader_memory_ ;
+    uint64_t            vert_shader_memory_size_ ;
+    VkShaderModule      vert_shader_ ;
+    void *              frag_shader_memory_ ;
+    uint64_t            frag_shader_memory_size_ ;
+    VkShaderModule      frag_shader_ ;
+
+    VkRenderPass        render_pass_ ;
+    VkPipelineLayout    pipeline_layout_ ;
+    VkPipeline          graphics_pipeline_ ;
+
+    VkFramebuffer   framebuffers_[max_vulkan_swapchain_images] ;
+    VkCommandPool   command_pool_ ;
+    VkCommandBuffer command_buffer_ ;
+
+    VkSemaphore image_available_semaphore_ ;
+    VkSemaphore render_finished_semaphore_ ;
+    VkFence     in_flight_fence_ ;
+
 } vulkan_context ;
 
 
@@ -140,3 +160,6 @@ create_vulkan() ;
 void
 destroy_vulkan() ;
 
+
+int
+draw_vulkan() ;
