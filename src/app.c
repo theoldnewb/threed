@@ -179,6 +179,11 @@ update_app()
 {
     //begin_timed_block() ;
 
+    if(app_->minimized_)
+    {
+        return true ;
+    }
+
     if(check(draw_vulkan()))
     {
         return false ;
@@ -186,6 +191,27 @@ update_app()
 
     //end_timed_block() ;
     return true ;
+}
+
+
+void
+resize_app(
+    int const new_width
+,   int const new_height
+)
+{
+    if(
+        new_width   == app_->window_width_
+    &&  new_height  == app_->window_height_
+    )
+    {
+        return ;
+    }
+
+    app_->window_width_ = new_width ;
+    app_->window_height_ = new_height ;
+
+    resize_vulkan() ;
 }
 
 

@@ -15,6 +15,8 @@
 #define max_vulkan_present_modes                8
 #define max_vulkan_desired_format_properties    8
 #define max_vulkan_swapchain_images             4
+#define max_vulkan_frames_in_flight             2
+
 
 typedef struct vulkan_desired_format_properties
 {
@@ -26,6 +28,8 @@ typedef struct vulkan_desired_format_properties
 
 typedef struct vulkan_swapchain_support_details
 {
+    VkPhysicalDevice            physical_device_ ;
+    VkSurfaceKHR                surface_ ;
     VkSurfaceCapabilitiesKHR    capabilities_ ;
     VkFormatProperties          formats_properties_[max_vulkan_surface_formats] ;
     VkSurfaceFormatKHR          formats_[max_vulkan_surface_formats] ;
@@ -144,11 +148,13 @@ typedef struct vulkan_context
 
     VkFramebuffer   framebuffers_[max_vulkan_swapchain_images] ;
     VkCommandPool   command_pool_ ;
-    VkCommandBuffer command_buffer_ ;
+    VkCommandBuffer command_buffer_[max_vulkan_frames_in_flight] ;
 
-    VkSemaphore image_available_semaphore_ ;
-    VkSemaphore render_finished_semaphore_ ;
-    VkFence     in_flight_fence_ ;
+    VkSemaphore image_available_semaphore_[max_vulkan_frames_in_flight] ;
+    VkSemaphore render_finished_semaphore_[max_vulkan_frames_in_flight] ;
+    VkFence     in_flight_fence_[max_vulkan_frames_in_flight] ;
+    uint32_t    current_frame_ ;
+    VkBool32    resizing_ ;
 
 } vulkan_context ;
 
@@ -163,3 +169,6 @@ destroy_vulkan() ;
 
 int
 draw_vulkan() ;
+
+void
+resize_vulkan() ;
