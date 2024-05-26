@@ -84,3 +84,8 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE Vulkan::Vulkan
 )
 
+if(LINUX)
+target_link_libraries(${PROJECT_NAME}
+    PRIVATE m
+)
+endif()

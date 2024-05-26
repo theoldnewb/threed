@@ -7,6 +7,11 @@
 #include "math.h"
 
 #include <SDL3/SDL_vulkan.h>
+#include <cglm/vec2.h>
+#include <cglm/vec3.h>
+#include <cglm/mat4.h>
+#include <cglm/affine.h>
+#include <cglm/cam.h>
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -23,6 +28,94 @@ static char const vk_destroy_debug_utils_messenger_ext_name[]   = "vkDestroyDebu
 static char const vk_khr_swapchain_extension_name[]             = VK_KHR_SWAPCHAIN_EXTENSION_NAME ;
 
 
+
+
+
+
+
+
+typedef struct vertex {
+    vec2 pos ;
+    vec3 color ;
+} vertex;
+static uint32_t const vertex_size = sizeof(vertex) ;
+
+static vertex const vertices[] =
+{
+    { {-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f} }
+,   { { 0.5f, -0.5f}, {0.0f, 1.0f, 1.0f} }
+,   { { 0.5f,  0.5f}, {0.0f, 0.0f, 1.0f} }
+,   { {-0.5f,  0.5f}, {1.0f, 1.0f, 1.0f} }
+} ;
+static uint32_t const vertices_size = sizeof(vertices) ;
+static uint32_t const vertices_count = array_count(vertices) ;
+
+
+static uint16_t const indices[] =
+{
+    0, 1, 2
+,   2, 3, 0
+} ;
+static uint32_t const   indices_size = sizeof(indices) ;
+static uint32_t const   indices_count = array_count(indices) ;
+
+
+typedef struct uniform_buffer_object
+{
+    mat4 model ;
+    mat4 view ;
+    mat4 proj ;
+} uniform_buffer_object ;
+
+static uint32_t const uniform_buffer_object_size = sizeof(uniform_buffer_object) ;
+
+
+
+static VkVertexInputBindingDescription
+get_binding_description()
+{
+    // typedef struct VkVertexInputBindingDescription {
+    //     uint32_t             binding;
+    //     uint32_t             stride;
+    //     VkVertexInputRate    inputRate;
+    // } VkVertexInputBindingDescription;
+    static VkVertexInputBindingDescription binding_description = { 0 } ;
+    binding_description.binding     = 0 ;
+    binding_description.stride      = vertex_size ;
+    binding_description.inputRate   = VK_VERTEX_INPUT_RATE_VERTEX ;
+
+    return binding_description ;
+}
+
+
+static void
+get_attribute_descriptions(
+    VkVertexInputAttributeDescription * viad
+,   uint32_t const                      viad_count
+)
+{
+    require(viad) ;
+    require(viad_count == 2) ;
+    // typedef struct VkVertexInputAttributeDescription {
+    //     uint32_t    location;
+    //     uint32_t    binding;
+    //     VkFormat    format;
+    //     uint32_t    offset;
+    // } VkVertexInputAttributeDescription;
+    viad[0].location    = 0 ;
+    viad[0].binding     = 0 ;
+    viad[0].format      = VK_FORMAT_R32G32_SFLOAT ;
+    viad[0].offset      = offsetof(vertex, pos) ;
+
+    viad[1].location    = 1 ;
+    viad[1].binding     = 0 ;
+    viad[1].format      = VK_FORMAT_R32G32B32_SFLOAT ;
+    viad[1].offset      = offsetof(vertex, color) ;
+
+}
+
+
+
 static VkFormat const desired_formats[] =
 {
     VK_FORMAT_B8G8R8A8_UNORM
@@ -37,6 +130,59 @@ static_require(array_count(desired_formats) < max_vulkan_desired_format_properti
 
 
 #define max_dump_buffer 4096
+
+
+
+static void
+update_uniform_buffer(
+    vulkan_context *    vc
+,   uint32_t const      current_frame
+)
+{
+    require(vc) ;
+    require(current_frame < max_vulkan_frames_in_flight) ;
+
+    static bool once = true ;
+    static uint64_t previous_time = 0 ;
+
+    uint64_t const current_time = get_app_time() ;
+
+    if(once)
+    {
+        once = false ;
+        previous_time = current_time ;
+    }
+
+    uint64_t const delta_time = (current_time - previous_time) ;
+    double const fractional_seconds = (double) delta_time * get_performance_frequency_inverse() ;
+    //log_debug("%f", fractional_seconds) ;
+
+    uniform_buffer_object ubo = { 0 } ;
+
+    // glm_mat4_identity(ubo.model) ;
+    // glm_mat4_identity(ubo.view) ;
+    // glm_mat4_identity(ubo.proj) ;
+
+    float angle = fractional_seconds ;
+    vec3 axis = {0.0f, 0.0f, 1.0f} ;
+    glm_rotate_make(ubo.model, angle, axis) ;
+
+    vec3 eye    = { 1.5f, 1.5f, 1.5f } ;
+    vec3 center = { 0.0f, 0.0f, 0.0f } ;
+    vec3 up     = { 0.0f, 0.0f, 1.0f } ;
+    glm_lookat(eye, center, up, ubo.view) ;
+
+    float fovy = glm_rad(45.0f) ;
+    float aspect_ratio = (float)vc->swapchain_extent_.width / (float)vc->swapchain_extent_.height ;
+    float near = 0.1f ;
+    float far = 10.f ;
+    glm_perspective(fovy, aspect_ratio, near, far, ubo.proj) ;
+
+    SDL_memcpy(vc->uniform_buffers_mapped_[current_frame], &ubo, sizeof(ubo)) ;
+}
+
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -3935,9 +4081,10 @@ choose_swapchain_present_mode(
     )
     {
         bool const mode_ok =
-            present_modes[i] == VK_PRESENT_MODE_MAILBOX_KHR ;
+            //present_modes[i] == VK_PRESENT_MODE_MAILBOX_KHR ;
             //present_modes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR ;
             //present_modes[i] == VK_PRESENT_MODE_FIFO_RELAXED_KHR ;
+            present_modes[i] == VK_PRESENT_MODE_FIFO_KHR ;
 
         if(mode_ok)
         {
@@ -4730,6 +4877,10 @@ create_graphics_pipeline(
 
 
 
+    VkVertexInputBindingDescription     vibd = get_binding_description() ;
+    VkVertexInputAttributeDescription   viad[2] = { 0 } ;
+    get_attribute_descriptions(viad, 2) ;
+
     // typedef struct VkPipelineVertexInputStateCreateInfo {
     //     VkStructureType                             sType;
     //     const void*                                 pNext;
@@ -4743,10 +4894,10 @@ create_graphics_pipeline(
     pvisci.sType                            = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO ;
     pvisci.pNext                            = NULL ;
     pvisci.flags                            = 0 ;
-    pvisci.vertexBindingDescriptionCount    = 0 ;
-    pvisci.pVertexBindingDescriptions       = NULL ;
-    pvisci.vertexAttributeDescriptionCount  = 0 ;
-    pvisci.pVertexAttributeDescriptions     = NULL ;
+    pvisci.vertexBindingDescriptionCount    = 1 ;
+    pvisci.pVertexBindingDescriptions       = &vibd ;
+    pvisci.vertexAttributeDescriptionCount  = 2 ;
+    pvisci.pVertexAttributeDescriptions     = viad ;
 
 
     // typedef struct VkPipelineInputAssemblyStateCreateInfo {
@@ -4842,8 +4993,8 @@ create_graphics_pipeline(
     prsci.depthClampEnable          = VK_FALSE ;
     prsci.rasterizerDiscardEnable   = VK_FALSE ;
     prsci.polygonMode               = VK_POLYGON_MODE_FILL ;
-    prsci.cullMode                  = VK_CULL_MODE_NONE ; // VK_CULL_MODE_BACK_BIT ;
-    prsci.frontFace                 = VK_FRONT_FACE_CLOCKWISE ;
+    prsci.cullMode                  = VK_CULL_MODE_BACK_BIT ;
+    prsci.frontFace                 = VK_FRONT_FACE_COUNTER_CLOCKWISE ;
     prsci.depthBiasEnable           = VK_FALSE ;
     prsci.depthBiasConstantFactor   = 0.0f ;
     prsci.depthBiasClamp            = 0.0f ;
@@ -4940,8 +5091,8 @@ create_graphics_pipeline(
     plci.sType                      = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO ;
     plci.pNext                      = NULL ;
     plci.flags                      = 0 ;
-    plci.setLayoutCount             = 0 ;
-    plci.pSetLayouts                = NULL ;
+    plci.setLayoutCount             = 1 ;
+    plci.pSetLayouts                = &vc->descriptor_set_layout_ ;
     plci.pushConstantRangeCount     = 0 ;
     plci.pPushConstantRanges        = NULL ;
 
@@ -5363,6 +5514,31 @@ record_command_buffer(
     ) ;
 
 
+    VkBuffer vertex_buffers[] = { vc->vertex_buffer_} ;
+    VkDeviceSize offsets[] = { 0 } ;
+
+    // void vkCmdBindVertexBuffers(
+    //     VkCommandBuffer                             commandBuffer,
+    //     uint32_t                                    firstBinding,
+    //     uint32_t                                    bindingCount,
+    //     const VkBuffer*                             pBuffers,
+    //     const VkDeviceSize*                         pOffsets);
+    vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, offsets) ;
+
+
+    // void vkCmdBindIndexBuffer(
+    //     VkCommandBuffer                             commandBuffer,
+    //     VkBuffer                                    buffer,
+    //     VkDeviceSize                                offset,
+    //     VkIndexType                                 indexType);
+    vkCmdBindIndexBuffer(
+        command_buffer
+    ,   vc->index_buffer_
+    ,   0
+    ,   VK_INDEX_TYPE_UINT16
+    ) ;
+
+
     static VkViewport viewport = { 0 } ;
     viewport.x          = 0.0f ;
     viewport.y          = 0.0f ;
@@ -5392,15 +5568,42 @@ record_command_buffer(
     //     const VkRect2D*                             pScissors);
     vkCmdSetScissor(command_buffer, 0, 1, &scissor) ;
 
+    // // void vkCmdDraw(
+    // //     VkCommandBuffer                             commandBuffer,
+    // //     uint32_t                                    vertexCount,
+    // //     uint32_t                                    instanceCount,
+    // //     uint32_t                                    firstVertex,
+    // //     uint32_t                                    firstInstance);
+    // vkCmdDraw(command_buffer, vertices_count, 1, 0, 0) ;
 
-    // void vkCmdDraw(
+    // void vkCmdBindDescriptorSets(
     //     VkCommandBuffer                             commandBuffer,
-    //     uint32_t                                    vertexCount,
-    //     uint32_t                                    instanceCount,
-    //     uint32_t                                    firstVertex,
-    //     uint32_t                                    firstInstance);
-    vkCmdDraw(command_buffer, 3, 1, 0, 0) ;
+    //     VkPipelineBindPoint                         pipelineBindPoint,
+    //     VkPipelineLayout                            layout,
+    //     uint32_t                                    firstSet,
+    //     uint32_t                                    descriptorSetCount,
+    //     const VkDescriptorSet*                      pDescriptorSets,
+    //     uint32_t                                    dynamicOffsetCount,
+    //     const uint32_t*                             pDynamicOffsets);
+    vkCmdBindDescriptorSets(
+        command_buffer
+    ,   VK_PIPELINE_BIND_POINT_GRAPHICS
+    ,   vc->pipeline_layout_
+    ,   0
+    ,   1
+    ,   &vc->descriptor_sets_[vc->current_frame_]
+    ,   0
+    ,   NULL
+    ) ;
 
+    // void vkCmdDrawIndexed(
+    //     VkCommandBuffer                             commandBuffer,
+    //     uint32_t                                    indexCount,
+    //     uint32_t                                    instanceCount,
+    //     uint32_t                                    firstIndex,
+    //     int32_t                                     vertexOffset,
+    //     uint32_t                                    firstInstance);
+    vkCmdDrawIndexed(command_buffer, indices_count, 1, 0, 0, 0) ;
 
     // void vkCmdEndRenderPass(
     //     VkCommandBuffer                             commandBuffer);
@@ -5579,6 +5782,8 @@ draw_frame(
         end_timed_block() ;
         return true ;
     }
+
+    update_uniform_buffer(vc, vc->current_frame_) ;
 
     // VkResult vkResetFences(
     //     VkDevice                                    device,
@@ -5789,9 +5994,583 @@ draw_frame(
 }
 
 
+static bool
+find_memory_type(
+    uint32_t *                                  out_mem_type
+,   VkPhysicalDeviceMemoryProperties const *    mp
+,   uint32_t const                              type_filter
+,   VkMemoryPropertyFlags const                 prop
+)
+{
+    require(mp) ;
+    begin_timed_block() ;
+
+    for(
+        uint32_t i = 0
+    ;   i < mp->memoryTypeCount
+    ;   ++i
+    )
+    {
+        bool const filter_ok = type_filter & (1 << i) ;
+        bool const prop_ok = (mp->memoryTypes[i].propertyFlags & prop) == prop ;
+        bool const all_ok =
+            filter_ok
+        &&  prop_ok
+        ;
+        if(all_ok)
+        {
+            *out_mem_type = i ;
+            end_timed_block() ;
+            return true ;
+        }
+    }
+
+    end_timed_block() ;
+    require(0) ;
+    return false ;
+}
+
 
 static bool
-destroy_vulkan_instance(
+create_buffer(
+    VkBuffer *                  out_buffer
+,   VkDeviceMemory *            out_buffer_memory
+,   vulkan_context *            vc
+,   uint32_t const              size
+,   VkBufferUsageFlags const    usage
+,   VkMemoryPropertyFlags const mem_prop
+)
+{
+    require(out_buffer) ;
+    require(out_buffer_memory) ;
+    require(vc) ;
+    require(vc_->device_) ;
+    begin_timed_block() ;
+
+
+    // typedef struct VkBufferCreateInfo {
+    //     VkStructureType        sType;
+    //     const void*            pNext;
+    //     VkBufferCreateFlags    flags;
+    //     VkDeviceSize           size;
+    //     VkBufferUsageFlags     usage;
+    //     VkSharingMode          sharingMode;
+    //     uint32_t               queueFamilyIndexCount;
+    //     const uint32_t*        pQueueFamilyIndices;
+    // } VkBufferCreateInfo;
+    static VkBufferCreateInfo bci = { 0 } ;
+    bci.sType                   = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO ;
+    bci.pNext                   = NULL ;
+    bci.flags                   = 0 ;
+    bci.size                    = size ;
+    bci.usage                   = usage ;
+    bci.sharingMode             = VK_SHARING_MODE_EXCLUSIVE ;
+    bci.queueFamilyIndexCount   = 0 ;
+    bci.pQueueFamilyIndices     = NULL ;
+
+    // VkResult vkCreateBuffer(
+    //     VkDevice                                    device,
+    //     const VkBufferCreateInfo*                   pCreateInfo,
+    //     const VkAllocationCallbacks*                pAllocator,
+    //     VkBuffer*                                   pBuffer);
+    if(check_vulkan(vkCreateBuffer(
+                vc->device_
+            ,   &bci
+            ,   NULL
+            ,   out_buffer
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+    require(*out_buffer) ;
+
+
+    // typedef struct VkMemoryRequirements {
+    //     VkDeviceSize    size;
+    //     VkDeviceSize    alignment;
+    //     uint32_t        memoryTypeBits;
+    // } VkMemoryRequirements;
+    VkMemoryRequirements mem_requirements = { 0 } ;
+
+    // void vkGetBufferMemoryRequirements(
+    //     VkDevice                                    device,
+    //     VkBuffer                                    buffer,
+    //     VkMemoryRequirements*                       pMemoryRequirements);
+    vkGetBufferMemoryRequirements(vc->device_, *out_buffer, &mem_requirements) ;
+
+    uint32_t desired_memory_type = 0 ;
+    if(check(find_memory_type(
+                &desired_memory_type
+            ,   &vc->picked_physical_device_->memory_properties_
+            ,   mem_requirements.memoryTypeBits
+            ,   mem_prop
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
+    // typedef struct VkMemoryAllocateInfo {
+    //     VkStructureType    sType;
+    //     const void*        pNext;
+    //     VkDeviceSize       allocationSize;
+    //     uint32_t           memoryTypeIndex;
+    // } VkMemoryAllocateInfo;
+    static VkMemoryAllocateInfo mai = { 0 } ;
+    mai.sType               = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO ;
+    mai.pNext               = NULL ;
+    mai.allocationSize      = mem_requirements.size ;
+    mai.memoryTypeIndex     = desired_memory_type ;
+
+
+    // VkResult vkAllocateMemory(
+    //     VkDevice                                    device,
+    //     const VkMemoryAllocateInfo*                 pAllocateInfo,
+    //     const VkAllocationCallbacks*                pAllocator,
+    //     VkDeviceMemory*                             pMemory);
+    if(check_vulkan(vkAllocateMemory(
+                vc->device_
+            ,   &mai
+            ,   NULL
+            ,   out_buffer_memory
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+    require(*out_buffer_memory) ;
+
+
+    // VkResult vkBindBufferMemory(
+    //     VkDevice                                    device,
+    //     VkBuffer                                    buffer,
+    //     VkDeviceMemory                              memory,
+    //     VkDeviceSize                                memoryOffset);
+    if(check_vulkan(vkBindBufferMemory(
+                vc->device_
+            ,   *out_buffer
+            ,   *out_buffer_memory
+            ,   0
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
+
+    end_timed_block() ;
+    return true ;
+}
+
+
+static bool
+copy_buffer(
+    vulkan_context *    vc
+,   VkBuffer const      src_buffer
+,   VkBuffer const      dst_buffer
+,   VkDeviceSize const  size
+)
+{
+    require(vc) ;
+    require(vc->device_) ;
+    require(vc->command_pool_) ;
+    require(vc->graphics_queue_) ;
+    require(src_buffer) ;
+    require(dst_buffer) ;
+    require(size) ;
+
+    begin_timed_block() ;
+
+    static VkCommandBufferAllocateInfo cbai = { 0 } ;
+    cbai.sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO ;
+    cbai.pNext              = NULL ;
+    cbai.commandPool        = vc->command_pool_ ;
+    cbai.level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY ;
+    cbai.commandBufferCount = 1 ;
+
+
+    // VkResult vkAllocateCommandBuffers(
+    //     VkDevice                                    device,
+    //     const VkCommandBufferAllocateInfo*          pAllocateInfo,
+    //     VkCommandBuffer*                            pCommandBuffers);
+    VkCommandBuffer command_buffer = NULL ;
+    if(check_vulkan(vkAllocateCommandBuffers(
+                vc->device_
+            ,   &cbai
+            ,   &command_buffer
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+    require(command_buffer) ;
+
+
+    static VkCommandBufferBeginInfo cbbi = { 0 } ;
+    cbbi.sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO ;
+    cbbi.pNext              = NULL ;
+    cbbi.flags              = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT ;
+    cbbi.pInheritanceInfo   = NULL ;
+
+    // VkResult vkBeginCommandBuffer(
+    //     VkCommandBuffer                             commandBuffer,
+    //     const VkCommandBufferBeginInfo*             pBeginInfo);
+    if(check_vulkan(vkBeginCommandBuffer(command_buffer, &cbbi)))
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
+    // typedef struct VkBufferCopy {
+    //     VkDeviceSize    srcOffset;
+    //     VkDeviceSize    dstOffset;
+    //     VkDeviceSize    size;
+    // } VkBufferCopy;
+
+    static VkBufferCopy copy_region = { 0 } ;
+    copy_region.srcOffset   = 0 ;
+    copy_region.dstOffset   = 0 ;
+    copy_region.size        = size ;
+
+    // void vkCmdCopyBuffer(
+    //     VkCommandBuffer                             commandBuffer,
+    //     VkBuffer                                    srcBuffer,
+    //     VkBuffer                                    dstBuffer,
+    //     uint32_t                                    regionCount,
+    //     const VkBufferCopy*                         pRegions);
+    vkCmdCopyBuffer(command_buffer, src_buffer, dst_buffer, 1, &copy_region) ;
+
+    if(check_vulkan(vkEndCommandBuffer(command_buffer)))
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
+
+    static VkSubmitInfo si = { 0 } ;
+    si.sType                    = VK_STRUCTURE_TYPE_SUBMIT_INFO ;
+    si.pNext                    = NULL ;
+    si.waitSemaphoreCount       = 0 ;
+    si.pWaitSemaphores          = NULL ;
+    si.pWaitDstStageMask        = NULL ;
+    si.commandBufferCount       = 1 ;
+    si.pCommandBuffers          = &command_buffer ;
+    si.signalSemaphoreCount     = 0 ;
+    si.pSignalSemaphores        = NULL ;
+
+    if(check_vulkan(vkQueueSubmit(
+                vc->graphics_queue_
+            ,   1
+            ,   &si
+            ,   VK_NULL_HANDLE
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
+    // VkResult vkQueueWaitIdle(
+    //     VkQueue                                     queue);
+    if(check_vulkan(vkQueueWaitIdle(vc->graphics_queue_)))
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
+    // void vkFreeCommandBuffers(
+    //     VkDevice                                    device,
+    //     VkCommandPool                               commandPool,
+    //     uint32_t                                    commandBufferCount,
+    //     const VkCommandBuffer*                      pCommandBuffers);
+    vkFreeCommandBuffers(
+        vc->device_
+    ,   vc->command_pool_
+    ,   1
+    ,   &command_buffer
+    ) ;
+
+    end_timed_block() ;
+    return true ;
+}
+
+
+static bool
+create_vertex_buffer(
+    VkBuffer *          out_buffer
+,   VkDeviceMemory *    out_buffer_memory
+,   vulkan_context *    vc
+)
+{
+    require(out_buffer) ;
+    require(out_buffer_memory) ;
+    require(vc) ;
+    require(vc_->device_) ;
+    begin_timed_block() ;
+
+    VkDeviceSize const buffer_size = vertices_size ;
+
+    VkBuffer staging_buffer = NULL ;
+    VkDeviceMemory staging_buffer_memory = NULL ;
+
+    if(check(create_buffer(
+                &staging_buffer
+            ,   &staging_buffer_memory
+            ,   vc
+            ,   buffer_size
+            ,   VK_BUFFER_USAGE_TRANSFER_SRC_BIT
+            ,   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+    require(staging_buffer) ;
+    require(staging_buffer_memory) ;
+
+    void * data = NULL ;
+
+    // VkResult vkMapMemory(
+    //     VkDevice                                    device,
+    //     VkDeviceMemory                              memory,
+    //     VkDeviceSize                                offset,
+    //     VkDeviceSize                                size,
+    //     VkMemoryMapFlags                            flags,
+    //     void**                                      ppData);
+    if(check_vulkan(vkMapMemory(
+                vc->device_
+            ,   staging_buffer_memory
+            ,   0
+            ,   buffer_size
+            ,   0
+            ,   &data
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+    require(data) ;
+
+    SDL_memcpy(data, vertices, buffer_size) ;
+
+    // void vkUnmapMemory(
+    //     VkDevice                                    device,
+    //     VkDeviceMemory                              memory);
+    vkUnmapMemory(vc->device_, staging_buffer_memory) ;
+
+    if(check(create_buffer(
+                out_buffer
+            ,   out_buffer_memory
+            ,   vc
+            ,   buffer_size
+            ,   VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
+            ,   VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+    require(*out_buffer) ;
+    require(*out_buffer_memory) ;
+
+    if(check(copy_buffer(vc, staging_buffer, *out_buffer, buffer_size)))
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
+    vkDestroyBuffer(vc->device_, staging_buffer, NULL) ;
+    vkFreeMemory(vc->device_, staging_buffer_memory, NULL) ;
+
+    end_timed_block() ;
+    return true ;
+}
+
+
+static bool
+create_index_buffer(
+    VkBuffer *          out_buffer
+,   VkDeviceMemory *    out_buffer_memory
+,   vulkan_context *    vc
+)
+{
+    require(out_buffer) ;
+    require(out_buffer_memory) ;
+    require(vc) ;
+    require(vc_->device_) ;
+    begin_timed_block() ;
+
+    VkDeviceSize const buffer_size = indices_size ;
+    VkBuffer staging_buffer = NULL ;
+    VkDeviceMemory staging_buffer_memory = NULL ;
+
+    if(check(create_buffer(
+                &staging_buffer
+            ,   &staging_buffer_memory
+            ,   vc
+            ,   buffer_size
+            ,   VK_BUFFER_USAGE_TRANSFER_SRC_BIT
+            ,   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+    require(staging_buffer) ;
+    require(staging_buffer_memory) ;
+
+    void * data = NULL ;
+
+    // VkResult vkMapMemory(
+    //     VkDevice                                    device,
+    //     VkDeviceMemory                              memory,
+    //     VkDeviceSize                                offset,
+    //     VkDeviceSize                                size,
+    //     VkMemoryMapFlags                            flags,
+    //     void**                                      ppData);
+    if(check_vulkan(vkMapMemory(
+                vc->device_
+            ,   staging_buffer_memory
+            ,   0
+            ,   buffer_size
+            ,   0
+            ,   &data
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+    require(data) ;
+
+    SDL_memcpy(data, indices, buffer_size) ;
+
+    // void vkUnmapMemory(
+    //     VkDevice                                    device,
+    //     VkDeviceMemory                              memory);
+    vkUnmapMemory(vc->device_, staging_buffer_memory) ;
+
+    if(check(create_buffer(
+                out_buffer
+            ,   out_buffer_memory
+            ,   vc
+            ,   buffer_size
+            ,   VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT
+            ,   VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+    require(*out_buffer) ;
+    require(*out_buffer_memory) ;
+
+    if(check(copy_buffer(vc, staging_buffer, *out_buffer, buffer_size)))
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
+    vkDestroyBuffer(vc->device_, staging_buffer, NULL) ;
+    vkFreeMemory(vc->device_, staging_buffer_memory, NULL) ;
+
+    end_timed_block() ;
+    return true ;
+}
+
+
+static bool
+create_descriptor_set_layout(
+    VkDescriptorSetLayout * out_descriptor_set_layout
+,   vulkan_context *        vc
+)
+{
+    require(out_descriptor_set_layout) ;
+    require(vc) ;
+
+    begin_timed_block() ;
+
+    // typedef struct VkDescriptorSetLayoutBinding {
+    //     uint32_t              binding;
+    //     VkDescriptorType      descriptorType;
+    //     uint32_t              descriptorCount;
+    //     VkShaderStageFlags    stageFlags;
+    //     const VkSampler*      pImmutableSamplers;
+    // } VkDescriptorSetLayoutBinding;
+    static VkDescriptorSetLayoutBinding dslb = { 0 } ;
+    dslb.binding                = 0 ;
+    dslb.descriptorType         = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER ;
+    dslb.descriptorCount        = 1 ;
+    dslb.stageFlags             = VK_SHADER_STAGE_VERTEX_BIT ;
+    dslb.pImmutableSamplers     = NULL ;
+
+
+
+    // typedef struct VkDescriptorSetLayoutCreateInfo {
+    //     VkStructureType                        sType;
+    //     const void*                            pNext;
+    //     VkDescriptorSetLayoutCreateFlags       flags;
+    //     uint32_t                               bindingCount;
+    //     const VkDescriptorSetLayoutBinding*    pBindings;
+    // } VkDescriptorSetLayoutCreateInfo;
+    static VkDescriptorSetLayoutCreateInfo dslci = { 0 } ;
+    dslci.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO ;
+    dslci.pNext         = NULL ;
+    dslci.flags         = 0 ;
+    dslci.bindingCount  = 1 ;
+    dslci.pBindings     = &dslb ;
+
+
+    // VkResult vkCreateDescriptorSetLayout(
+    //     VkDevice                                    device,
+    //     const VkDescriptorSetLayoutCreateInfo*      pCreateInfo,
+    //     const VkAllocationCallbacks*                pAllocator,
+    //     VkDescriptorSetLayout*                      pSetLayout);
+    if(check_vulkan(vkCreateDescriptorSetLayout(
+                vc->device_
+            ,   &dslci
+            ,   NULL
+            ,   out_descriptor_set_layout
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+    require(*out_descriptor_set_layout) ;
+
+    end_timed_block() ;
+    return true ;
+
+}
+
+
+static bool
+create_uniform_buffers(
     vulkan_context *    vc
 )
 {
@@ -5799,15 +6578,330 @@ destroy_vulkan_instance(
     require(vc_->device_) ;
     begin_timed_block() ;
 
+    VkDeviceSize const buffer_size = uniform_buffer_object_size ;
 
-    if(vc_->device_)
+    for(
+        uint32_t i = 0
+    ;   i < max_vulkan_frames_in_flight
+    ;   ++i
+    )
+    {
+        if(check(create_buffer(
+                    &vc->uniform_buffers_[i]
+                ,   &vc->uniform_buffers_memory_[i]
+                ,   vc
+                ,   buffer_size
+                ,   VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT
+                ,   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+                )
+            )
+        )
+        {
+            end_timed_block() ;
+            return false ;
+        }
+        require(vc->uniform_buffers_[i]) ;
+        require(vc->uniform_buffers_memory_[i]) ;
+
+        if(check_vulkan(vkMapMemory(
+                    vc->device_
+                ,   vc->uniform_buffers_memory_[i]
+                ,   0
+                ,   buffer_size
+                ,   0
+                ,   &vc->uniform_buffers_mapped_[i]
+                )
+            )
+        )
+        {
+            end_timed_block() ;
+            return false ;
+        }
+        require(vc->uniform_buffers_mapped_[i]) ;
+    }
+
+    end_timed_block() ;
+    return true ;
+}
+
+
+static bool
+create_descriptor_pool(
+    vulkan_context *    vc
+)
+{
+    require(vc) ;
+    begin_timed_block() ;
+
+    // typedef struct VkDescriptorPoolSize {
+    //     VkDescriptorType    type;
+    //     uint32_t            descriptorCount;
+    // } VkDescriptorPoolSize;
+    static VkDescriptorPoolSize dps = { 0 } ;
+    dps.type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER ;
+    dps.descriptorCount = max_vulkan_frames_in_flight ;
+
+
+    // typedef struct VkDescriptorPoolCreateInfo {
+    //     VkStructureType                sType;
+    //     const void*                    pNext;
+    //     VkDescriptorPoolCreateFlags    flags;
+    //     uint32_t                       maxSets;
+    //     uint32_t                       poolSizeCount;
+    //     const VkDescriptorPoolSize*    pPoolSizes;
+    // } VkDescriptorPoolCreateInfo;
+    static VkDescriptorPoolCreateInfo dpci = { 0 } ;
+    dpci.sType          = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO ;
+    dpci.pNext          = NULL ;
+    dpci.flags          = 0 ;
+    dpci.maxSets        = max_vulkan_frames_in_flight ;
+    dpci.poolSizeCount  = 1 ;
+    dpci.pPoolSizes     = &dps ;
+
+
+    // VkResult vkCreateDescriptorPool(
+    //     VkDevice                                    device,
+    //     const VkDescriptorPoolCreateInfo*           pCreateInfo,
+    //     const VkAllocationCallbacks*                pAllocator,
+    //     VkDescriptorPool*                           pDescriptorPool);
+    if(check_vulkan(vkCreateDescriptorPool(
+                vc->device_
+            ,   &dpci
+            ,   NULL
+            ,   &vc->descriptor_pool_
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+    require(vc->descriptor_pool_) ;
+
+    end_timed_block() ;
+    return true ;
+
+}
+
+
+static bool
+create_descriptor_sets(
+    vulkan_context *    vc
+)
+{
+    require(vc) ;
+    begin_timed_block() ;
+
+    VkDescriptorSetLayout   layouts[max_vulkan_frames_in_flight] = { 0 } ;
+
+    for(
+        uint32_t i = 0
+    ;   i < max_vulkan_frames_in_flight
+    ;   ++i
+    )
+    {
+        layouts[i] = vc->descriptor_set_layout_ ;
+    }
+
+
+    // typedef struct VkDescriptorSetAllocateInfo {
+    //     VkStructureType                 sType;
+    //     const void*                     pNext;
+    //     VkDescriptorPool                descriptorPool;
+    //     uint32_t                        descriptorSetCount;
+    //     const VkDescriptorSetLayout*    pSetLayouts;
+    // } VkDescriptorSetAllocateInfo;
+    static VkDescriptorSetAllocateInfo  dsai = { 0 } ;
+    dsai.sType                  = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO ;
+    dsai.pNext                  = NULL ;
+    dsai.descriptorPool         = vc->descriptor_pool_ ;
+    dsai.descriptorSetCount     = array_count(layouts) ;
+    dsai.pSetLayouts            = layouts ;
+
+
+    // VkResult vkAllocateDescriptorSets(
+    //     VkDevice                                    device,
+    //     const VkDescriptorSetAllocateInfo*          pAllocateInfo,
+    //     VkDescriptorSet*                            pDescriptorSets);
+    if(check_vulkan(vkAllocateDescriptorSets(
+                vc->device_
+            ,   &dsai
+            ,   vc->descriptor_sets_
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
+
+    for(
+        uint32_t i = 0
+    ;   i < max_vulkan_frames_in_flight
+    ;   ++i
+    )
+    {
+        require(vc->descriptor_sets_[i]) ;
+
+        // typedef struct VkDescriptorBufferInfo {
+        //     VkBuffer        buffer;
+        //     VkDeviceSize    offset;
+        //     VkDeviceSize    range;
+        // } VkDescriptorBufferInfo;
+        VkDescriptorBufferInfo dbi = { 0 } ;
+        dbi.buffer  = vc->uniform_buffers_[i] ;
+        dbi.offset  = 0 ;
+        dbi.range   = uniform_buffer_object_size ;
+
+        // typedef struct VkWriteDescriptorSet {
+        //     VkStructureType                  sType;
+        //     const void*                      pNext;
+        //     VkDescriptorSet                  dstSet;
+        //     uint32_t                         dstBinding;
+        //     uint32_t                         dstArrayElement;
+        //     uint32_t                         descriptorCount;
+        //     VkDescriptorType                 descriptorType;
+        //     const VkDescriptorImageInfo*     pImageInfo;
+        //     const VkDescriptorBufferInfo*    pBufferInfo;
+        //     const VkBufferView*              pTexelBufferView;
+        // } VkWriteDescriptorSet;
+        VkWriteDescriptorSet wds = { 0 } ;
+        wds.sType               = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET ;
+        wds.pNext               = NULL ;
+        wds.dstSet              = vc->descriptor_sets_[i] ;
+        wds.dstBinding          = 0 ;
+        wds.dstArrayElement     = 0 ;
+        wds.descriptorCount     = 1 ;
+        wds.descriptorType      = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER ;
+        wds.pImageInfo          = NULL ;
+        wds.pBufferInfo         = &dbi ;
+        wds.pTexelBufferView    = NULL ;
+
+        // void vkUpdateDescriptorSets(
+        //     VkDevice                                    device,
+        //     uint32_t                                    descriptorWriteCount,
+        //     const VkWriteDescriptorSet*                 pDescriptorWrites,
+        //     uint32_t                                    descriptorCopyCount,
+        //     const VkCopyDescriptorSet*                  pDescriptorCopies);
+        vkUpdateDescriptorSets(
+            vc->device_
+        ,   1
+        ,   &wds
+        ,   0
+        ,   NULL
+        ) ;
+
+
+    }
+
+    end_timed_block() ;
+    return true ;
+}
+
+
+
+
+static bool
+destroy_vulkan_instance(
+    vulkan_context *    vc
+)
+{
+    require(vc) ;
+    require(vc->device_) ;
+    begin_timed_block() ;
+
+
+    if(vc->device_)
     {
         // VkResult vkDeviceWaitIdle(
         //     VkDevice                                    device);
-        vkDeviceWaitIdle(vc_->device_) ;
+        vkDeviceWaitIdle(vc->device_) ;
     }
 
     cleanup_swapchain(vc) ;
+
+
+
+    for(
+        uint32_t i = 0
+    ;   i < max_vulkan_frames_in_flight
+    ;   ++i
+    )
+    {
+        vkDestroyBuffer(vc->device_, vc->uniform_buffers_[i], NULL) ;
+        vc->uniform_buffers_[i] = NULL ;
+        vkFreeMemory(vc->device_, vc->uniform_buffers_memory_[i], NULL) ;
+        vc->uniform_buffers_memory_[i] = NULL ;
+    }
+
+
+    if(vc->descriptor_pool_)
+    {
+        // void vkDestroyDescriptorPool(
+        //     VkDevice                                    device,
+        //     VkDescriptorPool                            descriptorPool,
+        //     const VkAllocationCallbacks*                pAllocator);
+        vkDestroyDescriptorPool(vc->device_, vc->descriptor_pool_, NULL) ;
+        vc->descriptor_pool_ = NULL ;
+    }
+
+
+    if(vc->descriptor_set_layout_)
+    {
+        // void vkDestroyDescriptorSetLayout(
+        //     VkDevice                                    device,
+        //     VkDescriptorSetLayout                       descriptorSetLayout,
+        //     const VkAllocationCallbacks*                pAllocator);
+        vkDestroyDescriptorSetLayout(vc->device_, vc->descriptor_set_layout_, NULL) ;
+        vc->descriptor_set_layout_ = NULL ;
+    }
+
+
+    if(vc->descriptor_set_layout_)
+    {
+        // void vkDestroyDescriptorSetLayout(
+        //     VkDevice                                    device,
+        //     VkDescriptorSetLayout                       descriptorSetLayout,
+        //     const VkAllocationCallbacks*                pAllocator);
+        vkDestroyDescriptorSetLayout(vc->device_, vc->descriptor_set_layout_, NULL) ;
+        vc->descriptor_set_layout_ = NULL ;
+    }
+
+
+    if(vc->index_buffer_)
+    {
+        vkDestroyBuffer(vc->device_, vc->index_buffer_, NULL) ;
+        vc->index_buffer_ = NULL ;
+    }
+
+    if(vc->index_buffer_memory_)
+    {
+        vkFreeMemory(vc->device_, vc->index_buffer_memory_, NULL) ;
+        vc->index_buffer_memory_ = NULL ;
+    }
+
+
+    if(vc->vertex_buffer_)
+    {
+        // void vkDestroyBuffer(
+        //     VkDevice                                    device,
+        //     VkBuffer                                    buffer,
+        //     const VkAllocationCallbacks*                pAllocator);
+        vkDestroyBuffer(vc->device_, vc->vertex_buffer_, NULL) ;
+        vc->vertex_buffer_ = NULL ;
+    }
+
+    if(vc->vertex_buffer_memory_)
+    {
+        // void vkFreeMemory(
+        //     VkDevice                                    device,
+        //     VkDeviceMemory                              memory,
+        //     const VkAllocationCallbacks*                pAllocator);
+        //     }
+        vkFreeMemory(vc->device_, vc->vertex_buffer_memory_, NULL) ;
+        vc->vertex_buffer_memory_ = NULL ;
+    }
 
     if(vc->graphics_pipeline_)
     {
@@ -6187,6 +7281,13 @@ create_vulkan()
         return false ;
     }
 
+    if(check(create_descriptor_set_layout(&vc_->descriptor_set_layout_, vc_)))
+    {
+        end_timed_block() ;
+        return false ;
+    }
+    require(vc_->descriptor_set_layout_) ;
+
     if(check(create_graphics_pipeline(vc_)))
     {
         end_timed_block() ;
@@ -6212,6 +7313,53 @@ create_vulkan()
     }
 
     if(check(create_sync_objects(vc_)))
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
+    if(check(create_vertex_buffer(
+                &vc_->vertex_buffer_
+            ,   &vc_->vertex_buffer_memory_
+            ,   vc_
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+    require(vc_->vertex_buffer_) ;
+    require(vc_->vertex_buffer_memory_) ;
+
+    if(check(create_index_buffer(
+                &vc_->index_buffer_
+            ,   &vc_->index_buffer_memory_
+            ,   vc_
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+    require(vc_->index_buffer_) ;
+    require(vc_->index_buffer_memory_) ;
+
+    if(check(create_uniform_buffers(vc_)))
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
+    if(check(create_descriptor_pool(vc_)))
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
+
+    if(check(create_descriptor_sets(vc_)))
     {
         end_timed_block() ;
         return false ;

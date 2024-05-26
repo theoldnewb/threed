@@ -96,6 +96,25 @@ get_app_time()
 }
 
 
+double
+get_performance_frequency_inverse()
+{
+    static bool once = true ;
+    static uint64_t u_freq = 0 ;
+    static double d_inv_freq = 0.0 ;
+
+    if(once)
+    {
+        once = false;
+        u_freq = SDL_GetPerformanceFrequency() ;
+        require(u_freq) ;
+        d_inv_freq = 1.0 / (double) u_freq ;
+    }
+
+    return d_inv_freq ;
+}
+
+
 bool
 create_app()
 {

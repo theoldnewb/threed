@@ -41,6 +41,10 @@ uint64_t
 get_app_time() ;
 
 
+double
+get_performance_frequency_inverse() ;
+
+
 void *
 alloc_memory_impl(
     size_t const    byte_count

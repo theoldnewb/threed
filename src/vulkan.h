@@ -142,9 +142,10 @@ typedef struct vulkan_context
     uint64_t            frag_shader_memory_size_ ;
     VkShaderModule      frag_shader_ ;
 
-    VkRenderPass        render_pass_ ;
-    VkPipelineLayout    pipeline_layout_ ;
-    VkPipeline          graphics_pipeline_ ;
+    VkRenderPass            render_pass_ ;
+    VkDescriptorSetLayout   descriptor_set_layout_ ;
+    VkPipelineLayout        pipeline_layout_ ;
+    VkPipeline              graphics_pipeline_ ;
 
     VkFramebuffer   framebuffers_[max_vulkan_swapchain_images] ;
     VkCommandPool   command_pool_ ;
@@ -155,6 +156,18 @@ typedef struct vulkan_context
     VkFence     in_flight_fence_[max_vulkan_frames_in_flight] ;
     uint32_t    current_frame_ ;
     VkBool32    resizing_ ;
+
+    VkBuffer        vertex_buffer_ ;
+    VkDeviceMemory  vertex_buffer_memory_ ;
+    VkBuffer        index_buffer_ ;
+    VkDeviceMemory  index_buffer_memory_ ;
+
+    VkBuffer        uniform_buffers_[max_vulkan_frames_in_flight] ;
+    VkDeviceMemory  uniform_buffers_memory_[max_vulkan_frames_in_flight] ;
+    void *          uniform_buffers_mapped_[max_vulkan_frames_in_flight] ;
+
+    VkDescriptorPool    descriptor_pool_ ;
+    VkDescriptorSet     descriptor_sets_[max_vulkan_frames_in_flight] ;
 
 } vulkan_context ;
 
