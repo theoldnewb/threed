@@ -35,11 +35,22 @@ def build_and_install(tpl_name):
         shutil.rmtree(build_dir)
 
 
+def just_copy_dir(tpl_name):
+    build_dir = os.path.join(SCRIPT_PATH, tpl_name)
+    tpl_dir = os.path.join(SCRIPT_PATH, TPL_DIR, tpl_name)
+    print("build_dir=%s, tpl_dir=%s, tpl_name=%s" % (build_dir, tpl_dir, tpl_name))
+    if os.path.isdir(tpl_dir):
+        shutil.rmtree(tpl_dir)
+
+    shutil.copytree(build_dir, tpl_dir)
+
+
 def main():
     print("Hello, World!")
     print("SCRIPT_PATH=%s" % SCRIPT_PATH)
-    build_and_install("SDL")
-    build_and_install("cglm")
+    #build_and_install("SDL")
+    #build_and_install("cglm")
+    just_copy_dir("stb")
 
 if __name__ == "__main__":
     main()

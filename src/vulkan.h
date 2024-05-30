@@ -169,6 +169,13 @@ typedef struct vulkan_context
     VkDescriptorPool    descriptor_pool_ ;
     VkDescriptorSet     descriptor_sets_[max_vulkan_frames_in_flight] ;
 
+    VkImage             texture_image_ ;
+    VkDeviceMemory      texture_image_memory_ ;
+    VkImageView         texture_image_view_ ;
+    VkSampler           texture_sampler_ ;
+
+    float               desired_sampler_aniso_ ; //maxSamplerAnisotropy
+
 } vulkan_context ;
 
 
