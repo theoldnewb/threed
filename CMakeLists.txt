@@ -83,10 +83,5 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 target_link_libraries(${PROJECT_NAME}
     PRIVATE SDL3::SDL3
     PRIVATE Vulkan::Vulkan
+    PRIVATE $<$<PLATFORM_ID:Linux>:m>
 )
-
-if(LINUX)
-target_link_libraries(${PROJECT_NAME}
-    PRIVATE m
-)
-endif()

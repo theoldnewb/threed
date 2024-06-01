@@ -176,6 +176,11 @@ typedef struct vulkan_context
 
     float               desired_sampler_aniso_ ; //maxSamplerAnisotropy
 
+    VkImage         depth_image_ ;
+    VkDeviceMemory  depth_image_memory_ ;
+    VkImageView     depth_image_view_ ;
+
+
 } vulkan_context ;
 
 
