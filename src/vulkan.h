@@ -181,6 +181,16 @@ typedef struct vulkan_context
     VkDeviceMemory  depth_image_memory_ ;
     VkImageView     depth_image_view_ ;
 
+    VkBool32                enable_sampling_ ;
+    VkSampleCountFlagBits   sample_count_ ;
+    VkBool32                enable_sample_shading_ ;
+    float                   min_sample_shading_ ;
+
+    VkImage         color_image_ ;
+    VkDeviceMemory  color_image_memory_ ;
+    VkImageView     color_image_view_ ;
+
+
 
 } vulkan_context ;
 

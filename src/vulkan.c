@@ -95,6 +95,7 @@ create_image(
 ,   uint32_t const              width
 ,   uint32_t const              height
 ,   uint32_t const              mip_levels
+,   VkSampleCountFlagBits const msaa_sample_count
 ,   VkFormat const              format
 ,   VkImageTiling const         tiling
 ,   VkImageUsageFlags const     usage
@@ -188,7 +189,7 @@ update_uniform_buffer(
         previous_time = current_time ;
     }
 
-    uint64_t const delta_time = (current_time - previous_time) ;
+    uint64_t const delta_time = (current_time - previous_time) / 10 ;
     double const fractional_seconds = (double) delta_time * get_performance_frequency_inverse() ;
     //log_debug("%f", fractional_seconds) ;
 
@@ -4016,7 +4017,8 @@ create_framebuffers(
     require(vc->device_) ;
     begin_timed_block() ;
 
-    static VkImageView attachments[2] = { 0 } ;
+    static VkImageView  attachments[3] = { 0 } ;
+    static uint32_t     attachments_count = 0 ;
 
     for(
         uint32_t i = 0
@@ -4024,11 +4026,24 @@ create_framebuffers(
     ;   ++i
     )
     {
-        attachments[0] = vc->swapchain_views_[i] ;
-        attachments[1] = vc->depth_image_view_ ;
-
-        require(attachments[0]) ;
-        require(attachments[1]) ;
+        if(vc->enable_sampling_)
+        {
+            attachments[0] = vc->color_image_view_ ;
+            attachments[1] = vc->depth_image_view_ ;
+            attachments[2] = vc->swapchain_views_[i] ;
+            attachments_count = 3 ;
+            require(attachments[0]) ;
+            require(attachments[1]) ;
+            require(attachments[2]) ;
+        }
+        else
+        {
+            attachments[0] = vc->swapchain_views_[i] ;
+            attachments[1] = vc->depth_image_view_ ;
+            attachments_count = 2 ;
+            require(attachments[0]) ;
+            require(attachments[1]) ;
+        }
 
         // typedef struct VkFramebufferCreateInfo {
         //     VkStructureType             sType;
@@ -4046,7 +4061,7 @@ create_framebuffers(
         fbci.pNext              = NULL ;
         fbci.flags              = 0 ;
         fbci.renderPass         = vc->render_pass_ ;
-        fbci.attachmentCount    = array_count(attachments) ;
+        fbci.attachmentCount    = attachments_count ;
         fbci.pAttachments       = attachments ;
         fbci.width              = vc->swapchain_extent_.width ;
         fbci.height             = vc->swapchain_extent_.height ;
@@ -4749,6 +4764,7 @@ create_depth_resource(
             ,   vc->swapchain_extent_.width
             ,   vc->swapchain_extent_.height
             ,   1
+            ,   vc->sample_count_
             ,   vc->picked_physical_device_->depth_format_
             ,   VK_IMAGE_TILING_OPTIMAL
             ,   VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
@@ -4815,6 +4831,24 @@ cleanup_swapchain(
 
     vkDeviceWaitIdle(vc->device_);
 
+    if(vc->color_image_view_)
+    {
+        vkDestroyImageView(vc->device_, vc->color_image_view_, NULL) ;
+        vc->color_image_view_ = NULL ;
+    }
+
+    if(vc->color_image_)
+    {
+        vkDestroyImage(vc->device_, vc->color_image_, NULL) ;
+        vc->color_image_ = NULL ;
+    }
+
+    if(vc->color_image_memory_)
+    {
+        vkFreeMemory(vc->device_, vc->color_image_memory_, NULL) ;
+        vc->color_image_memory_ = NULL ;
+    }
+
     if(vc->depth_image_view_)
     {
         vkDestroyImageView(vc->device_, vc->depth_image_view_, NULL) ;
@@ -4875,6 +4909,65 @@ cleanup_swapchain(
 
 
 static bool
+create_color_resource(
+    vulkan_context *    vc
+)
+{
+    require(vc) ;
+    require(vc->device_) ;
+    begin_timed_block() ;
+
+    if(!vc->enable_sampling_)
+    {
+        end_timed_block() ;
+        return true ;
+    }
+
+    if(check(create_image(
+                &vc->color_image_
+            ,   &vc->color_image_memory_
+            ,   vc
+            ,   vc->swapchain_extent_.width
+            ,   vc->swapchain_extent_.height
+            ,   1
+            ,   vc->sample_count_
+            ,   vc->swapchain_surface_format_.format
+            ,   VK_IMAGE_TILING_OPTIMAL
+            ,   VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
+            ,   VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+    require(vc->color_image_) ;
+    require(vc->color_image_memory_) ;
+
+    if(check(create_image_views(
+                &vc->color_image_view_
+            ,   &vc->color_image_
+            ,   1
+            ,   vc->device_
+            ,   vc->swapchain_surface_format_.format
+            ,   VK_IMAGE_ASPECT_COLOR_BIT
+            ,   1
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+    require(vc->color_image_view_) ;
+
+    end_timed_block() ;
+    return true ;
+}
+
+
+static bool
 recreate_swapchain(
     vulkan_context *    vc
 )
@@ -4918,6 +5011,12 @@ recreate_swapchain(
             )
         )
     )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
+    if(check(create_color_resource(vc)))
     {
         end_timed_block() ;
         return false ;
@@ -5429,9 +5528,24 @@ create_graphics_pipeline(
     pmssci.sType                    = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO ;
     pmssci.pNext                    = NULL ;
     pmssci.flags                    = 0 ;
-    pmssci.rasterizationSamples     = VK_SAMPLE_COUNT_1_BIT ;
-    pmssci.sampleShadingEnable      = VK_FALSE ;
-    pmssci.minSampleShading         = 1.0f ;
+    if(vc->enable_sampling_)
+    {
+        pmssci.rasterizationSamples = vc->sample_count_ ;
+    }
+    else
+    {
+        pmssci.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT ;
+    }
+    if(vc->enable_sample_shading_)
+    {
+        pmssci.sampleShadingEnable  = vc->enable_sample_shading_ ;
+        pmssci.minSampleShading     = vc->min_sample_shading_ ;
+    }
+    else
+    {
+        pmssci.sampleShadingEnable  = VK_FALSE ;
+        pmssci.minSampleShading     = 1.0f ;
+    }
     pmssci.pSampleMask              = NULL ;
     pmssci.alphaToCoverageEnable    = VK_FALSE ;
     pmssci.alphaToOneEnable         = VK_FALSE ;
@@ -5689,27 +5803,68 @@ create_render_pass(
     //     VkImageLayout                   initialLayout;
     //     VkImageLayout                   finalLayout;
     // } VkAttachmentDescription;
-    static VkAttachmentDescription attachments[2] = { 0 } ;
-    attachments[0].flags            = 0 ;
-    attachments[0].format           = vc->swapchain_surface_format_.format ;
-    attachments[0].samples          = VK_SAMPLE_COUNT_1_BIT ;
-    attachments[0].loadOp           = VK_ATTACHMENT_LOAD_OP_CLEAR ;
-    attachments[0].storeOp          = VK_ATTACHMENT_STORE_OP_STORE ;
-    attachments[0].stencilLoadOp    = VK_ATTACHMENT_LOAD_OP_DONT_CARE ;
-    attachments[0].stencilStoreOp   = VK_ATTACHMENT_STORE_OP_DONT_CARE ;
-    attachments[0].initialLayout    = VK_IMAGE_LAYOUT_UNDEFINED ;
-    attachments[0].finalLayout      = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR ;
 
-    attachments[1].flags            = 0 ;
-    attachments[1].format           = vc->picked_physical_device_->depth_format_ ;
-    attachments[1].samples          = VK_SAMPLE_COUNT_1_BIT ;
-    attachments[1].loadOp           = VK_ATTACHMENT_LOAD_OP_CLEAR ;
-    attachments[1].storeOp          = VK_ATTACHMENT_STORE_OP_STORE ;
-    attachments[1].stencilLoadOp    = VK_ATTACHMENT_LOAD_OP_DONT_CARE ;
-    attachments[1].stencilStoreOp   = VK_ATTACHMENT_STORE_OP_DONT_CARE ;
-    attachments[1].initialLayout    = VK_IMAGE_LAYOUT_UNDEFINED ;
-    attachments[1].finalLayout      = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL ;
+    static VkAttachmentDescription  attachments[3] = { 0 } ;
+    static uint32_t                 attachments_count = 0 ;
 
+    if(vc->enable_sampling_)
+    {
+        attachments_count               = 3 ;
+
+        attachments[0].flags            = 0 ;
+        attachments[0].format           = vc->swapchain_surface_format_.format ;
+        attachments[0].samples          = vc->sample_count_ ;
+        attachments[0].loadOp           = VK_ATTACHMENT_LOAD_OP_CLEAR ;
+        attachments[0].storeOp          = VK_ATTACHMENT_STORE_OP_STORE ;
+        attachments[0].stencilLoadOp    = VK_ATTACHMENT_LOAD_OP_DONT_CARE ;
+        attachments[0].stencilStoreOp   = VK_ATTACHMENT_STORE_OP_DONT_CARE ;
+        attachments[0].initialLayout    = VK_IMAGE_LAYOUT_UNDEFINED ;
+        attachments[0].finalLayout      = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL ;
+
+        attachments[1].flags            = 0 ;
+        attachments[1].format           = vc->swapchain_surface_format_.format ;
+        attachments[1].samples          = vc->sample_count_ ;
+        attachments[1].loadOp           = VK_ATTACHMENT_LOAD_OP_CLEAR ;
+        attachments[1].storeOp          = VK_ATTACHMENT_STORE_OP_STORE ;
+        attachments[1].stencilLoadOp    = VK_ATTACHMENT_LOAD_OP_DONT_CARE ;
+        attachments[1].stencilStoreOp   = VK_ATTACHMENT_STORE_OP_DONT_CARE ;
+        attachments[1].initialLayout    = VK_IMAGE_LAYOUT_UNDEFINED ;
+        attachments[1].finalLayout      = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR ;
+
+        attachments[2].flags            = 0 ;
+        attachments[2].format           = vc->picked_physical_device_->depth_format_ ;
+        attachments[2].samples          = VK_SAMPLE_COUNT_1_BIT ;
+        attachments[2].loadOp           = VK_ATTACHMENT_LOAD_OP_DONT_CARE ;
+        attachments[2].storeOp          = VK_ATTACHMENT_STORE_OP_STORE ;
+        attachments[2].stencilLoadOp    = VK_ATTACHMENT_LOAD_OP_DONT_CARE ;
+        attachments[2].stencilStoreOp   = VK_ATTACHMENT_STORE_OP_DONT_CARE ;
+        attachments[2].initialLayout    = VK_IMAGE_LAYOUT_UNDEFINED ;
+        attachments[2].finalLayout      = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR ;
+    }
+    else
+    {
+        attachments_count               = 2 ;
+
+        attachments[0].flags            = 0 ;
+        attachments[0].format           = vc->swapchain_surface_format_.format ;
+        attachments[0].samples          = VK_SAMPLE_COUNT_1_BIT ;
+        attachments[0].loadOp           = VK_ATTACHMENT_LOAD_OP_CLEAR ;
+        attachments[0].storeOp          = VK_ATTACHMENT_STORE_OP_STORE ;
+        attachments[0].stencilLoadOp    = VK_ATTACHMENT_LOAD_OP_DONT_CARE ;
+        attachments[0].stencilStoreOp   = VK_ATTACHMENT_STORE_OP_DONT_CARE ;
+        attachments[0].initialLayout    = VK_IMAGE_LAYOUT_UNDEFINED ;
+        attachments[0].finalLayout      = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR ;
+
+        attachments[1].flags            = 0 ;
+        attachments[1].format           = vc->picked_physical_device_->depth_format_ ;
+        attachments[1].samples          = VK_SAMPLE_COUNT_1_BIT ;
+        attachments[1].loadOp           = VK_ATTACHMENT_LOAD_OP_CLEAR ;
+        attachments[1].storeOp          = VK_ATTACHMENT_STORE_OP_STORE ;
+        attachments[1].stencilLoadOp    = VK_ATTACHMENT_LOAD_OP_DONT_CARE ;
+        attachments[1].stencilStoreOp   = VK_ATTACHMENT_STORE_OP_DONT_CARE ;
+        attachments[1].initialLayout    = VK_IMAGE_LAYOUT_UNDEFINED ;
+        attachments[1].finalLayout      = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL ;
+    }
 
     // typedef struct VkAttachmentReference {
     //     uint32_t         attachment;
@@ -5722,6 +5877,10 @@ create_render_pass(
     static VkAttachmentReference depth_ar = { 0 } ;
     depth_ar.attachment    = 1 ;
     depth_ar.layout        = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL ;
+
+    static VkAttachmentReference color_resolve_ar = { 0 } ;
+    color_resolve_ar.attachment = 2 ;
+    color_resolve_ar.layout     = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL ;
 
     // typedef struct VkSubpassDescription {
     //     VkSubpassDescriptionFlags       flags;
@@ -5742,7 +5901,14 @@ create_render_pass(
     sd.pInputAttachments            = NULL ;
     sd.colorAttachmentCount         = 1 ;
     sd.pColorAttachments            = &color_ar ;
-    sd.pResolveAttachments          = NULL ;
+    if(vc->enable_sampling_)
+    {
+        sd.pResolveAttachments      = &color_resolve_ar ;
+    }
+    else
+    {
+        sd.pResolveAttachments      = NULL ;
+    }
     sd.pDepthStencilAttachment      = &depth_ar ;
     sd.preserveAttachmentCount      = 0 ;
     sd.pPreserveAttachments         = NULL ;
@@ -5766,7 +5932,7 @@ create_render_pass(
     sde.dstAccessMask    = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT ;
     sde.dependencyFlags  = 0 ;
 
-
+    require(attachments_count) ;
     // typedef struct VkRenderPassCreateInfo {
     //     VkStructureType                   sType;
     //     const void*                       pNext;
@@ -5782,7 +5948,7 @@ create_render_pass(
     rpci.sType              = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO ;
     rpci.pNext              = NULL ;
     rpci.flags              = 0 ;
-    rpci.attachmentCount    = array_count(attachments) ;
+    rpci.attachmentCount    = attachments_count ;
     rpci.pAttachments       = attachments ;
     rpci.subpassCount       = 1 ;
     rpci.pSubpasses         = &sd ;
@@ -7321,6 +7487,7 @@ create_image(
 ,   uint32_t const              width
 ,   uint32_t const              height
 ,   uint32_t const              mip_levels
+,   VkSampleCountFlagBits const msaa_sample_count
 ,   VkFormat const              format
 ,   VkImageTiling const         tiling
 ,   VkImageUsageFlags const     usage
@@ -7361,7 +7528,7 @@ create_image(
     ici.extent.depth                = 1 ;
     ici.mipLevels                   = mip_levels ;
     ici.arrayLayers                 = 1 ;
-    ici.samples                     = VK_SAMPLE_COUNT_1_BIT ;
+    ici.samples                     = msaa_sample_count ;
     ici.tiling                      = tiling ;
     ici.usage                       = usage ;
     ici.sharingMode                 = VK_SHARING_MODE_EXCLUSIVE ;
@@ -7739,6 +7906,7 @@ create_texture_image(
             ,   tx_width
             ,   tx_height
             ,   vc->texture_mip_levels_
+            ,   VK_SAMPLE_COUNT_1_BIT
             ,   VK_FORMAT_R8G8B8A8_SRGB
             ,   VK_IMAGE_TILING_OPTIMAL
             ,   VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT
@@ -8165,8 +8333,15 @@ create_vulkan()
     begin_timed_block() ;
 
     vc_->enable_validation_ = VK_TRUE ;
+    vc_->enable_sampling_ = VK_FALSE ;
+    vc_->enable_sample_shading_ = VK_FALSE ;
+
     vc_->desired_swapchain_image_count_ = 2 ;
+    vc_->sample_count_ = VK_SAMPLE_COUNT_8_BIT ;
+    vc_->min_sample_shading_ = 0.2f ;
+
     vc_->resizing_ = VK_FALSE ;
+
 
     vc_->platform_instance_extensions_ = SDL_Vulkan_GetInstanceExtensions(
         &vc_->platform_instance_extensions_count_
@@ -8446,6 +8621,12 @@ create_vulkan()
     require(vc_->descriptor_set_layout_) ;
 
     if(check(create_graphics_pipeline(vc_)))
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
+    if(check(create_color_resource(vc_)))
     {
         end_timed_block() ;
         return false ;
