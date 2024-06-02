@@ -24,3 +24,10 @@ clamp_u32(
 ,   uint32_t const min_value
 ,   uint32_t const max_value
 ) ;
+
+
+uint32_t
+calc_mip_levels(
+    uint32_t const width
+,   uint32_t const height
+) ;

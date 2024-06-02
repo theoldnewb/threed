@@ -94,6 +94,7 @@ create_image(
 ,   vulkan_context *            vc
 ,   uint32_t const              width
 ,   uint32_t const              height
+,   uint32_t const              mip_levels
 ,   VkFormat const              format
 ,   VkImageTiling const         tiling
 ,   VkImageUsageFlags const     usage
@@ -201,7 +202,7 @@ update_uniform_buffer(
     vec3 axis = {1.0f, 0.5f, 1.0f} ;
     glm_rotate_make(ubo.model, angle, axis) ;
 
-    vec3 eye    = { 0.0f, 2.0f, 2.0f } ;
+    vec3 eye    = { 0.0f, 1.0f, 1.0f } ;
     vec3 center = { 0.0f, 0.0f, 0.0f } ;
     vec3 up     = { 0.0f, 0.0f, 1.0f } ;
     glm_lookat(eye, center, up, ubo.view) ;
@@ -4355,6 +4356,7 @@ create_image_views(
 ,   VkDevice const              device
 ,   VkFormat const              format
 ,   VkImageAspectFlags const    aspect_flags
+,   uint32_t const              mip_levels
 )
 {
     require(out_views) ;
@@ -4428,7 +4430,7 @@ create_image_views(
     ivci.components.b                       = VK_COMPONENT_SWIZZLE_IDENTITY ;
     ivci.subresourceRange.aspectMask        = aspect_flags ;
     ivci.subresourceRange.baseMipLevel      = 0 ;
-    ivci.subresourceRange.levelCount        = 1 ;
+    ivci.subresourceRange.levelCount        = mip_levels ;
     ivci.subresourceRange.baseArrayLayer    = 0 ;
     ivci.subresourceRange.layerCount        = 1 ;
 
@@ -4587,6 +4589,7 @@ transition_image_layout(
 ,   VkFormat const      format
 ,   VkImageLayout const old_layout
 ,   VkImageLayout const new_layout
+,   uint32_t const      mip_levels
 )
 {
     require(vc) ;
@@ -4632,7 +4635,7 @@ transition_image_layout(
     imb.image                           = image ;
     imb.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT ;
     imb.subresourceRange.baseMipLevel   = 0 ;
-    imb.subresourceRange.levelCount     = 1 ;
+    imb.subresourceRange.levelCount     = mip_levels ;
     imb.subresourceRange.baseArrayLayer = 0 ;
     imb.subresourceRange.layerCount     = 1 ;
 
@@ -4745,6 +4748,7 @@ create_depth_resource(
             ,   vc
             ,   vc->swapchain_extent_.width
             ,   vc->swapchain_extent_.height
+            ,   1
             ,   vc->picked_physical_device_->depth_format_
             ,   VK_IMAGE_TILING_OPTIMAL
             ,   VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
@@ -4767,6 +4771,7 @@ create_depth_resource(
             ,   vc->device_
             ,   vc->picked_physical_device_->depth_format_
             ,   VK_IMAGE_ASPECT_DEPTH_BIT
+            ,   1
             )
         )
     )
@@ -4783,6 +4788,7 @@ create_depth_resource(
             ,   vc->picked_physical_device_->depth_format_
             ,   VK_IMAGE_LAYOUT_UNDEFINED
             ,   VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+            ,   1
             )
         )
     )
@@ -4908,6 +4914,7 @@ recreate_swapchain(
             ,   vc->device_
             ,   vc->swapchain_surface_format_.format
             ,   VK_IMAGE_ASPECT_COLOR_BIT
+            ,   1
             )
         )
     )
@@ -7313,6 +7320,7 @@ create_image(
 ,   vulkan_context *            vc
 ,   uint32_t const              width
 ,   uint32_t const              height
+,   uint32_t const              mip_levels
 ,   VkFormat const              format
 ,   VkImageTiling const         tiling
 ,   VkImageUsageFlags const     usage
@@ -7351,7 +7359,7 @@ create_image(
     ici.extent.width                = width ;
     ici.extent.height               = height ;
     ici.extent.depth                = 1 ;
-    ici.mipLevels                   = 1 ;
+    ici.mipLevels                   = mip_levels ;
     ici.arrayLayers                 = 1 ;
     ici.samples                     = VK_SAMPLE_COUNT_1_BIT ;
     ici.tiling                      = tiling ;
@@ -7436,6 +7444,208 @@ create_image(
 }
 
 
+
+
+static bool
+generate_mipmaps(
+    vulkan_context *    vc
+,   VkImage const       image
+,   int32_t const       width
+,   int32_t const       height
+,   uint32_t const      mip_levels
+)
+{
+    require(vc) ;
+    require(image) ;
+    require(width) ;
+    require(height) ;
+    require(mip_levels) ;
+    require(vc->device_) ;
+    require(vc->picked_physical_device_) ;
+    require(vc->picked_physical_device_->swapchain_support_details_okay_) ;
+    begin_timed_block() ;
+
+    if(check(vc->picked_physical_device_->swapchain_support_details_.formats_properties_->optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT))
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
+    VkCommandBuffer command_buffer = NULL ;
+    if(check(begin_single_time_commands(&command_buffer, vc)))
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
+    static VkImageMemoryBarrier imb = { 0 } ;
+    imb.sType                           = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER ;
+    imb.pNext                           = NULL ;
+    imb.srcAccessMask                   = 0 ;
+    imb.dstAccessMask                   = 0 ;
+    imb.oldLayout                       = 0 ;
+    imb.newLayout                       = 0 ;
+    imb.srcQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED ;
+    imb.dstQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED ;
+    imb.image                           = image ;
+    imb.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT ;
+    imb.subresourceRange.baseMipLevel   = 0 ;
+    imb.subresourceRange.levelCount     = 1 ;
+    imb.subresourceRange.baseArrayLayer = 0 ;
+    imb.subresourceRange.layerCount     = 1 ;
+
+    int32_t mip_width   = width ;
+    int32_t mip_height  = height ;
+
+    for(
+        uint32_t i = 1
+    ;   i < mip_levels
+    ;   ++i
+    )
+    {
+        imb.subresourceRange.baseMipLevel   = i - 1;
+        imb.oldLayout                       = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        imb.newLayout                       = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+        imb.srcAccessMask                   = VK_ACCESS_TRANSFER_WRITE_BIT;
+        imb.dstAccessMask                   = VK_ACCESS_TRANSFER_READ_BIT;
+
+        vkCmdPipelineBarrier(
+            command_buffer
+        ,   VK_PIPELINE_STAGE_TRANSFER_BIT
+        ,   VK_PIPELINE_STAGE_TRANSFER_BIT
+        ,   0
+        ,   0
+        ,   NULL
+        ,   0
+        ,   NULL
+        ,   1
+        ,   &imb
+        ) ;
+
+
+        // typedef struct VkImageBlit {
+        //     VkImageSubresourceLayers    srcSubresource;
+        //     VkOffset3D                  srcOffsets[2];
+        //     VkImageSubresourceLayers    dstSubresource;
+        //     VkOffset3D                  dstOffsets[2];
+        // } VkImageBlit;
+        // typedef struct VkImageSubresourceLayers {
+        //     VkImageAspectFlags    aspectMask;
+        //     uint32_t              mipLevel;
+        //     uint32_t              baseArrayLayer;
+        //     uint32_t              layerCount;
+        // } VkImageSubresourceLayers;
+        // typedef struct VkOffset3D {
+        //     int32_t    x;
+        //     int32_t    y;
+        //     int32_t    z;
+        // } VkOffset3D;
+
+        VkImageBlit ib = { 0 } ;
+        ib.srcSubresource.aspectMask        = VK_IMAGE_ASPECT_COLOR_BIT ;
+        ib.srcSubresource.mipLevel          = i - 1 ;
+        ib.srcSubresource.baseArrayLayer    = 0 ;
+        ib.srcSubresource.layerCount        = 1 ;
+        ib.srcOffsets[0].x                  = 0 ;
+        ib.srcOffsets[0].y                  = 0 ;
+        ib.srcOffsets[0].z                  = 0 ;
+        ib.srcOffsets[1].x                  = mip_width ;
+        ib.srcOffsets[1].y                  = mip_height ;
+        ib.srcOffsets[1].z                  = 1 ;
+        ib.dstSubresource.aspectMask        = VK_IMAGE_ASPECT_COLOR_BIT ;
+        ib.dstSubresource.mipLevel          = i ;
+        ib.dstSubresource.baseArrayLayer    = 0 ;
+        ib.dstSubresource.layerCount        = 1 ;
+        ib.dstOffsets[0].x                  = 0 ;
+        ib.dstOffsets[0].y                  = 0 ;
+        ib.dstOffsets[0].z                  = 0 ;
+        ib.dstOffsets[1].x                  = mip_width > 1 ? mip_width / 2 : 1 ;
+        ib.dstOffsets[1].y                  = mip_height > 1 ? mip_height / 2 : 1 ;
+        ib.dstOffsets[1].z                  = 1 ;
+
+        // void vkCmdBlitImage(
+        //     VkCommandBuffer                             commandBuffer,
+        //     VkImage                                     srcImage,
+        //     VkImageLayout                               srcImageLayout,
+        //     VkImage                                     dstImage,
+        //     VkImageLayout                               dstImageLayout,
+        //     uint32_t                                    regionCount,
+        //     const VkImageBlit*                          pRegions,
+        //     VkFilter                                    filter);
+        vkCmdBlitImage(
+            command_buffer
+        ,   image
+        ,   VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL
+        ,   image
+        ,   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
+        ,   1
+        ,   &ib
+        ,   VK_FILTER_LINEAR
+        ) ;
+
+        imb.oldLayout       = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL ;
+        imb.newLayout       = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL ;
+        imb.srcAccessMask   = VK_ACCESS_TRANSFER_READ_BIT ;
+        imb.dstAccessMask   = VK_ACCESS_SHADER_READ_BIT ;
+
+        vkCmdPipelineBarrier(
+            command_buffer
+        ,   VK_PIPELINE_STAGE_TRANSFER_BIT
+        ,   VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT
+        ,   0
+        ,   0
+        ,   NULL
+        ,   0
+        ,   NULL
+        ,   1
+        ,   &imb
+        ) ;
+
+
+        if(mip_width > 1)
+        {
+            mip_width /= 2 ;
+        }
+
+        if(mip_height > 1)
+        {
+            mip_height /= 2 ;
+        }
+
+    }
+
+    imb.subresourceRange.baseMipLevel   = mip_levels - 1 ;
+    imb.oldLayout                       = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL ;
+    imb.newLayout                       = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL ;
+    imb.srcAccessMask                   = VK_ACCESS_TRANSFER_WRITE_BIT ;
+    imb.dstAccessMask                   = VK_ACCESS_SHADER_READ_BIT ;
+
+    vkCmdPipelineBarrier(
+        command_buffer
+    ,   VK_PIPELINE_STAGE_TRANSFER_BIT
+    ,   VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT
+    ,   0
+    ,   0
+    ,   NULL
+    ,   0
+    ,   NULL
+    ,   1
+    ,   &imb
+    ) ;
+
+
+    if(check(end_single_time_commands(vc, command_buffer)))
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
+
+    end_timed_block() ;
+    return true ;
+}
+
+
 static bool
 create_texture_image(
     vulkan_context *    vc
@@ -7468,6 +7678,14 @@ create_texture_image(
     require(tx_width > 0) ;
     require(tx_height > 0) ;
     require(tx_channels > 0) ;
+
+    vc->texture_mip_levels_ = calc_mip_levels(tx_width, tx_height) ;
+    log_debug_u32(tx_width) ;
+    log_debug_u32(tx_height) ;
+    log_debug_u32(vc->texture_mip_levels_) ;
+
+
+
     VkDeviceSize const image_size = tx_width * tx_height * 4 ;
 
     VkBuffer staging_buffer                 = NULL ;
@@ -7520,9 +7738,10 @@ create_texture_image(
             ,   vc
             ,   tx_width
             ,   tx_height
+            ,   vc->texture_mip_levels_
             ,   VK_FORMAT_R8G8B8A8_SRGB
             ,   VK_IMAGE_TILING_OPTIMAL
-            ,   VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT
+            ,   VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT
             ,   VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
             )
         )
@@ -7538,6 +7757,7 @@ create_texture_image(
             ,   VK_FORMAT_R8G8B8A8_SRGB
             ,   VK_IMAGE_LAYOUT_UNDEFINED
             ,   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
+            ,   vc->texture_mip_levels_
             )
         )
     )
@@ -7560,12 +7780,12 @@ create_texture_image(
         return false ;
     }
 
-    if(check(transition_image_layout(
+    if(check(generate_mipmaps(
                 vc
             ,   vc->texture_image_
-            ,   VK_FORMAT_R8G8B8A8_SRGB
-            ,   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
-            ,   VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            ,   tx_width
+            ,   tx_height
+            ,   vc->texture_mip_levels_
             )
         )
     )
@@ -7573,6 +7793,22 @@ create_texture_image(
         end_timed_block() ;
         return false ;
     }
+
+
+    // if(check(transition_image_layout(
+    //             vc
+    //         ,   vc->texture_image_
+    //         ,   VK_FORMAT_R8G8B8A8_SRGB
+    //         ,   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
+    //         ,   VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+    //         ,   vc->texture_mip_levels_
+    //         )
+    //     )
+    // )
+    // {
+    //     end_timed_block() ;
+    //     return false ;
+    // }
 
     vkDestroyBuffer(vc->device_, staging_buffer, NULL) ;
     vkFreeMemory(vc->device_, staging_buffer_memory, NULL) ;
@@ -7599,6 +7835,7 @@ create_texture_image_view(
             ,   vc->device_
             ,   VK_FORMAT_R8G8B8A8_SRGB
             ,   VK_IMAGE_ASPECT_COLOR_BIT
+            ,   vc->texture_mip_levels_
             )
         )
     )
@@ -7657,7 +7894,7 @@ create_texture_sampler(
     sci.compareEnable           = VK_FALSE ;
     sci.compareOp               = VK_COMPARE_OP_ALWAYS ;
     sci.minLod                  = 0.0f ;
-    sci.maxLod                  = 0.0f ;
+    sci.maxLod                  = (float) vc->texture_mip_levels_ ;
     sci.borderColor             = VK_BORDER_COLOR_INT_OPAQUE_BLACK ;
     sci.unnormalizedCoordinates = VK_FALSE ;
 
@@ -8172,6 +8409,7 @@ create_vulkan()
             ,   vc_->device_
             ,   vc_->swapchain_surface_format_.format
             ,   VK_IMAGE_ASPECT_COLOR_BIT
+            ,   1
             )
         )
     )

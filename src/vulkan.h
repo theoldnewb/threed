@@ -169,6 +169,7 @@ typedef struct vulkan_context
     VkDescriptorPool    descriptor_pool_ ;
     VkDescriptorSet     descriptor_sets_[max_vulkan_frames_in_flight] ;
 
+    uint32_t            texture_mip_levels_ ;
     VkImage             texture_image_ ;
     VkDeviceMemory      texture_image_memory_ ;
     VkImageView         texture_image_view_ ;
