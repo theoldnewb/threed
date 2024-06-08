@@ -15,7 +15,7 @@
 #define max_vulkan_present_modes                8
 #define max_vulkan_desired_format_properties    8
 #define max_vulkan_swapchain_images             4
-#define max_vulkan_frames_in_flight             2
+#define max_vulkan_frames_in_flight             4
 
 
 typedef struct vulkan_desired_format_properties
@@ -133,7 +133,7 @@ typedef struct vulkan_context
     VkImage             swapchain_images_[max_vulkan_swapchain_images] ;
     VkImageView         swapchain_views_[max_vulkan_swapchain_images] ;
     uint32_t            desired_swapchain_image_count_ ;
-
+    uint32_t            frames_in_flight_count_ ;
 
     void *              vert_shader_memory_ ;
     uint64_t            vert_shader_memory_size_ ;
@@ -191,7 +191,6 @@ typedef struct vulkan_context
     VkImageView     color_image_view_ ;
 
 
-
 } vulkan_context ;
 
 
@@ -208,3 +207,86 @@ draw_vulkan() ;
 
 void
 resize_vulkan() ;
+
+
+void
+add_desriptor_set_layout_binding(
+    VkDescriptorSetLayoutBinding *  bindings
+,   uint32_t *                      bindings_count
+,   uint32_t const                  bindings_count_max
+,   uint32_t const                  binding
+,   VkDescriptorType const          descriptor_type
+,   VkShaderStageFlags const        stage_flags
+) ;
+
+
+bool
+create_descriptor_set_layout(
+    VkDescriptorSetLayout *                 out_layout
+,   VkDevice const                          device
+,   VkDescriptorSetLayoutBinding const *    bindings
+,   uint32_t const                          bindings_count
+) ;
+
+
+void
+fill_pipeline_layout_create_info(
+    VkPipelineLayoutCreateInfo *    plci
+,   VkDescriptorSetLayout const *   descriptor_set_layouts
+,   uint32_t const                  descriptor_set_layouts_count
+) ;
+
+
+void
+add_descriptor_pool_size(
+    VkDescriptorPoolSize *  pool_sizes
+,   uint32_t *              pool_sizes_count
+,   uint32_t const          pool_sizes_count_max
+,   VkDescriptorType const  descriptor_type
+,   uint32_t const          frames_in_flight_count
+) ;
+
+
+bool
+create_descriptor_pool(
+    VkDescriptorPool *              out_descriptor_pool
+,   VkDevice const                  device
+,   VkDescriptorPoolSize const *    pool_sizes
+,   uint32_t const                  pool_sizes_count
+,   uint32_t const                  frames_in_flight_count
+) ;
+
+
+bool
+create_descriptor_sets(
+    VkDescriptorSet *           out_descriptor_sets
+,   VkDevice const              device
+,   VkDescriptorSetLayout const descriptor_set_layout
+,   VkDescriptorPool const      descriptor_pool
+,   uint32_t const              frames_in_flight_count
+) ;
+
+
+bool
+create_uniform_buffers(
+    VkBuffer *                                  out_uniform_buffers
+,   VkDeviceMemory *                            out_uniform_buffers_memory
+,   void **                                     out_uniform_buffers_mapped
+,   VkDevice const                              device
+,   uint32_t const                              uniform_buffer_size
+,   VkPhysicalDeviceMemoryProperties const *    pdmp
+,   uint32_t const                              frames_in_flight_count
+) ;
+
+
+bool
+create_texture_image(
+    VkImage *                                   out_image
+,   VkDeviceMemory *                            out_image_memory
+,   char const * const                          full_name
+,   VkDevice const                              device
+,   VkCommandPool const                         command_pool
+,   VkQueue const                               graphics_queue
+,   VkPhysicalDeviceMemoryProperties const *    pdmp
+,   uint32_t const                              mip_levels
+) ;

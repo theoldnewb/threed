@@ -5,6 +5,7 @@
 #include "log.h"
 #include "debug.h"
 #include "math.h"
+#include "vulkan_rob.h"
 
 #include <SDL3/SDL_vulkan.h>
 #include <cglm/vec2.h>
@@ -89,17 +90,18 @@ static uint32_t const uniform_buffer_object_size = sizeof(uniform_buffer_object)
 //
 static bool
 create_image(
-    VkImage *                   out_image
-,   VkDeviceMemory *            out_image_memory
-,   vulkan_context *            vc
-,   uint32_t const              width
-,   uint32_t const              height
-,   uint32_t const              mip_levels
-,   VkSampleCountFlagBits const msaa_sample_count
-,   VkFormat const              format
-,   VkImageTiling const         tiling
-,   VkImageUsageFlags const     usage
-,   VkMemoryPropertyFlags const mem_prop_flags
+    VkImage *                                   out_image
+,   VkDeviceMemory *                            out_image_memory
+,   VkDevice const                              device
+,   VkPhysicalDeviceMemoryProperties const *    pdmp
+,   uint32_t const                              width
+,   uint32_t const                              height
+,   uint32_t const                              mip_levels
+,   VkSampleCountFlagBits const                 msaa_sample_count
+,   VkFormat const                              format
+,   VkImageTiling const                         tiling
+,   VkImageUsageFlags const                     usage
+,   VkMemoryPropertyFlags const                 mem_prop_flags
 ) ;
 
 
@@ -177,6 +179,7 @@ update_uniform_buffer(
 {
     require(vc) ;
     require(current_frame < max_vulkan_frames_in_flight) ;
+    require(current_frame < vc->frames_in_flight_count_) ;
 
     static bool once = true ;
     static uint64_t previous_time = 0 ;
@@ -4016,7 +4019,7 @@ create_framebuffers(
     require(vc) ;
     require(vc->device_) ;
     begin_timed_block() ;
-
+    require(vc->swapchain_images_count_ < max_vulkan_swapchain_images) ;
     static VkImageView  attachments[3] = { 0 } ;
     static uint32_t     attachments_count = 0 ;
 
@@ -4487,25 +4490,25 @@ create_image_views(
 static bool
 begin_single_time_commands(
     VkCommandBuffer *   out_command_buffer
-,   vulkan_context *    vc
+,   VkDevice const      device
+,   VkCommandPool const command_pool
 )
 {
     require(out_command_buffer) ;
-    require(vc) ;
-    require(vc->device_) ;
-    require(vc->command_pool_) ;
+    require(device) ;
+    require(command_pool) ;
 
     begin_timed_block() ;
 
     static VkCommandBufferAllocateInfo cbai = { 0 } ;
     cbai.sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO ;
     cbai.pNext              = NULL ;
-    cbai.commandPool        = vc->command_pool_ ;
+    cbai.commandPool        = command_pool ;
     cbai.level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY ;
     cbai.commandBufferCount = 1 ;
 
     if(check_vulkan(vkAllocateCommandBuffers(
-                vc->device_
+                device
             ,   &cbai
             ,   out_command_buffer
             )
@@ -4537,15 +4540,16 @@ begin_single_time_commands(
 
 static bool
 end_single_time_commands(
-    vulkan_context *        vc
+    VkDevice const          device
+,   VkCommandPool const     command_pool
+,   VkQueue const           graphics_queue
 ,   VkCommandBuffer const   command_buffer
 )
 {
-    require(vc) ;
+    require(device) ;
+    require(command_pool) ;
+    require(graphics_queue) ;
     require(command_buffer) ;
-    require(vc->device_) ;
-    require(vc->command_pool_) ;
-    require(vc->graphics_queue_) ;
     begin_timed_block() ;
 
     if(check_vulkan(vkEndCommandBuffer(command_buffer)))
@@ -4567,7 +4571,7 @@ end_single_time_commands(
     si.pSignalSemaphores        = NULL ;
 
     if(check_vulkan(vkQueueSubmit(
-                vc->graphics_queue_
+                graphics_queue
             ,   1
             ,   &si
             ,   VK_NULL_HANDLE
@@ -4579,15 +4583,15 @@ end_single_time_commands(
         return false ;
     }
 
-    if(check_vulkan(vkQueueWaitIdle(vc->graphics_queue_)))
+    if(check_vulkan(vkQueueWaitIdle(graphics_queue)))
     {
         end_timed_block() ;
         return false ;
     }
 
     vkFreeCommandBuffers(
-        vc->device_
-    ,   vc->command_pool_
+        device
+    ,   command_pool
     ,   1
     ,   &command_buffer
     ) ;
@@ -4599,7 +4603,9 @@ end_single_time_commands(
 
 static bool
 transition_image_layout(
-    vulkan_context *    vc
+    VkDevice const      device
+,   VkCommandPool const command_pool
+,   VkQueue const       graphics_queue
 ,   VkImage const       image
 ,   VkFormat const      format
 ,   VkImageLayout const old_layout
@@ -4607,13 +4613,20 @@ transition_image_layout(
 ,   uint32_t const      mip_levels
 )
 {
-    require(vc) ;
+    require(device) ;
+    require(command_pool) ;
+    require(graphics_queue) ;
     require(image) ;
-    require(vc->device_) ;
     begin_timed_block() ;
 
     VkCommandBuffer command_buffer = NULL ;
-    if(check(begin_single_time_commands(&command_buffer, vc)))
+    if(check(begin_single_time_commands(
+                &command_buffer
+            ,   device
+            ,   command_pool
+            )
+        )
+    )
     {
         end_timed_block() ;
         return false ;
@@ -4736,8 +4749,14 @@ transition_image_layout(
     ,   &imb
     ) ;
 
-
-    if(check(end_single_time_commands(vc, command_buffer)))
+    if(check(end_single_time_commands(
+                device
+            ,   command_pool
+            ,   graphics_queue
+            ,   command_buffer
+            )
+        )
+    )
     {
         end_timed_block() ;
         return false ;
@@ -4760,7 +4779,8 @@ create_depth_resource(
     if(check(create_image(
                 &vc->depth_image_
             ,   &vc->depth_image_memory_
-            ,   vc
+            ,   vc->device_
+            ,   &vc->picked_physical_device_->memory_properties_
             ,   vc->swapchain_extent_.width
             ,   vc->swapchain_extent_.height
             ,   1
@@ -4797,9 +4817,10 @@ create_depth_resource(
     }
     require(vc->depth_image_view_) ;
 
-
     if(check(transition_image_layout(
-                vc
+                vc->device_
+            ,   vc->command_pool_
+            ,   vc->graphics_queue_
             ,   vc->depth_image_
             ,   vc->picked_physical_device_->depth_format_
             ,   VK_IMAGE_LAYOUT_UNDEFINED
@@ -4826,6 +4847,7 @@ cleanup_swapchain(
 {
     require(vc) ;
     require(vc->device_) ;
+    require(vc->swapchain_images_count_ < max_vulkan_swapchain_images) ;
 
     begin_timed_block() ;
 
@@ -4926,7 +4948,8 @@ create_color_resource(
     if(check(create_image(
                 &vc->color_image_
             ,   &vc->color_image_memory_
-            ,   vc
+            ,   vc->device_
+            ,   &vc->picked_physical_device_->memory_properties_
             ,   vc->swapchain_extent_.width
             ,   vc->swapchain_extent_.height
             ,   1
@@ -5664,44 +5687,6 @@ create_graphics_pipeline(
     pdssci.maxDepthBounds           = 1.0f ;
 
 
-    // typedef struct VkPipelineLayoutCreateInfo {
-    //     VkStructureType                 sType;
-    //     const void*                     pNext;
-    //     VkPipelineLayoutCreateFlags     flags;
-    //     uint32_t                        setLayoutCount;
-    //     const VkDescriptorSetLayout*    pSetLayouts;
-    //     uint32_t                        pushConstantRangeCount;
-    //     const VkPushConstantRange*      pPushConstantRanges;
-    // } VkPipelineLayoutCreateInfo;
-    static VkPipelineLayoutCreateInfo plci = { 0 } ;
-    plci.sType                      = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO ;
-    plci.pNext                      = NULL ;
-    plci.flags                      = 0 ;
-    plci.setLayoutCount             = 1 ;
-    plci.pSetLayouts                = &vc->descriptor_set_layout_ ;
-    plci.pushConstantRangeCount     = 0 ;
-    plci.pPushConstantRanges        = NULL ;
-
-    // VkResult vkCreatePipelineLayout(
-    //     VkDevice                                    device,
-    //     const VkPipelineLayoutCreateInfo*           pCreateInfo,
-    //     const VkAllocationCallbacks*                pAllocator,
-    //     VkPipelineLayout*                           pPipelineLayout);
-    if(check_vulkan(vkCreatePipelineLayout(
-                vc->device_
-            ,   &plci
-            ,   NULL
-            ,   &vc->pipeline_layout_
-            )
-        )
-    )
-    {
-        end_timed_block() ;
-        return false ;
-    }
-    require(vc->pipeline_layout_) ;
-
-
     // typedef struct VkGraphicsPipelineCreateInfo {
     //     VkStructureType                                  sType;
     //     const void*                                      pNext;
@@ -5724,25 +5709,26 @@ create_graphics_pipeline(
     //     int32_t                                          basePipelineIndex;
     // } VkGraphicsPipelineCreateInfo;
     static VkGraphicsPipelineCreateInfo gpci = { 0 } ;
-    gpci.sType                  = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO ;
-    gpci.pNext                  = NULL ;
-    gpci.flags                  = 0 ;
-    gpci.stageCount             = array_count(pssci) ;
-    gpci.pStages                = pssci ;
-    gpci.pVertexInputState      = &pvisci ;
-    gpci.pInputAssemblyState    = &piasci ;
-    gpci.pTessellationState     = NULL ;
-    gpci.pViewportState         = &pvsci ;
-    gpci.pRasterizationState    = &prsci ;
-    gpci.pMultisampleState      = &pmssci ;
-    gpci.pDepthStencilState     = &pdssci ;
-    gpci.pColorBlendState       = &pcbsci ;
-    gpci.pDynamicState          = &pdsci ;
-    gpci.layout                 = vc->pipeline_layout_ ;
-    gpci.renderPass             = vc->render_pass_ ;
-    gpci.subpass                = 0 ;
-    gpci.basePipelineHandle     = VK_NULL_HANDLE ;
-    gpci.basePipelineIndex      = -1 ;
+    // away
+    // gpci.sType                  = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO ;
+    // gpci.pNext                  = NULL ;
+    // gpci.flags                  = 0 ;
+    // gpci.stageCount             = array_count(pssci) ;
+    // gpci.pStages                = pssci ;
+    // gpci.pVertexInputState      = &pvisci ;
+    // gpci.pInputAssemblyState    = &piasci ;
+    // gpci.pTessellationState     = NULL ;
+    // gpci.pViewportState         = &pvsci ;
+    // gpci.pRasterizationState    = &prsci ;
+    // gpci.pMultisampleState      = &pmssci ;
+    // gpci.pDepthStencilState     = &pdssci ;
+    // gpci.pColorBlendState       = &pcbsci ;
+    // gpci.pDynamicState          = &pdsci ;
+    // gpci.layout                 = vc->pipeline_layout_ ;
+    // gpci.renderPass             = vc->render_pass_ ;
+    // gpci.subpass                = 0 ;
+    // gpci.basePipelineHandle     = VK_NULL_HANDLE ;
+    // gpci.basePipelineIndex      = -1 ;
 
 
 
@@ -6044,7 +6030,7 @@ create_command_buffer(
     cbai.pNext              = NULL ;
     cbai.commandPool        = vc->command_pool_ ;
     cbai.level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY ;
-    cbai.commandBufferCount = max_vulkan_frames_in_flight ;
+    cbai.commandBufferCount = vc->frames_in_flight_count_ ;
 
     // VkResult vkAllocateCommandBuffers(
     //     VkDevice                                    device,
@@ -6234,16 +6220,17 @@ record_command_buffer(
     //     const VkDescriptorSet*                      pDescriptorSets,
     //     uint32_t                                    dynamicOffsetCount,
     //     const uint32_t*                             pDynamicOffsets);
-    vkCmdBindDescriptorSets(
-        command_buffer
-    ,   VK_PIPELINE_BIND_POINT_GRAPHICS
-    ,   vc->pipeline_layout_
-    ,   0
-    ,   1
-    ,   &vc->descriptor_sets_[vc->current_frame_]
-    ,   0
-    ,   NULL
-    ) ;
+    // away
+    // vkCmdBindDescriptorSets(
+    //     command_buffer
+    // ,   VK_PIPELINE_BIND_POINT_GRAPHICS
+    // ,   vc->pipeline_layout_
+    // ,   0
+    // ,   1
+    // ,   &vc->descriptor_sets_[vc->current_frame_]
+    // ,   0
+    // ,   NULL
+    // ) ;
 
     // void vkCmdDrawIndexed(
     //     VkCommandBuffer                             commandBuffer,
@@ -6304,7 +6291,7 @@ create_sync_objects(
 
     for(
         uint32_t i = 0
-    ;   i < max_vulkan_frames_in_flight
+    ;   i < vc->frames_in_flight_count_
     ;   ++i
     )
     {
@@ -6376,6 +6363,7 @@ draw_frame(
     begin_timed_block() ;
 
     require(vc->current_frame_ < max_vulkan_frames_in_flight) ;
+    require(vc->current_frame_ < vc->frames_in_flight_count_) ;
 
     // VkResult vkWaitForFences(
     //     VkDevice                                    device,
@@ -6636,7 +6624,7 @@ draw_frame(
 
     log_debug("vc->current_frame_=%d, image_index=%d", vc->current_frame_, image_index) ;
 
-    vc->current_frame_ = (vc->current_frame_ + 1) % max_vulkan_frames_in_flight ;
+    vc->current_frame_ = (vc->current_frame_ + 1) % vc->frames_in_flight_count_ ;
 
     end_timed_block() ;
     return true ;
@@ -6682,18 +6670,20 @@ find_memory_type(
 
 static bool
 create_buffer(
-    VkBuffer *                  out_buffer
-,   VkDeviceMemory *            out_buffer_memory
-,   vulkan_context *            vc
-,   uint32_t const              size
-,   VkBufferUsageFlags const    usage
-,   VkMemoryPropertyFlags const mem_prop
+    VkBuffer *                                  out_buffer
+,   VkDeviceMemory *                            out_buffer_memory
+,   VkDevice const                              device
+,   VkPhysicalDeviceMemoryProperties const *    pdmp
+,   uint32_t const                              size
+,   VkBufferUsageFlags const                    usage
+,   VkMemoryPropertyFlags const                 mem_prop
 )
 {
     require(out_buffer) ;
     require(out_buffer_memory) ;
-    require(vc) ;
-    require(vc_->device_) ;
+    require(device) ;
+    require(pdmp) ;
+    require(size) ;
     begin_timed_block() ;
 
 
@@ -6723,7 +6713,7 @@ create_buffer(
     //     const VkAllocationCallbacks*                pAllocator,
     //     VkBuffer*                                   pBuffer);
     if(check_vulkan(vkCreateBuffer(
-                vc->device_
+                device
             ,   &bci
             ,   NULL
             ,   out_buffer
@@ -6748,12 +6738,12 @@ create_buffer(
     //     VkDevice                                    device,
     //     VkBuffer                                    buffer,
     //     VkMemoryRequirements*                       pMemoryRequirements);
-    vkGetBufferMemoryRequirements(vc->device_, *out_buffer, &mem_requirements) ;
+    vkGetBufferMemoryRequirements(device, *out_buffer, &mem_requirements) ;
 
     uint32_t desired_memory_type = 0 ;
     if(check(find_memory_type(
                 &desired_memory_type
-            ,   &vc->picked_physical_device_->memory_properties_
+            ,   pdmp
             ,   mem_requirements.memoryTypeBits
             ,   mem_prop
             )
@@ -6783,7 +6773,7 @@ create_buffer(
     //     const VkAllocationCallbacks*                pAllocator,
     //     VkDeviceMemory*                             pMemory);
     if(check_vulkan(vkAllocateMemory(
-                vc->device_
+                device
             ,   &mai
             ,   NULL
             ,   out_buffer_memory
@@ -6803,7 +6793,7 @@ create_buffer(
     //     VkDeviceMemory                              memory,
     //     VkDeviceSize                                memoryOffset);
     if(check_vulkan(vkBindBufferMemory(
-                vc->device_
+                device
             ,   *out_buffer
             ,   *out_buffer_memory
             ,   0
@@ -6840,7 +6830,7 @@ copy_buffer(
     begin_timed_block() ;
 
     VkCommandBuffer command_buffer = NULL ;
-    if(check(begin_single_time_commands(&command_buffer, vc)))
+    if(check(begin_single_time_commands(&command_buffer, vc->device_, vc->command_pool_)))
     {
         end_timed_block() ;
         return false ;
@@ -6866,7 +6856,14 @@ copy_buffer(
     //     const VkBufferCopy*                         pRegions);
     vkCmdCopyBuffer(command_buffer, src_buffer, dst_buffer, 1, &copy_region) ;
 
-    if(check(end_single_time_commands(vc, command_buffer)))
+    if(check(end_single_time_commands(
+                vc->device_
+            ,   vc->command_pool_
+            ,   vc->graphics_queue_
+            ,   command_buffer
+            )
+        )
+    )
     {
         end_timed_block() ;
         return false ;
@@ -6879,20 +6876,33 @@ copy_buffer(
 
 static bool
 copy_buffer_to_image(
-    vulkan_context *    vc
+    VkDevice const      device
+,   VkCommandPool const command_pool
+,   VkQueue const       graphics_queue
 ,   VkBuffer const      buffer
 ,   VkImage const       image
 ,   uint32_t const      width
 ,   uint32_t const      height
 )
 {
-    require(vc) ;
+    require(device) ;
+    require(command_pool) ;
+    require(graphics_queue) ;
     require(buffer) ;
     require(image) ;
+    require(width) ;
+    require(height) ;
+
     begin_timed_block() ;
 
     VkCommandBuffer command_buffer = NULL ;
-    if(check(begin_single_time_commands(&command_buffer, vc)))
+    if(check(begin_single_time_commands(
+                &command_buffer
+            ,   device
+            ,   command_pool
+            )
+        )
+    )
     {
         end_timed_block() ;
         return false ;
@@ -6944,7 +6954,14 @@ copy_buffer_to_image(
     ,   &bic
     ) ;
 
-    if(check(end_single_time_commands(vc, command_buffer)))
+    if(check(end_single_time_commands(
+                device
+            ,   command_pool
+            ,   graphics_queue
+            ,   command_buffer
+            )
+        )
+    )
     {
         end_timed_block() ;
         return false ;
@@ -6976,7 +6993,8 @@ create_vertex_buffer(
     if(check(create_buffer(
                 &staging_buffer
             ,   &staging_buffer_memory
-            ,   vc
+            ,   vc->device_
+            ,   &vc->picked_physical_device_->memory_properties_
             ,   buffer_size
             ,   VK_BUFFER_USAGE_TRANSFER_SRC_BIT
             ,   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
@@ -7025,7 +7043,8 @@ create_vertex_buffer(
     if(check(create_buffer(
                 out_buffer
             ,   out_buffer_memory
-            ,   vc
+            ,   vc->device_
+            ,   &vc->picked_physical_device_->memory_properties_
             ,   buffer_size
             ,   VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
             ,   VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
@@ -7073,7 +7092,8 @@ create_index_buffer(
     if(check(create_buffer(
                 &staging_buffer
             ,   &staging_buffer_memory
-            ,   vc
+            ,   vc->device_
+            ,   &vc->picked_physical_device_->memory_properties_
             ,   buffer_size
             ,   VK_BUFFER_USAGE_TRANSFER_SRC_BIT
             ,   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
@@ -7122,7 +7142,8 @@ create_index_buffer(
     if(check(create_buffer(
                 out_buffer
             ,   out_buffer_memory
-            ,   vc
+            ,   vc->device_
+            ,   &vc->picked_physical_device_->memory_properties_
             ,   buffer_size
             ,   VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT
             ,   VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
@@ -7150,354 +7171,27 @@ create_index_buffer(
 }
 
 
-static bool
-create_descriptor_set_layout(
-    VkDescriptorSetLayout * out_descriptor_set_layout
-,   vulkan_context *        vc
-)
-{
-    require(out_descriptor_set_layout) ;
-    require(vc) ;
-
-    begin_timed_block() ;
-
-    // typedef struct VkDescriptorSetLayoutBinding {
-    //     uint32_t              binding;
-    //     VkDescriptorType      descriptorType;
-    //     uint32_t              descriptorCount;
-    //     VkShaderStageFlags    stageFlags;
-    //     const VkSampler*      pImmutableSamplers;
-    // } VkDescriptorSetLayoutBinding;
-    static VkDescriptorSetLayoutBinding dslb[2] = { 0 } ;
-    dslb[0].binding                = 0 ;
-    dslb[0].descriptorType         = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER ;
-    dslb[0].descriptorCount        = 1 ;
-    dslb[0].stageFlags             = VK_SHADER_STAGE_VERTEX_BIT ;
-    dslb[0].pImmutableSamplers     = NULL ;
-
-    dslb[1].binding                = 1 ;
-    dslb[1].descriptorType         = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER ;
-    dslb[1].descriptorCount        = 1 ;
-    dslb[1].stageFlags             = VK_SHADER_STAGE_FRAGMENT_BIT ;
-    dslb[1].pImmutableSamplers     = NULL ;
-
-
-    // typedef struct VkDescriptorSetLayoutCreateInfo {
-    //     VkStructureType                        sType;
-    //     const void*                            pNext;
-    //     VkDescriptorSetLayoutCreateFlags       flags;
-    //     uint32_t                               bindingCount;
-    //     const VkDescriptorSetLayoutBinding*    pBindings;
-    // } VkDescriptorSetLayoutCreateInfo;
-    static VkDescriptorSetLayoutCreateInfo dslci = { 0 } ;
-    dslci.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO ;
-    dslci.pNext         = NULL ;
-    dslci.flags         = 0 ;
-    dslci.bindingCount  = array_count(dslb) ;
-    dslci.pBindings     = dslb ;
-
-
-    // VkResult vkCreateDescriptorSetLayout(
-    //     VkDevice                                    device,
-    //     const VkDescriptorSetLayoutCreateInfo*      pCreateInfo,
-    //     const VkAllocationCallbacks*                pAllocator,
-    //     VkDescriptorSetLayout*                      pSetLayout);
-    if(check_vulkan(vkCreateDescriptorSetLayout(
-                vc->device_
-            ,   &dslci
-            ,   NULL
-            ,   out_descriptor_set_layout
-            )
-        )
-    )
-    {
-        end_timed_block() ;
-        return false ;
-    }
-    require(*out_descriptor_set_layout) ;
-
-    end_timed_block() ;
-    return true ;
-
-}
-
-
-static bool
-create_uniform_buffers(
-    vulkan_context *    vc
-)
-{
-    require(vc) ;
-    require(vc_->device_) ;
-    begin_timed_block() ;
-
-    VkDeviceSize const buffer_size = uniform_buffer_object_size ;
-
-    for(
-        uint32_t i = 0
-    ;   i < max_vulkan_frames_in_flight
-    ;   ++i
-    )
-    {
-        if(check(create_buffer(
-                    &vc->uniform_buffers_[i]
-                ,   &vc->uniform_buffers_memory_[i]
-                ,   vc
-                ,   buffer_size
-                ,   VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT
-                ,   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-                )
-            )
-        )
-        {
-            end_timed_block() ;
-            return false ;
-        }
-        require(vc->uniform_buffers_[i]) ;
-        require(vc->uniform_buffers_memory_[i]) ;
-
-        if(check_vulkan(vkMapMemory(
-                    vc->device_
-                ,   vc->uniform_buffers_memory_[i]
-                ,   0
-                ,   buffer_size
-                ,   0
-                ,   &vc->uniform_buffers_mapped_[i]
-                )
-            )
-        )
-        {
-            end_timed_block() ;
-            return false ;
-        }
-        require(vc->uniform_buffers_mapped_[i]) ;
-    }
-
-    end_timed_block() ;
-    return true ;
-}
-
-
-static bool
-create_descriptor_pool(
-    vulkan_context *    vc
-)
-{
-    require(vc) ;
-    begin_timed_block() ;
-
-    // typedef struct VkDescriptorPoolSize {
-    //     VkDescriptorType    type;
-    //     uint32_t            descriptorCount;
-    // } VkDescriptorPoolSize;
-    static VkDescriptorPoolSize dps[2] = { 0 } ;
-    dps[0].type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER ;
-    dps[0].descriptorCount = max_vulkan_frames_in_flight ;
-
-    dps[1].type            = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER ;
-    dps[1].descriptorCount = max_vulkan_frames_in_flight ;
-
-
-    // typedef struct VkDescriptorPoolCreateInfo {
-    //     VkStructureType                sType;
-    //     const void*                    pNext;
-    //     VkDescriptorPoolCreateFlags    flags;
-    //     uint32_t                       maxSets;
-    //     uint32_t                       poolSizeCount;
-    //     const VkDescriptorPoolSize*    pPoolSizes;
-    // } VkDescriptorPoolCreateInfo;
-    static VkDescriptorPoolCreateInfo dpci = { 0 } ;
-    dpci.sType          = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO ;
-    dpci.pNext          = NULL ;
-    dpci.flags          = 0 ;
-    dpci.maxSets        = max_vulkan_frames_in_flight ;
-    dpci.poolSizeCount  = array_count(dps) ;
-    dpci.pPoolSizes     = dps ;
-
-
-    // VkResult vkCreateDescriptorPool(
-    //     VkDevice                                    device,
-    //     const VkDescriptorPoolCreateInfo*           pCreateInfo,
-    //     const VkAllocationCallbacks*                pAllocator,
-    //     VkDescriptorPool*                           pDescriptorPool);
-    if(check_vulkan(vkCreateDescriptorPool(
-                vc->device_
-            ,   &dpci
-            ,   NULL
-            ,   &vc->descriptor_pool_
-            )
-        )
-    )
-    {
-        end_timed_block() ;
-        return false ;
-    }
-    require(vc->descriptor_pool_) ;
-
-    end_timed_block() ;
-    return true ;
-
-}
-
-
-static bool
-create_descriptor_sets(
-    vulkan_context *    vc
-)
-{
-    require(vc) ;
-    begin_timed_block() ;
-
-    VkDescriptorSetLayout   layouts[max_vulkan_frames_in_flight] = { 0 } ;
-
-    for(
-        uint32_t i = 0
-    ;   i < max_vulkan_frames_in_flight
-    ;   ++i
-    )
-    {
-        layouts[i] = vc->descriptor_set_layout_ ;
-    }
-
-
-    // typedef struct VkDescriptorSetAllocateInfo {
-    //     VkStructureType                 sType;
-    //     const void*                     pNext;
-    //     VkDescriptorPool                descriptorPool;
-    //     uint32_t                        descriptorSetCount;
-    //     const VkDescriptorSetLayout*    pSetLayouts;
-    // } VkDescriptorSetAllocateInfo;
-    static VkDescriptorSetAllocateInfo  dsai = { 0 } ;
-    dsai.sType                  = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO ;
-    dsai.pNext                  = NULL ;
-    dsai.descriptorPool         = vc->descriptor_pool_ ;
-    dsai.descriptorSetCount     = array_count(layouts) ;
-    dsai.pSetLayouts            = layouts ;
-
-
-    // VkResult vkAllocateDescriptorSets(
-    //     VkDevice                                    device,
-    //     const VkDescriptorSetAllocateInfo*          pAllocateInfo,
-    //     VkDescriptorSet*                            pDescriptorSets);
-    if(check_vulkan(vkAllocateDescriptorSets(
-                vc->device_
-            ,   &dsai
-            ,   vc->descriptor_sets_
-            )
-        )
-    )
-    {
-        end_timed_block() ;
-        return false ;
-    }
-
-
-    for(
-        uint32_t i = 0
-    ;   i < max_vulkan_frames_in_flight
-    ;   ++i
-    )
-    {
-        require(vc->descriptor_sets_[i]) ;
-
-        // typedef struct VkDescriptorBufferInfo {
-        //     VkBuffer        buffer;
-        //     VkDeviceSize    offset;
-        //     VkDeviceSize    range;
-        // } VkDescriptorBufferInfo;
-        VkDescriptorBufferInfo dbi = { 0 } ;
-        dbi.buffer  = vc->uniform_buffers_[i] ;
-        dbi.offset  = 0 ;
-        dbi.range   = uniform_buffer_object_size ;
-
-
-        // typedef struct VkDescriptorImageInfo {
-        //     VkSampler        sampler;
-        //     VkImageView      imageView;
-        //     VkImageLayout    imageLayout;
-        // } VkDescriptorImageInfo;
-        VkDescriptorImageInfo dii = { 0 } ;
-        dii.sampler     = vc->texture_sampler_ ;
-        dii.imageView   = vc->texture_image_view_ ;
-        dii.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL ;
-
-
-        // typedef struct VkWriteDescriptorSet {
-        //     VkStructureType                  sType;
-        //     const void*                      pNext;
-        //     VkDescriptorSet                  dstSet;
-        //     uint32_t                         dstBinding;
-        //     uint32_t                         dstArrayElement;
-        //     uint32_t                         descriptorCount;
-        //     VkDescriptorType                 descriptorType;
-        //     const VkDescriptorImageInfo*     pImageInfo;
-        //     const VkDescriptorBufferInfo*    pBufferInfo;
-        //     const VkBufferView*              pTexelBufferView;
-        // } VkWriteDescriptorSet;
-        VkWriteDescriptorSet wds[2] = { 0 } ;
-        wds[0].sType               = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET ;
-        wds[0].pNext               = NULL ;
-        wds[0].dstSet              = vc->descriptor_sets_[i] ;
-        wds[0].dstBinding          = 0 ;
-        wds[0].dstArrayElement     = 0 ;
-        wds[0].descriptorCount     = 1 ;
-        wds[0].descriptorType      = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER ;
-        wds[0].pImageInfo          = NULL ;
-        wds[0].pBufferInfo         = &dbi ;
-        wds[0].pTexelBufferView    = NULL ;
-
-        wds[1].sType               = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET ;
-        wds[1].pNext               = NULL ;
-        wds[1].dstSet              = vc->descriptor_sets_[i] ;
-        wds[1].dstBinding          = 1 ;
-        wds[1].dstArrayElement     = 0 ;
-        wds[1].descriptorCount     = 1 ;
-        wds[1].descriptorType      = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER ;
-        wds[1].pImageInfo          = &dii ;
-        wds[1].pBufferInfo         = NULL ;
-        wds[1].pTexelBufferView    = NULL ;
-
-        // void vkUpdateDescriptorSets(
-        //     VkDevice                                    device,
-        //     uint32_t                                    descriptorWriteCount,
-        //     const VkWriteDescriptorSet*                 pDescriptorWrites,
-        //     uint32_t                                    descriptorCopyCount,
-        //     const VkCopyDescriptorSet*                  pDescriptorCopies);
-        vkUpdateDescriptorSets(
-            vc->device_
-        ,   array_count(wds)
-        ,   wds
-        ,   0
-        ,   NULL
-        ) ;
-
-
-    }
-
-    end_timed_block() ;
-    return true ;
-}
-
 
 static bool
 create_image(
-    VkImage *                   out_image
-,   VkDeviceMemory *            out_image_memory
-,   vulkan_context *            vc
-,   uint32_t const              width
-,   uint32_t const              height
-,   uint32_t const              mip_levels
-,   VkSampleCountFlagBits const msaa_sample_count
-,   VkFormat const              format
-,   VkImageTiling const         tiling
-,   VkImageUsageFlags const     usage
-,   VkMemoryPropertyFlags const mem_prop_flags
+    VkImage *                                   out_image
+,   VkDeviceMemory *                            out_image_memory
+,   VkDevice const                              device
+,   VkPhysicalDeviceMemoryProperties const *    pdmp
+,   uint32_t const                              width
+,   uint32_t const                              height
+,   uint32_t const                              mip_levels
+,   VkSampleCountFlagBits const                 msaa_sample_count
+,   VkFormat const                              format
+,   VkImageTiling const                         tiling
+,   VkImageUsageFlags const                     usage
+,   VkMemoryPropertyFlags const                 mem_prop_flags
 )
 {
     require(out_image) ;
     require(out_image_memory) ;
-    require(vc) ;
-    require(vc->device_) ;
+    require(device) ;
+    require(pdmp) ;
     begin_timed_block() ;
 
     // typedef struct VkImageCreateInfo {
@@ -7543,7 +7237,7 @@ create_image(
     //     const VkAllocationCallbacks*                pAllocator,
     //     VkImage*                                    pImage);
     if(check_vulkan(vkCreateImage(
-                vc->device_
+                device
             ,   &ici
             ,   NULL
             ,   out_image
@@ -7557,12 +7251,12 @@ create_image(
     require(*out_image) ;
 
     VkMemoryRequirements mem_requirements = { 0 } ;
-    vkGetImageMemoryRequirements(vc->device_, *out_image, &mem_requirements) ;
+    vkGetImageMemoryRequirements(device, *out_image, &mem_requirements) ;
 
     uint32_t desired_memory_type = 0 ;
     if(check(find_memory_type(
                 &desired_memory_type
-            ,   &vc->picked_physical_device_->memory_properties_
+            ,   pdmp
             ,   mem_requirements.memoryTypeBits
             ,   mem_prop_flags
             )
@@ -7580,7 +7274,7 @@ create_image(
     mai.memoryTypeIndex     = desired_memory_type ;
 
     if(check_vulkan(vkAllocateMemory(
-                vc->device_
+                device
             ,   &mai
             ,   NULL
             ,   out_image_memory
@@ -7594,7 +7288,7 @@ create_image(
     require(*out_image_memory) ;
 
     if(check_vulkan(vkBindImageMemory(
-                vc->device_
+                device
             ,   *out_image
             ,   *out_image_memory
             ,   0
@@ -7615,31 +7309,38 @@ create_image(
 
 static bool
 generate_mipmaps(
-    vulkan_context *    vc
+    VkDevice const      device
+,   VkCommandPool const command_pool
+,   VkQueue const       graphics_queue
 ,   VkImage const       image
 ,   int32_t const       width
 ,   int32_t const       height
 ,   uint32_t const      mip_levels
 )
 {
-    require(vc) ;
+    require(device) ;
+    require(command_pool) ;
+    require(graphics_queue) ;
     require(image) ;
     require(width) ;
     require(height) ;
     require(mip_levels) ;
-    require(vc->device_) ;
-    require(vc->picked_physical_device_) ;
-    require(vc->picked_physical_device_->swapchain_support_details_okay_) ;
     begin_timed_block() ;
 
-    if(check(vc->picked_physical_device_->swapchain_support_details_.formats_properties_->optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT))
-    {
-        end_timed_block() ;
-        return false ;
-    }
+    // if(check(vc->picked_physical_device_->swapchain_support_details_.formats_properties_->optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT))
+    // {
+    //     end_timed_block() ;
+    //     return false ;
+    // }
 
     VkCommandBuffer command_buffer = NULL ;
-    if(check(begin_single_time_commands(&command_buffer, vc)))
+    if(check(begin_single_time_commands(
+                &command_buffer
+            ,   device
+            ,   command_pool
+            )
+        )
+    )
     {
         end_timed_block() ;
         return false ;
@@ -7800,191 +7501,197 @@ generate_mipmaps(
     ,   &imb
     ) ;
 
-
-    if(check(end_single_time_commands(vc, command_buffer)))
+    if(check(end_single_time_commands(
+                device
+            ,   command_pool
+            ,   graphics_queue
+            ,   command_buffer
+            )
+        )
+    )
     {
         end_timed_block() ;
         return false ;
     }
-
 
     end_timed_block() ;
     return true ;
 }
 
+//away
+// static bool
+// create_texture_image(
+//     vulkan_context *    vc
+// )
+// {
+//     require(vc) ;
+//     require(vc->device_) ;
+//     begin_timed_block() ;
 
-static bool
-create_texture_image(
-    vulkan_context *    vc
-)
-{
-    require(vc) ;
-    require(vc->device_) ;
-    begin_timed_block() ;
+//     int tx_width    = 0 ;
+//     int tx_height   = 0 ;
+//     int tx_channels = 0 ;
 
-    int tx_width    = 0 ;
-    int tx_height   = 0 ;
-    int tx_channels = 0 ;
+//     stbi_uc * pixels = NULL ;
 
-    stbi_uc * pixels = NULL ;
+//     if(check(pixels = stbi_load(
+//                 "ass/textures/statue-1275469_1280.jpg"
+//             ,   &tx_width
+//             ,   &tx_height
+//             ,   &tx_channels
+//             ,   STBI_rgb_alpha
+//             )
+//         )
+//     )
+//     {
+//         end_timed_block() ;
+//         return false ;
+//     }
+//     require(pixels) ;
+//     require(tx_width > 0) ;
+//     require(tx_height > 0) ;
+//     require(tx_channels > 0) ;
 
-    if(check(pixels = stbi_load(
-                "ass/textures/statue-1275469_1280.jpg"
-            ,   &tx_width
-            ,   &tx_height
-            ,   &tx_channels
-            ,   STBI_rgb_alpha
-            )
-        )
-    )
-    {
-        end_timed_block() ;
-        return false ;
-    }
-    require(pixels) ;
-    require(tx_width > 0) ;
-    require(tx_height > 0) ;
-    require(tx_channels > 0) ;
-
-    vc->texture_mip_levels_ = calc_mip_levels(tx_width, tx_height) ;
-    log_debug_u32(tx_width) ;
-    log_debug_u32(tx_height) ;
-    log_debug_u32(vc->texture_mip_levels_) ;
-
-
-
-    VkDeviceSize const image_size = tx_width * tx_height * 4 ;
-
-    VkBuffer staging_buffer                 = NULL ;
-    VkDeviceMemory staging_buffer_memory    = NULL ;
-
-    if(check(create_buffer(
-                &staging_buffer
-            ,   &staging_buffer_memory
-            ,   vc
-            ,   image_size
-            ,   VK_BUFFER_USAGE_TRANSFER_SRC_BIT
-            ,   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-            )
-        )
-    )
-    {
-        end_timed_block() ;
-        return false ;
-    }
-    require(staging_buffer) ;
-    require(staging_buffer_memory) ;
-
-    void * data = NULL ;
-
-    if(check_vulkan(vkMapMemory(
-                vc->device_
-            ,   staging_buffer_memory
-            ,   0
-            ,   image_size
-            ,   0
-            ,   &data
-            )
-        )
-    )
-    {
-        end_timed_block() ;
-        return false ;
-    }
-    require(data) ;
-
-    SDL_memcpy(data, pixels, image_size) ;
-
-    vkUnmapMemory(vc->device_, staging_buffer_memory) ;
-
-    stbi_image_free(pixels) ;
-
-    if(check(create_image(
-                &vc->texture_image_
-            ,   &vc->texture_image_memory_
-            ,   vc
-            ,   tx_width
-            ,   tx_height
-            ,   vc->texture_mip_levels_
-            ,   VK_SAMPLE_COUNT_1_BIT
-            ,   VK_FORMAT_R8G8B8A8_SRGB
-            ,   VK_IMAGE_TILING_OPTIMAL
-            ,   VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT
-            ,   VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
-            )
-        )
-    )
-    {
-        end_timed_block() ;
-        return false ;
-    }
-
-    if(check(transition_image_layout(
-                vc
-            ,   vc->texture_image_
-            ,   VK_FORMAT_R8G8B8A8_SRGB
-            ,   VK_IMAGE_LAYOUT_UNDEFINED
-            ,   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
-            ,   vc->texture_mip_levels_
-            )
-        )
-    )
-    {
-        end_timed_block() ;
-        return false ;
-    }
-
-    if(check(copy_buffer_to_image(
-                vc
-            ,   staging_buffer
-            ,   vc->texture_image_
-            ,   tx_width
-            ,   tx_height
-            )
-        )
-    )
-    {
-        end_timed_block() ;
-        return false ;
-    }
-
-    if(check(generate_mipmaps(
-                vc
-            ,   vc->texture_image_
-            ,   tx_width
-            ,   tx_height
-            ,   vc->texture_mip_levels_
-            )
-        )
-    )
-    {
-        end_timed_block() ;
-        return false ;
-    }
+//     vc->texture_mip_levels_ = calc_mip_levels(tx_width, tx_height) ;
+//     log_debug_u32(tx_width) ;
+//     log_debug_u32(tx_height) ;
+//     log_debug_u32(vc->texture_mip_levels_) ;
 
 
-    // if(check(transition_image_layout(
-    //             vc
-    //         ,   vc->texture_image_
-    //         ,   VK_FORMAT_R8G8B8A8_SRGB
-    //         ,   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
-    //         ,   VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-    //         ,   vc->texture_mip_levels_
-    //         )
-    //     )
-    // )
-    // {
-    //     end_timed_block() ;
-    //     return false ;
-    // }
 
-    vkDestroyBuffer(vc->device_, staging_buffer, NULL) ;
-    vkFreeMemory(vc->device_, staging_buffer_memory, NULL) ;
+//     VkDeviceSize const image_size = tx_width * tx_height * 4 ;
 
-    end_timed_block() ;
-    return true ;
+//     VkBuffer staging_buffer                 = NULL ;
+//     VkDeviceMemory staging_buffer_memory    = NULL ;
 
-}
+//     if(check(create_buffer(
+//                 &staging_buffer
+//             ,   &staging_buffer_memory
+//             ,   vc->device_
+//             ,   &vc->picked_physical_device_->memory_properties_
+//             ,   image_size
+//             ,   VK_BUFFER_USAGE_TRANSFER_SRC_BIT
+//             ,   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+//             )
+//         )
+//     )
+//     {
+//         end_timed_block() ;
+//         return false ;
+//     }
+//     require(staging_buffer) ;
+//     require(staging_buffer_memory) ;
+
+//     void * data = NULL ;
+
+//     if(check_vulkan(vkMapMemory(
+//                 vc->device_
+//             ,   staging_buffer_memory
+//             ,   0
+//             ,   image_size
+//             ,   0
+//             ,   &data
+//             )
+//         )
+//     )
+//     {
+//         end_timed_block() ;
+//         return false ;
+//     }
+//     require(data) ;
+
+//     SDL_memcpy(data, pixels, image_size) ;
+
+//     vkUnmapMemory(vc->device_, staging_buffer_memory) ;
+
+//     stbi_image_free(pixels) ;
+
+//     if(check(create_image(
+//                 &vc->texture_image_
+//             ,   &vc->texture_image_memory_
+//             ,   vc
+//             ,   tx_width
+//             ,   tx_height
+//             ,   vc->texture_mip_levels_
+//             ,   VK_SAMPLE_COUNT_1_BIT
+//             ,   VK_FORMAT_R8G8B8A8_SRGB
+//             ,   VK_IMAGE_TILING_OPTIMAL
+//             ,   VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT
+//             ,   VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+//             )
+//         )
+//     )
+//     {
+//         end_timed_block() ;
+//         return false ;
+//     }
+
+//     if(check(transition_image_layout(
+//                 vc
+//             ,   vc->texture_image_
+//             ,   VK_FORMAT_R8G8B8A8_SRGB
+//             ,   VK_IMAGE_LAYOUT_UNDEFINED
+//             ,   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
+//             ,   vc->texture_mip_levels_
+//             )
+//         )
+//     )
+//     {
+//         end_timed_block() ;
+//         return false ;
+//     }
+
+//     if(check(copy_buffer_to_image(
+//                 vc
+//             ,   staging_buffer
+//             ,   vc->texture_image_
+//             ,   tx_width
+//             ,   tx_height
+//             )
+//         )
+//     )
+//     {
+//         end_timed_block() ;
+//         return false ;
+//     }
+
+//     if(check(generate_mipmaps(
+//                 vc
+//             ,   vc->texture_image_
+//             ,   tx_width
+//             ,   tx_height
+//             ,   vc->texture_mip_levels_
+//             )
+//         )
+//     )
+//     {
+//         end_timed_block() ;
+//         return false ;
+//     }
+
+
+//     // if(check(transition_image_layout(
+//     //             vc
+//     //         ,   vc->texture_image_
+//     //         ,   VK_FORMAT_R8G8B8A8_SRGB
+//     //         ,   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
+//     //         ,   VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+//     //         ,   vc->texture_mip_levels_
+//     //         )
+//     //     )
+//     // )
+//     // {
+//     //     end_timed_block() ;
+//     //     return false ;
+//     // }
+
+//     vkDestroyBuffer(vc->device_, staging_buffer, NULL) ;
+//     vkFreeMemory(vc->device_, staging_buffer_memory, NULL) ;
+
+//     end_timed_block() ;
+//     return true ;
+
+// }
 
 
 static bool
@@ -8142,7 +7849,7 @@ destroy_vulkan_instance(
 
     for(
         uint32_t i = 0
-    ;   i < max_vulkan_frames_in_flight
+    ;   i < vc->frames_in_flight_count_
     ;   ++i
     )
     {
@@ -8253,7 +7960,7 @@ destroy_vulkan_instance(
 
     for(
         uint32_t i = 0
-    ;   i < max_vulkan_frames_in_flight
+    ;   i < vc->frames_in_flight_count_
     ;   ++i
     )
     {
@@ -8336,12 +8043,17 @@ create_vulkan()
     vc_->enable_sampling_ = VK_FALSE ;
     vc_->enable_sample_shading_ = VK_FALSE ;
 
-    vc_->desired_swapchain_image_count_ = 2 ;
+    vc_->frames_in_flight_count_            = 2 ;
+    vc_->desired_swapchain_image_count_     = 2 ;
+    require(vc_->frames_in_flight_count_ < max_vulkan_frames_in_flight) ;
+
     vc_->sample_count_ = VK_SAMPLE_COUNT_8_BIT ;
     vc_->min_sample_shading_ = 0.2f ;
 
-    vc_->resizing_ = VK_FALSE ;
+    vc_->desired_sampler_aniso_ = 1.0f ;
 
+
+    vc_->resizing_ = VK_FALSE ;
 
     vc_->platform_instance_extensions_ = SDL_Vulkan_GetInstanceExtensions(
         &vc_->platform_instance_extensions_count_
@@ -8554,6 +8266,11 @@ create_vulkan()
     require(vc_->graphics_queue_) ;
     require(vc_->present_queue_) ;
 
+    if(check(create_command_pool(vc_)))
+    {
+        end_timed_block() ;
+        return false ;
+    }
 
     if(check(create_swapchain(
                 &vc_->swapchain_
@@ -8575,7 +8292,6 @@ create_vulkan()
         return false ;
     }
     require(vc_->swapchain_) ;
-    //require(vc_->desired_swapchain_image_count_ vc_->swapchain_image_count_) ;
 
     if(check(create_image_views(
                 vc_->swapchain_views_
@@ -8601,31 +8317,6 @@ create_vulkan()
     ,   vc_->desired_swapchain_image_count_
     ) ;
 
-    if(check(create_command_pool(vc_)))
-    {
-        end_timed_block() ;
-        return false ;
-    }
-
-    if(check(create_render_pass(vc_)))
-    {
-        end_timed_block() ;
-        return false ;
-    }
-
-    if(check(create_descriptor_set_layout(&vc_->descriptor_set_layout_, vc_)))
-    {
-        end_timed_block() ;
-        return false ;
-    }
-    require(vc_->descriptor_set_layout_) ;
-
-    if(check(create_graphics_pipeline(vc_)))
-    {
-        end_timed_block() ;
-        return false ;
-    }
-
     if(check(create_color_resource(vc_)))
     {
         end_timed_block() ;
@@ -8638,7 +8329,19 @@ create_vulkan()
         return false ;
     }
 
+    if(check(create_render_pass(vc_)))
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
     if(check(create_framebuffers(vc_)))
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
+    if(check(create_sync_objects(vc_)))
     {
         end_timed_block() ;
         return false ;
@@ -8650,7 +8353,17 @@ create_vulkan()
         return false ;
     }
 
-    if(check(create_sync_objects(vc_)))
+    // ------------------
+
+
+    if(check(create_rob(vc_)))
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
+
+    if(check(create_graphics_pipeline(vc_)))
     {
         end_timed_block() ;
         return false ;
@@ -8684,31 +8397,23 @@ create_vulkan()
     require(vc_->index_buffer_) ;
     require(vc_->index_buffer_memory_) ;
 
-    if(check(create_uniform_buffers(vc_)))
-    {
-        end_timed_block() ;
-        return false ;
-    }
+    // if(check(create_uniform_buffers(vc_)))
+    // {
+    //     end_timed_block() ;
+    //     return false ;
+    // }
 
-    if(check(create_descriptor_pool(vc_)))
-    {
-        end_timed_block() ;
-        return false ;
-    }
-
-    if(check(create_texture_image(vc_)))
-    {
-        end_timed_block() ;
-        return false ;
-    }
+    // if(check(create_texture_image(vc_)))
+    // {
+    //     end_timed_block() ;
+    //     return false ;
+    // }
 
     if(check(create_texture_image_view(vc_)))
     {
         end_timed_block() ;
         return false ;
     }
-
-    vc_->desired_sampler_aniso_ = 1.0f ;
 
     require(vc_->desired_sampler_aniso_ <= vc_->picked_physical_device_->properties_.limits.maxSamplerAnisotropy) ;
 
@@ -8719,11 +8424,11 @@ create_vulkan()
     }
 
 
-    if(check(create_descriptor_sets(vc_)))
-    {
-        end_timed_block() ;
-        return false ;
-    }
+    // if(check(create_descriptor_sets(vc_)))
+    // {
+    //     end_timed_block() ;
+    //     return false ;
+    // }
 
     end_timed_block() ;
     return true ;
@@ -8761,4 +8466,555 @@ void
 resize_vulkan()
 {
     vc_->resizing_ = VK_TRUE ;
+}
+
+
+
+void
+add_desriptor_set_layout_binding(
+    VkDescriptorSetLayoutBinding *  bindings
+,   uint32_t *                      bindings_count
+,   uint32_t const                  bindings_count_max
+,   uint32_t const                  binding
+,   VkDescriptorType const          descriptor_type
+,   VkShaderStageFlags const        stage_flags
+)
+{
+    require(bindings) ;
+    require(bindings_count) ;
+    require(*bindings_count < bindings_count_max) ;
+
+    begin_timed_block() ;
+
+    uint32_t const idx = *bindings_count ;
+    VkDescriptorSetLayoutBinding * dslb = &bindings[idx] ;
+
+    // typedef struct VkDescriptorSetLayoutBinding {
+    //     uint32_t              binding;
+    //     VkDescriptorType      descriptorType;
+    //     uint32_t              descriptorCount;
+    //     VkShaderStageFlags    stageFlags;
+    //     const VkSampler*      pImmutableSamplers;
+    // } VkDescriptorSetLayoutBinding;
+    dslb->binding                = binding ;
+    dslb->descriptorType         = descriptor_type ;
+    dslb->descriptorCount        = 1 ;
+    dslb->stageFlags             = stage_flags ;
+    dslb->pImmutableSamplers     = NULL ;
+
+    ++ *bindings_count ;
+
+    end_timed_block() ;
+}
+
+
+bool
+create_descriptor_set_layout(
+    VkDescriptorSetLayout *                 out_layout
+,   VkDevice const                          device
+,   VkDescriptorSetLayoutBinding const *    bindings
+,   uint32_t const                          bindings_count
+)
+{
+    require(out_layout) ;
+    require(device) ;
+    require(bindings) ;
+    require(bindings_count) ;
+    begin_timed_block() ;
+
+
+    // typedef struct VkDescriptorSetLayoutCreateInfo {
+    //     VkStructureType                        sType;
+    //     const void*                            pNext;
+    //     VkDescriptorSetLayoutCreateFlags       flags;
+    //     uint32_t                               bindingCount;
+    //     const VkDescriptorSetLayoutBinding*    pBindings;
+    // } VkDescriptorSetLayoutCreateInfo;
+    static VkDescriptorSetLayoutCreateInfo dslci = { 0 } ;
+    dslci.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO ;
+    dslci.pNext         = NULL ;
+    dslci.flags         = 0 ;
+    dslci.bindingCount  = bindings_count ;
+    dslci.pBindings     = bindings ;
+
+
+    // VkResult vkCreateDescriptorSetLayout(
+    //     VkDevice                                    device,
+    //     const VkDescriptorSetLayoutCreateInfo*      pCreateInfo,
+    //     const VkAllocationCallbacks*                pAllocator,
+    //     VkDescriptorSetLayout*                      pSetLayout);
+    if(check_vulkan(vkCreateDescriptorSetLayout(
+                device
+            ,   &dslci
+            ,   NULL
+            ,   out_layout
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+    require(*out_layout) ;
+
+    end_timed_block() ;
+    return true ;
+}
+
+
+void
+fill_pipeline_layout_create_info(
+    VkPipelineLayoutCreateInfo *    plci
+,   VkDescriptorSetLayout const *   descriptor_set_layouts
+,   uint32_t const                  descriptor_set_layouts_count
+)
+{
+    require(plci) ;
+    require(descriptor_set_layouts) ;
+    require(descriptor_set_layouts_count) ;
+    begin_timed_block() ;
+
+    // typedef struct VkPipelineLayoutCreateInfo {
+    //     VkStructureType                 sType;
+    //     const void*                     pNext;
+    //     VkPipelineLayoutCreateFlags     flags;
+    //     uint32_t                        setLayoutCount;
+    //     const VkDescriptorSetLayout*    pSetLayouts;
+    //     uint32_t                        pushConstantRangeCount;
+    //     const VkPushConstantRange*      pPushConstantRanges;
+    // } VkPipelineLayoutCreateInfo;
+    plci->sType                      = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO ;
+    plci->pNext                      = NULL ;
+    plci->flags                      = 0 ;
+    plci->setLayoutCount             = descriptor_set_layouts_count ;
+    plci->pSetLayouts                = descriptor_set_layouts ;
+    plci->pushConstantRangeCount     = 0 ;
+    plci->pPushConstantRanges        = NULL ;
+
+    end_timed_block() ;
+}
+
+
+void
+add_descriptor_pool_size(
+    VkDescriptorPoolSize *  pool_sizes
+,   uint32_t *              pool_sizes_count
+,   uint32_t const          pool_sizes_count_max
+,   VkDescriptorType const  descriptor_type
+,   uint32_t const          frames_in_flight_count
+)
+{
+    require(pool_sizes) ;
+    require(pool_sizes_count) ;
+    require(*pool_sizes_count < pool_sizes_count_max) ;
+    begin_timed_block() ;
+
+    uint32_t const idx = *pool_sizes_count ;
+
+    // typedef struct VkDescriptorPoolSize {
+    //     VkDescriptorType    type;
+    //     uint32_t            descriptorCount;
+    // } VkDescriptorPoolSize;
+    VkDescriptorPoolSize * dps = &pool_sizes[idx] ;
+    dps->type            = descriptor_type ;
+    dps->descriptorCount = frames_in_flight_count ;
+
+    end_timed_block() ;
+}
+
+
+bool
+create_descriptor_pool(
+    VkDescriptorPool *              out_descriptor_pool
+,   VkDevice const                  device
+,   VkDescriptorPoolSize const *    pool_sizes
+,   uint32_t const                  pool_sizes_count
+,   uint32_t const                  frames_in_flight_count
+)
+{
+    require(out_descriptor_pool) ;
+    require(device) ;
+    require(pool_sizes) ;
+    require(pool_sizes_count) ;
+    require(frames_in_flight_count) ;
+    require(frames_in_flight_count < max_vulkan_frames_in_flight) ;
+
+    begin_timed_block() ;
+
+
+    // typedef struct VkDescriptorPoolCreateInfo {
+    //     VkStructureType                sType;
+    //     const void*                    pNext;
+    //     VkDescriptorPoolCreateFlags    flags;
+    //     uint32_t                       maxSets;
+    //     uint32_t                       poolSizeCount;
+    //     const VkDescriptorPoolSize*    pPoolSizes;
+    // } VkDescriptorPoolCreateInfo;
+    static VkDescriptorPoolCreateInfo dpci = { 0 } ;
+    dpci.sType          = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO ;
+    dpci.pNext          = NULL ;
+    dpci.flags          = 0 ;
+    dpci.maxSets        = frames_in_flight_count ;
+    dpci.poolSizeCount  = pool_sizes_count ;
+    dpci.pPoolSizes     = pool_sizes ;
+
+
+    // VkResult vkCreateDescriptorPool(
+    //     VkDevice                                    device,
+    //     const VkDescriptorPoolCreateInfo*           pCreateInfo,
+    //     const VkAllocationCallbacks*                pAllocator,
+    //     VkDescriptorPool*                           pDescriptorPool);
+    if(check_vulkan(vkCreateDescriptorPool(
+                device
+            ,   &dpci
+            ,   NULL
+            ,   out_descriptor_pool
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+    require(out_descriptor_pool) ;
+
+    end_timed_block() ;
+    return true ;
+
+}
+
+
+bool
+create_descriptor_sets(
+    VkDescriptorSet *           out_descriptor_sets
+,   VkDevice const              device
+,   VkDescriptorSetLayout const descriptor_set_layout
+,   VkDescriptorPool const      descriptor_pool
+,   uint32_t const              frames_in_flight_count
+)
+{
+    require(out_descriptor_sets) ;
+    require(device) ;
+    require(descriptor_set_layout) ;
+    require(descriptor_pool) ;
+    require(frames_in_flight_count) ;
+    require(frames_in_flight_count < max_vulkan_frames_in_flight) ;
+    begin_timed_block() ;
+
+    static VkDescriptorSetLayout   layouts[max_vulkan_frames_in_flight] = { 0 } ;
+
+    for(
+        uint32_t i = 0
+    ;   i < frames_in_flight_count
+    ;   ++i
+    )
+    {
+        layouts[i] = descriptor_set_layout ;
+    }
+
+
+    // typedef struct VkDescriptorSetAllocateInfo {
+    //     VkStructureType                 sType;
+    //     const void*                     pNext;
+    //     VkDescriptorPool                descriptorPool;
+    //     uint32_t                        descriptorSetCount;
+    //     const VkDescriptorSetLayout*    pSetLayouts;
+    // } VkDescriptorSetAllocateInfo;
+    static VkDescriptorSetAllocateInfo  dsai = { 0 } ;
+    dsai.sType                  = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO ;
+    dsai.pNext                  = NULL ;
+    dsai.descriptorPool         = descriptor_pool ;
+    dsai.descriptorSetCount     = frames_in_flight_count ;
+    dsai.pSetLayouts            = layouts ;
+
+
+    // VkResult vkAllocateDescriptorSets(
+    //     VkDevice                                    device,
+    //     const VkDescriptorSetAllocateInfo*          pAllocateInfo,
+    //     VkDescriptorSet*                            pDescriptorSets);
+    if(check_vulkan(vkAllocateDescriptorSets(
+                device
+            ,   &dsai
+            ,   out_descriptor_sets
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
+    end_timed_block() ;
+    return true ;
+}
+
+
+bool
+create_uniform_buffers(
+    VkBuffer *                                  out_uniform_buffers
+,   VkDeviceMemory *                            out_uniform_buffers_memory
+,   void **                                     out_uniform_buffers_mapped
+,   VkDevice const                              device
+,   uint32_t const                              uniform_buffer_size
+,   VkPhysicalDeviceMemoryProperties const *    pdmp
+,   uint32_t const                              frames_in_flight_count
+)
+{
+    require(out_uniform_buffers) ;
+    require(out_uniform_buffers_memory) ;
+    require(out_uniform_buffers_mapped) ;
+    require(device) ;
+    require(uniform_buffer_size) ;
+    require(pdmp) ;
+    require(frames_in_flight_count) ;
+    require(frames_in_flight_count < max_vulkan_frames_in_flight) ;
+
+    begin_timed_block() ;
+
+    VkDeviceSize const buffer_size = uniform_buffer_size ;
+
+    for(
+        uint32_t i = 0
+    ;   i < frames_in_flight_count
+    ;   ++i
+    )
+    {
+        if(check(create_buffer(
+                    &out_uniform_buffers[i]
+                ,   &out_uniform_buffers_memory[i]
+                ,   device
+                ,   pdmp
+                ,   buffer_size
+                ,   VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT
+                ,   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+                )
+            )
+        )
+        {
+            end_timed_block() ;
+            return false ;
+        }
+        require(out_uniform_buffers[i]) ;
+        require(out_uniform_buffers_memory[i]) ;
+
+        if(check_vulkan(vkMapMemory(
+                    device
+                ,   out_uniform_buffers_memory[i]
+                ,   0
+                ,   buffer_size
+                ,   0
+                ,   &out_uniform_buffers_mapped[i]
+                )
+            )
+        )
+        {
+            end_timed_block() ;
+            return false ;
+        }
+        require(out_uniform_buffers_mapped[i]) ;
+    }
+
+    end_timed_block() ;
+    return true ;
+}
+
+
+bool
+create_texture_image(
+    VkImage *                                   out_image
+,   VkDeviceMemory *                            out_image_memory
+,   char const * const                          full_name
+,   VkDevice const                              device
+,   VkCommandPool const                         command_pool
+,   VkQueue const                               graphics_queue
+,   VkPhysicalDeviceMemoryProperties const *    pdmp
+,   uint32_t const                              mip_levels
+)
+{
+    require(out_image) ;
+    require(out_image_memory) ;
+    require(full_name) ;
+    require(device) ;
+    require(command_pool) ;
+    require(graphics_queue) ;
+    require(pdmp) ;
+    begin_timed_block() ;
+
+    int tx_width    = 0 ;
+    int tx_height   = 0 ;
+    int tx_channels = 0 ;
+
+    stbi_uc * pixels = stbi_load(
+        full_name
+    ,   &tx_width
+    ,   &tx_height
+    ,   &tx_channels
+    ,   STBI_rgb_alpha
+    ) ;
+    require(pixels) ;
+    require(tx_width > 0) ;
+    require(tx_height > 0) ;
+    require(tx_channels > 0) ;
+
+    VkDeviceSize const image_size = tx_width * tx_height * 4 ;
+
+    log_debug_u32(tx_width) ;
+    log_debug_u32(tx_height) ;
+    log_debug_u32(mip_levels) ;
+
+    if(check(pixels && image_size))
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
+    uint32_t desired_mip_levels = mip_levels ;
+    if(0 == mip_levels)
+    {
+        desired_mip_levels = calc_mip_levels(tx_width, tx_height) ;
+    }
+
+    VkBuffer staging_buffer                 = NULL ;
+    VkDeviceMemory staging_buffer_memory    = NULL ;
+
+    if(check(create_buffer(
+                &staging_buffer
+            ,   &staging_buffer_memory
+            ,   device
+            ,   pdmp
+            ,   image_size
+            ,   VK_BUFFER_USAGE_TRANSFER_SRC_BIT
+            ,   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+    require(staging_buffer) ;
+    require(staging_buffer_memory) ;
+
+    void * data = NULL ;
+
+    if(check_vulkan(vkMapMemory(
+                device
+            ,   staging_buffer_memory
+            ,   0
+            ,   image_size
+            ,   0
+            ,   &data
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+    require(data) ;
+
+    SDL_memcpy(data, pixels, image_size) ;
+
+    vkUnmapMemory(device, staging_buffer_memory) ;
+
+    stbi_image_free(pixels) ;
+
+    if(check(create_image(
+                out_image
+            ,   out_image_memory
+            ,   device
+            ,   pdmp
+            ,   tx_width
+            ,   tx_height
+            ,   desired_mip_levels
+            ,   VK_SAMPLE_COUNT_1_BIT
+            ,   VK_FORMAT_R8G8B8A8_SRGB
+            ,   VK_IMAGE_TILING_OPTIMAL
+            ,   VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT
+            ,   VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
+
+    if(check(transition_image_layout(
+                device
+            ,   command_pool
+            ,   graphics_queue
+            ,   *out_image
+            ,   VK_FORMAT_R8G8B8A8_SRGB
+            ,   VK_IMAGE_LAYOUT_UNDEFINED
+            ,   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
+            ,   desired_mip_levels
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
+    if(check(copy_buffer_to_image(
+                device
+            ,   command_pool
+            ,   graphics_queue
+            ,   staging_buffer
+            ,   *out_image
+            ,   tx_width
+            ,   tx_height
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
+    if(1 == desired_mip_levels)
+    {
+        if(check(transition_image_layout(
+                    device
+                ,   command_pool
+                ,   graphics_queue
+                ,   *out_image
+                ,   VK_FORMAT_R8G8B8A8_SRGB
+                ,   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
+                ,   VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+                ,   desired_mip_levels
+                )
+            )
+        )
+        {
+            end_timed_block() ;
+            return false ;
+        }
+    }
+    else
+    {
+        if(check(generate_mipmaps(
+                    device
+                ,   command_pool
+                ,   graphics_queue
+                ,   *out_image
+                ,   tx_width
+                ,   tx_height
+                ,   desired_mip_levels
+                )
+            )
+        )
+        {
+            end_timed_block() ;
+            return false ;
+        }
+    }
+
+    vkDestroyBuffer(device, staging_buffer, NULL) ;
+    vkFreeMemory(device, staging_buffer_memory, NULL) ;
+
+    end_timed_block() ;
+    return true ;
 }
