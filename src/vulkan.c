@@ -4367,19 +4367,18 @@ create_swapchain(
 
 
 static bool
-create_image_views(
-    VkImageView *               out_views
-,   VkImage *                   images
-,   uint32_t const              images_count
+create_image_view(
+    VkImageView *               out_view
 ,   VkDevice const              device
+,   VkImage const               image
 ,   VkFormat const              format
 ,   VkImageAspectFlags const    aspect_flags
 ,   uint32_t const              mip_levels
 )
 {
-    require(out_views) ;
-    require(images) ;
+    require(out_view) ;
     require(device) ;
+    require(image) ;
     begin_timed_block() ;
 
     // typedef struct VkImageViewCreateInfo {
@@ -4451,6 +4450,47 @@ create_image_views(
     ivci.subresourceRange.levelCount        = mip_levels ;
     ivci.subresourceRange.baseArrayLayer    = 0 ;
     ivci.subresourceRange.layerCount        = 1 ;
+    ivci.image                              = image ;
+
+    // VkResult vkCreateImageView(
+    //     VkDevice                                    device,
+    //     const VkImageViewCreateInfo*                pCreateInfo,
+    //     const VkAllocationCallbacks*                pAllocator,
+    //     VkImageView*                                pView);
+    if(check_vulkan(vkCreateImageView(
+                device
+            ,   &ivci
+            ,   NULL
+            ,   out_view
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+    require(*out_view) ;
+
+    end_timed_block() ;
+    return true ;
+}
+
+
+static bool
+create_image_views(
+    VkImageView *               out_views
+,   VkImage const *             images
+,   uint32_t const              images_count
+,   VkDevice const              device
+,   VkFormat const              format
+,   VkImageAspectFlags const    aspect_flags
+,   uint32_t const              mip_levels
+)
+{
+    require(out_views) ;
+    require(images) ;
+    require(device) ;
+    begin_timed_block() ;
 
     for(
         uint32_t i = 0
@@ -4459,18 +4499,14 @@ create_image_views(
     )
     {
         require(images[i]) ;
-        ivci.image  = images[i] ;
 
-        // VkResult vkCreateImageView(
-        //     VkDevice                                    device,
-        //     const VkImageViewCreateInfo*                pCreateInfo,
-        //     const VkAllocationCallbacks*                pAllocator,
-        //     VkImageView*                                pView);
-        if(check_vulkan(vkCreateImageView(
-                    device
-                ,   &ivci
-                ,   NULL
-                ,   &out_views[i]
+        if(check(create_image_view(
+                    &out_views[i]
+                ,   device
+                ,   images[i]
+                ,   format
+                ,   aspect_flags
+                ,   mip_levels
                 )
             )
         )
@@ -4478,9 +4514,7 @@ create_image_views(
             end_timed_block() ;
             return false ;
         }
-        require(out_views[i]) ;
     }
-
     end_timed_block() ;
     return true ;
 }
@@ -6813,16 +6847,17 @@ create_buffer(
 
 static bool
 copy_buffer(
-    vulkan_context *    vc
+    VkDevice const      device
+,   VkCommandPool const command_pool
+,   VkQueue const       graphics_queue
 ,   VkBuffer const      src_buffer
 ,   VkBuffer const      dst_buffer
 ,   VkDeviceSize const  size
 )
 {
-    require(vc) ;
-    require(vc->device_) ;
-    require(vc->command_pool_) ;
-    require(vc->graphics_queue_) ;
+    require(device) ;
+    require(command_pool) ;
+    require(graphics_queue) ;
     require(src_buffer) ;
     require(dst_buffer) ;
     require(size) ;
@@ -6830,7 +6865,7 @@ copy_buffer(
     begin_timed_block() ;
 
     VkCommandBuffer command_buffer = NULL ;
-    if(check(begin_single_time_commands(&command_buffer, vc->device_, vc->command_pool_)))
+    if(check(begin_single_time_commands(&command_buffer, device, command_pool)))
     {
         end_timed_block() ;
         return false ;
@@ -6857,9 +6892,9 @@ copy_buffer(
     vkCmdCopyBuffer(command_buffer, src_buffer, dst_buffer, 1, &copy_region) ;
 
     if(check(end_single_time_commands(
-                vc->device_
-            ,   vc->command_pool_
-            ,   vc->graphics_queue_
+                device
+            ,   command_pool
+            ,   graphics_queue
             ,   command_buffer
             )
         )
@@ -6972,203 +7007,203 @@ copy_buffer_to_image(
 }
 
 
-static bool
-create_vertex_buffer(
-    VkBuffer *          out_buffer
-,   VkDeviceMemory *    out_buffer_memory
-,   vulkan_context *    vc
-)
-{
-    require(out_buffer) ;
-    require(out_buffer_memory) ;
-    require(vc) ;
-    require(vc_->device_) ;
-    begin_timed_block() ;
+// static bool
+// create_vertex_buffer(
+//     VkBuffer *          out_buffer
+// ,   VkDeviceMemory *    out_buffer_memory
+// ,   vulkan_context *    vc
+// )
+// {
+//     require(out_buffer) ;
+//     require(out_buffer_memory) ;
+//     require(vc) ;
+//     require(vc_->device_) ;
+//     begin_timed_block() ;
 
-    VkDeviceSize const buffer_size = vertices_size ;
+//     VkDeviceSize const buffer_size = vertices_size ;
 
-    VkBuffer staging_buffer = NULL ;
-    VkDeviceMemory staging_buffer_memory = NULL ;
+//     VkBuffer staging_buffer = NULL ;
+//     VkDeviceMemory staging_buffer_memory = NULL ;
 
-    if(check(create_buffer(
-                &staging_buffer
-            ,   &staging_buffer_memory
-            ,   vc->device_
-            ,   &vc->picked_physical_device_->memory_properties_
-            ,   buffer_size
-            ,   VK_BUFFER_USAGE_TRANSFER_SRC_BIT
-            ,   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-            )
-        )
-    )
-    {
-        end_timed_block() ;
-        return false ;
-    }
-    require(staging_buffer) ;
-    require(staging_buffer_memory) ;
+//     if(check(create_buffer(
+//                 &staging_buffer
+//             ,   &staging_buffer_memory
+//             ,   vc->device_
+//             ,   &vc->picked_physical_device_->memory_properties_
+//             ,   buffer_size
+//             ,   VK_BUFFER_USAGE_TRANSFER_SRC_BIT
+//             ,   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+//             )
+//         )
+//     )
+//     {
+//         end_timed_block() ;
+//         return false ;
+//     }
+//     require(staging_buffer) ;
+//     require(staging_buffer_memory) ;
 
-    void * data = NULL ;
+//     void * data = NULL ;
 
-    // VkResult vkMapMemory(
-    //     VkDevice                                    device,
-    //     VkDeviceMemory                              memory,
-    //     VkDeviceSize                                offset,
-    //     VkDeviceSize                                size,
-    //     VkMemoryMapFlags                            flags,
-    //     void**                                      ppData);
-    if(check_vulkan(vkMapMemory(
-                vc->device_
-            ,   staging_buffer_memory
-            ,   0
-            ,   buffer_size
-            ,   0
-            ,   &data
-            )
-        )
-    )
-    {
-        end_timed_block() ;
-        return false ;
-    }
-    require(data) ;
+//     // VkResult vkMapMemory(
+//     //     VkDevice                                    device,
+//     //     VkDeviceMemory                              memory,
+//     //     VkDeviceSize                                offset,
+//     //     VkDeviceSize                                size,
+//     //     VkMemoryMapFlags                            flags,
+//     //     void**                                      ppData);
+//     if(check_vulkan(vkMapMemory(
+//                 vc->device_
+//             ,   staging_buffer_memory
+//             ,   0
+//             ,   buffer_size
+//             ,   0
+//             ,   &data
+//             )
+//         )
+//     )
+//     {
+//         end_timed_block() ;
+//         return false ;
+//     }
+//     require(data) ;
 
-    SDL_memcpy(data, vertices, buffer_size) ;
+//     SDL_memcpy(data, vertices, buffer_size) ;
 
-    // void vkUnmapMemory(
-    //     VkDevice                                    device,
-    //     VkDeviceMemory                              memory);
-    vkUnmapMemory(vc->device_, staging_buffer_memory) ;
+//     // void vkUnmapMemory(
+//     //     VkDevice                                    device,
+//     //     VkDeviceMemory                              memory);
+//     vkUnmapMemory(vc->device_, staging_buffer_memory) ;
 
-    if(check(create_buffer(
-                out_buffer
-            ,   out_buffer_memory
-            ,   vc->device_
-            ,   &vc->picked_physical_device_->memory_properties_
-            ,   buffer_size
-            ,   VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
-            ,   VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
-            )
-        )
-    )
-    {
-        end_timed_block() ;
-        return false ;
-    }
-    require(*out_buffer) ;
-    require(*out_buffer_memory) ;
+//     if(check(create_buffer(
+//                 out_buffer
+//             ,   out_buffer_memory
+//             ,   vc->device_
+//             ,   &vc->picked_physical_device_->memory_properties_
+//             ,   buffer_size
+//             ,   VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
+//             ,   VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+//             )
+//         )
+//     )
+//     {
+//         end_timed_block() ;
+//         return false ;
+//     }
+//     require(*out_buffer) ;
+//     require(*out_buffer_memory) ;
 
-    if(check(copy_buffer(vc, staging_buffer, *out_buffer, buffer_size)))
-    {
-        end_timed_block() ;
-        return false ;
-    }
+//     if(check(copy_buffer(vc, staging_buffer, *out_buffer, buffer_size)))
+//     {
+//         end_timed_block() ;
+//         return false ;
+//     }
 
-    vkDestroyBuffer(vc->device_, staging_buffer, NULL) ;
-    vkFreeMemory(vc->device_, staging_buffer_memory, NULL) ;
+//     vkDestroyBuffer(vc->device_, staging_buffer, NULL) ;
+//     vkFreeMemory(vc->device_, staging_buffer_memory, NULL) ;
 
-    end_timed_block() ;
-    return true ;
-}
+//     end_timed_block() ;
+//     return true ;
+// }
 
 
-static bool
-create_index_buffer(
-    VkBuffer *          out_buffer
-,   VkDeviceMemory *    out_buffer_memory
-,   vulkan_context *    vc
-)
-{
-    require(out_buffer) ;
-    require(out_buffer_memory) ;
-    require(vc) ;
-    require(vc_->device_) ;
-    begin_timed_block() ;
+// static bool
+// create_index_buffer(
+//     VkBuffer *          out_buffer
+// ,   VkDeviceMemory *    out_buffer_memory
+// ,   vulkan_context *    vc
+// )
+// {
+//     require(out_buffer) ;
+//     require(out_buffer_memory) ;
+//     require(vc) ;
+//     require(vc_->device_) ;
+//     begin_timed_block() ;
 
-    VkDeviceSize const buffer_size = indices_size ;
-    VkBuffer staging_buffer = NULL ;
-    VkDeviceMemory staging_buffer_memory = NULL ;
+//     VkDeviceSize const buffer_size = indices_size ;
+//     VkBuffer staging_buffer = NULL ;
+//     VkDeviceMemory staging_buffer_memory = NULL ;
 
-    if(check(create_buffer(
-                &staging_buffer
-            ,   &staging_buffer_memory
-            ,   vc->device_
-            ,   &vc->picked_physical_device_->memory_properties_
-            ,   buffer_size
-            ,   VK_BUFFER_USAGE_TRANSFER_SRC_BIT
-            ,   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-            )
-        )
-    )
-    {
-        end_timed_block() ;
-        return false ;
-    }
-    require(staging_buffer) ;
-    require(staging_buffer_memory) ;
+//     if(check(create_buffer(
+//                 &staging_buffer
+//             ,   &staging_buffer_memory
+//             ,   vc->device_
+//             ,   &vc->picked_physical_device_->memory_properties_
+//             ,   buffer_size
+//             ,   VK_BUFFER_USAGE_TRANSFER_SRC_BIT
+//             ,   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+//             )
+//         )
+//     )
+//     {
+//         end_timed_block() ;
+//         return false ;
+//     }
+//     require(staging_buffer) ;
+//     require(staging_buffer_memory) ;
 
-    void * data = NULL ;
+//     void * data = NULL ;
 
-    // VkResult vkMapMemory(
-    //     VkDevice                                    device,
-    //     VkDeviceMemory                              memory,
-    //     VkDeviceSize                                offset,
-    //     VkDeviceSize                                size,
-    //     VkMemoryMapFlags                            flags,
-    //     void**                                      ppData);
-    if(check_vulkan(vkMapMemory(
-                vc->device_
-            ,   staging_buffer_memory
-            ,   0
-            ,   buffer_size
-            ,   0
-            ,   &data
-            )
-        )
-    )
-    {
-        end_timed_block() ;
-        return false ;
-    }
-    require(data) ;
+//     // VkResult vkMapMemory(
+//     //     VkDevice                                    device,
+//     //     VkDeviceMemory                              memory,
+//     //     VkDeviceSize                                offset,
+//     //     VkDeviceSize                                size,
+//     //     VkMemoryMapFlags                            flags,
+//     //     void**                                      ppData);
+//     if(check_vulkan(vkMapMemory(
+//                 vc->device_
+//             ,   staging_buffer_memory
+//             ,   0
+//             ,   buffer_size
+//             ,   0
+//             ,   &data
+//             )
+//         )
+//     )
+//     {
+//         end_timed_block() ;
+//         return false ;
+//     }
+//     require(data) ;
 
-    SDL_memcpy(data, indices, buffer_size) ;
+//     SDL_memcpy(data, indices, buffer_size) ;
 
-    // void vkUnmapMemory(
-    //     VkDevice                                    device,
-    //     VkDeviceMemory                              memory);
-    vkUnmapMemory(vc->device_, staging_buffer_memory) ;
+//     // void vkUnmapMemory(
+//     //     VkDevice                                    device,
+//     //     VkDeviceMemory                              memory);
+//     vkUnmapMemory(vc->device_, staging_buffer_memory) ;
 
-    if(check(create_buffer(
-                out_buffer
-            ,   out_buffer_memory
-            ,   vc->device_
-            ,   &vc->picked_physical_device_->memory_properties_
-            ,   buffer_size
-            ,   VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT
-            ,   VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
-            )
-        )
-    )
-    {
-        end_timed_block() ;
-        return false ;
-    }
-    require(*out_buffer) ;
-    require(*out_buffer_memory) ;
+//     if(check(create_buffer(
+//                 out_buffer
+//             ,   out_buffer_memory
+//             ,   vc->device_
+//             ,   &vc->picked_physical_device_->memory_properties_
+//             ,   buffer_size
+//             ,   VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT
+//             ,   VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+//             )
+//         )
+//     )
+//     {
+//         end_timed_block() ;
+//         return false ;
+//     }
+//     require(*out_buffer) ;
+//     require(*out_buffer_memory) ;
 
-    if(check(copy_buffer(vc, staging_buffer, *out_buffer, buffer_size)))
-    {
-        end_timed_block() ;
-        return false ;
-    }
+//     if(check(copy_buffer(vc, staging_buffer, *out_buffer, buffer_size)))
+//     {
+//         end_timed_block() ;
+//         return false ;
+//     }
 
-    vkDestroyBuffer(vc->device_, staging_buffer, NULL) ;
-    vkFreeMemory(vc->device_, staging_buffer_memory, NULL) ;
+//     vkDestroyBuffer(vc->device_, staging_buffer, NULL) ;
+//     vkFreeMemory(vc->device_, staging_buffer_memory, NULL) ;
 
-    end_timed_block() ;
-    return true ;
-}
+//     end_timed_block() ;
+//     return true ;
+// }
 
 
 
@@ -7694,106 +7729,106 @@ generate_mipmaps(
 // }
 
 
-static bool
-create_texture_image_view(
-    vulkan_context *    vc
-)
-{
-    require(vc) ;
-    require(vc->device_) ;
-    begin_timed_block() ;
+// static bool
+// create_texture_image_view(
+//     vulkan_context *    vc
+// )
+// {
+//     require(vc) ;
+//     require(vc->device_) ;
+//     begin_timed_block() ;
 
-    if(check(create_image_views(
-                &vc->texture_image_view_
-            ,   &vc->texture_image_
-            ,   1
-            ,   vc->device_
-            ,   VK_FORMAT_R8G8B8A8_SRGB
-            ,   VK_IMAGE_ASPECT_COLOR_BIT
-            ,   vc->texture_mip_levels_
-            )
-        )
-    )
-    {
-        end_timed_block() ;
-        return false ;
-    }
+//     if(check(create_image_views(
+//                 &vc->texture_image_view_
+//             ,   &vc->texture_image_
+//             ,   1
+//             ,   vc->device_
+//             ,   VK_FORMAT_R8G8B8A8_SRGB
+//             ,   VK_IMAGE_ASPECT_COLOR_BIT
+//             ,   vc->texture_mip_levels_
+//             )
+//         )
+//     )
+//     {
+//         end_timed_block() ;
+//         return false ;
+//     }
 
-    end_timed_block() ;
-    return true ;
-}
+//     end_timed_block() ;
+//     return true ;
+// }
 
 
-static bool
-create_texture_sampler(
-    vulkan_context *    vc
-)
-{
-    require(vc) ;
-    require(vc->device_) ;
-    begin_timed_block() ;
+// static bool
+// create_texture_sampler(
+//     vulkan_context *    vc
+// )
+// {
+//     require(vc) ;
+//     require(vc->device_) ;
+//     begin_timed_block() ;
 
-    // typedef struct VkSamplerCreateInfo {
-    //     VkStructureType         sType;
-    //     const void*             pNext;
-    //     VkSamplerCreateFlags    flags;
-    //     VkFilter                magFilter;
-    //     VkFilter                minFilter;
-    //     VkSamplerMipmapMode     mipmapMode;
-    //     VkSamplerAddressMode    addressModeU;
-    //     VkSamplerAddressMode    addressModeV;
-    //     VkSamplerAddressMode    addressModeW;
-    //     float                   mipLodBias;
-    //     VkBool32                anisotropyEnable;
-    //     float                   maxAnisotropy;
-    //     VkBool32                compareEnable;
-    //     VkCompareOp             compareOp;
-    //     float                   minLod;
-    //     float                   maxLod;
-    //     VkBorderColor           borderColor;
-    //     VkBool32                unnormalizedCoordinates;
-    // } VkSamplerCreateInfo;
-    static VkSamplerCreateInfo sci = { 0 } ;
-    sci.sType                   = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO ;
-    sci.pNext                   = NULL ;
-    sci.flags                   = 0 ;
-    sci.magFilter               = VK_FILTER_LINEAR ;
-    sci.minFilter               = VK_FILTER_LINEAR ;
-    sci.mipmapMode              = VK_SAMPLER_MIPMAP_MODE_LINEAR ;
-    sci.addressModeU            = VK_SAMPLER_ADDRESS_MODE_REPEAT ;
-    sci.addressModeV            = VK_SAMPLER_ADDRESS_MODE_REPEAT ;
-    sci.addressModeW            = VK_SAMPLER_ADDRESS_MODE_REPEAT ;
-    sci.mipLodBias              = 0.0f ;
-    sci.anisotropyEnable        = VK_TRUE ;
-    sci.maxAnisotropy           = vc_->desired_sampler_aniso_ ;
-    sci.compareEnable           = VK_FALSE ;
-    sci.compareOp               = VK_COMPARE_OP_ALWAYS ;
-    sci.minLod                  = 0.0f ;
-    sci.maxLod                  = (float) vc->texture_mip_levels_ ;
-    sci.borderColor             = VK_BORDER_COLOR_INT_OPAQUE_BLACK ;
-    sci.unnormalizedCoordinates = VK_FALSE ;
+//     // typedef struct VkSamplerCreateInfo {
+//     //     VkStructureType         sType;
+//     //     const void*             pNext;
+//     //     VkSamplerCreateFlags    flags;
+//     //     VkFilter                magFilter;
+//     //     VkFilter                minFilter;
+//     //     VkSamplerMipmapMode     mipmapMode;
+//     //     VkSamplerAddressMode    addressModeU;
+//     //     VkSamplerAddressMode    addressModeV;
+//     //     VkSamplerAddressMode    addressModeW;
+//     //     float                   mipLodBias;
+//     //     VkBool32                anisotropyEnable;
+//     //     float                   maxAnisotropy;
+//     //     VkBool32                compareEnable;
+//     //     VkCompareOp             compareOp;
+//     //     float                   minLod;
+//     //     float                   maxLod;
+//     //     VkBorderColor           borderColor;
+//     //     VkBool32                unnormalizedCoordinates;
+//     // } VkSamplerCreateInfo;
+//     static VkSamplerCreateInfo sci = { 0 } ;
+//     sci.sType                   = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO ;
+//     sci.pNext                   = NULL ;
+//     sci.flags                   = 0 ;
+//     sci.magFilter               = VK_FILTER_LINEAR ;
+//     sci.minFilter               = VK_FILTER_LINEAR ;
+//     sci.mipmapMode              = VK_SAMPLER_MIPMAP_MODE_LINEAR ;
+//     sci.addressModeU            = VK_SAMPLER_ADDRESS_MODE_REPEAT ;
+//     sci.addressModeV            = VK_SAMPLER_ADDRESS_MODE_REPEAT ;
+//     sci.addressModeW            = VK_SAMPLER_ADDRESS_MODE_REPEAT ;
+//     sci.mipLodBias              = 0.0f ;
+//     sci.anisotropyEnable        = VK_TRUE ;
+//     sci.maxAnisotropy           = vc_->desired_sampler_aniso_ ;
+//     sci.compareEnable           = VK_FALSE ;
+//     sci.compareOp               = VK_COMPARE_OP_ALWAYS ;
+//     sci.minLod                  = 0.0f ;
+//     sci.maxLod                  = (float) vc->texture_mip_levels_ ;
+//     sci.borderColor             = VK_BORDER_COLOR_INT_OPAQUE_BLACK ;
+//     sci.unnormalizedCoordinates = VK_FALSE ;
 
-    // VkResult vkCreateSampler(
-    //     VkDevice                                    device,
-    //     const VkSamplerCreateInfo*                  pCreateInfo,
-    //     const VkAllocationCallbacks*                pAllocator,
-    //     VkSampler*                                  pSampler);
-    if(check_vulkan(vkCreateSampler(
-                vc->device_
-            ,   &sci
-            ,   NULL
-            ,   &vc->texture_sampler_
-            )
-        )
-    )
-    {
-        end_timed_block() ;
-        return false ;
-    }
+//     // VkResult vkCreateSampler(
+//     //     VkDevice                                    device,
+//     //     const VkSamplerCreateInfo*                  pCreateInfo,
+//     //     const VkAllocationCallbacks*                pAllocator,
+//     //     VkSampler*                                  pSampler);
+//     if(check_vulkan(vkCreateSampler(
+//                 vc->device_
+//             ,   &sci
+//             ,   NULL
+//             ,   &vc->texture_sampler_
+//             )
+//         )
+//     )
+//     {
+//         end_timed_block() ;
+//         return false ;
+//     }
 
-    end_timed_block() ;
-    return true ;
-}
+//     end_timed_block() ;
+//     return true ;
+// }
 
 
 static bool
@@ -8369,33 +8404,33 @@ create_vulkan()
         return false ;
     }
 
-    if(check(create_vertex_buffer(
-                &vc_->vertex_buffer_
-            ,   &vc_->vertex_buffer_memory_
-            ,   vc_
-            )
-        )
-    )
-    {
-        end_timed_block() ;
-        return false ;
-    }
-    require(vc_->vertex_buffer_) ;
-    require(vc_->vertex_buffer_memory_) ;
+    // if(check(create_vertex_buffer(
+    //             &vc_->vertex_buffer_
+    //         ,   &vc_->vertex_buffer_memory_
+    //         ,   vc_
+    //         )
+    //     )
+    // )
+    // {
+    //     end_timed_block() ;
+    //     return false ;
+    // }
+    // require(vc_->vertex_buffer_) ;
+    // require(vc_->vertex_buffer_memory_) ;
 
-    if(check(create_index_buffer(
-                &vc_->index_buffer_
-            ,   &vc_->index_buffer_memory_
-            ,   vc_
-            )
-        )
-    )
-    {
-        end_timed_block() ;
-        return false ;
-    }
-    require(vc_->index_buffer_) ;
-    require(vc_->index_buffer_memory_) ;
+    // if(check(create_index_buffer(
+    //             &vc_->index_buffer_
+    //         ,   &vc_->index_buffer_memory_
+    //         ,   vc_
+    //         )
+    //     )
+    // )
+    // {
+    //     end_timed_block() ;
+    //     return false ;
+    // }
+    // require(vc_->index_buffer_) ;
+    // require(vc_->index_buffer_memory_) ;
 
     // if(check(create_uniform_buffers(vc_)))
     // {
@@ -8409,19 +8444,19 @@ create_vulkan()
     //     return false ;
     // }
 
-    if(check(create_texture_image_view(vc_)))
-    {
-        end_timed_block() ;
-        return false ;
-    }
+    // if(check(create_texture_image_view(vc_)))
+    // {
+    //     end_timed_block() ;
+    //     return false ;
+    // }
 
-    require(vc_->desired_sampler_aniso_ <= vc_->picked_physical_device_->properties_.limits.maxSamplerAnisotropy) ;
+    // require(vc_->desired_sampler_aniso_ <= vc_->picked_physical_device_->properties_.limits.maxSamplerAnisotropy) ;
 
-    if(check(create_texture_sampler(vc_)))
-    {
-        end_timed_block() ;
-        return false ;
-    }
+    // if(check(create_texture_sampler(vc_)))
+    // {
+    //     end_timed_block() ;
+    //     return false ;
+    // }
 
 
     // if(check(create_descriptor_sets(vc_)))
@@ -9014,6 +9049,686 @@ create_texture_image(
 
     vkDestroyBuffer(device, staging_buffer, NULL) ;
     vkFreeMemory(device, staging_buffer_memory, NULL) ;
+
+    end_timed_block() ;
+    return true ;
+}
+
+
+bool
+create_texture_image_view(
+    VkImageView *       out_image_view
+,   VkDevice const      device
+,   VkImage const       image
+,   uint32_t const      mip_levels
+)
+{
+    require(out_image_view) ;
+    require(device) ;
+    require(image) ;
+
+    begin_timed_block() ;
+
+    if(check(create_image_view(
+                out_image_view
+            ,   device
+            ,   image
+            ,   VK_FORMAT_R8G8B8A8_SRGB
+            ,   VK_IMAGE_ASPECT_COLOR_BIT
+            ,   mip_levels
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
+    end_timed_block() ;
+    return true ;
+}
+
+
+bool
+create_texture_sampler(
+    VkSampler *     out_sampler
+,   VkDevice const  device
+,   uint32_t const  mip_levels
+,   VkBool32 const  enable_anisotropy
+,   float const     max_anisotropy
+)
+{
+    require(out_sampler) ;
+    require(device) ;
+    begin_timed_block() ;
+
+    // typedef struct VkSamplerCreateInfo {
+    //     VkStructureType         sType;
+    //     const void*             pNext;
+    //     VkSamplerCreateFlags    flags;
+    //     VkFilter                magFilter;
+    //     VkFilter                minFilter;
+    //     VkSamplerMipmapMode     mipmapMode;
+    //     VkSamplerAddressMode    addressModeU;
+    //     VkSamplerAddressMode    addressModeV;
+    //     VkSamplerAddressMode    addressModeW;
+    //     float                   mipLodBias;
+    //     VkBool32                anisotropyEnable;
+    //     float                   maxAnisotropy;
+    //     VkBool32                compareEnable;
+    //     VkCompareOp             compareOp;
+    //     float                   minLod;
+    //     float                   maxLod;
+    //     VkBorderColor           borderColor;
+    //     VkBool32                unnormalizedCoordinates;
+    // } VkSamplerCreateInfo;
+    static VkSamplerCreateInfo sci = { 0 } ;
+    sci.sType                   = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO ;
+    sci.pNext                   = NULL ;
+    sci.flags                   = 0 ;
+    sci.magFilter               = VK_FILTER_LINEAR ;
+    sci.minFilter               = VK_FILTER_LINEAR ;
+    sci.mipmapMode              = VK_SAMPLER_MIPMAP_MODE_LINEAR ;
+    sci.addressModeU            = VK_SAMPLER_ADDRESS_MODE_REPEAT ;
+    sci.addressModeV            = VK_SAMPLER_ADDRESS_MODE_REPEAT ;
+    sci.addressModeW            = VK_SAMPLER_ADDRESS_MODE_REPEAT ;
+    sci.mipLodBias              = 0.0f ;
+    sci.anisotropyEnable        = enable_anisotropy ;
+    sci.maxAnisotropy           = max_anisotropy ;
+    sci.compareEnable           = VK_FALSE ;
+    sci.compareOp               = VK_COMPARE_OP_ALWAYS ;
+    sci.minLod                  = 0.0f ;
+    sci.maxLod                  = (float) mip_levels ;
+    sci.borderColor             = VK_BORDER_COLOR_INT_OPAQUE_BLACK ;
+    sci.unnormalizedCoordinates = VK_FALSE ;
+
+    // VkResult vkCreateSampler(
+    //     VkDevice                                    device,
+    //     const VkSamplerCreateInfo*                  pCreateInfo,
+    //     const VkAllocationCallbacks*                pAllocator,
+    //     VkSampler*                                  pSampler);
+    if(check_vulkan(vkCreateSampler(
+                device
+            ,   &sci
+            ,   NULL
+            ,   out_sampler
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+    require(*out_sampler) ;
+
+    end_timed_block() ;
+    return true ;
+}
+
+
+void
+add_descriptor_buffer_info(
+    VkDescriptorBufferInfo *    descriptor_buffer_infos
+,   uint32_t *                  descriptor_buffer_infos_count
+,   uint32_t const              descriptor_buffer_infos_count_max
+,   uint32_t const              frames_in_flight_count
+,   VkBuffer const *            buffers
+,   VkDeviceSize const          offset
+,   VkDeviceSize const          range
+)
+{
+    require(descriptor_buffer_infos) ;
+    require(descriptor_buffer_infos_count) ;
+    require(*descriptor_buffer_infos_count < descriptor_buffer_infos_count_max) ;
+    require(frames_in_flight_count < max_vulkan_frames_in_flight) ;
+    begin_timed_block() ;
+
+    for(
+        uint32_t i = 0
+    ;   i < frames_in_flight_count
+    ;   ++i
+    )
+    {
+        require(buffers[i]) ;
+        uint32_t const idx = *descriptor_buffer_infos_count ;
+        require(idx < max_vulkan_frames_in_flight) ;
+        require(idx < frames_in_flight_count) ;
+
+        // typedef struct VkDescriptorBufferInfo {
+        //     VkBuffer        buffer;
+        //     VkDeviceSize    offset;
+        //     VkDeviceSize    range;
+        // } VkDescriptorBufferInfo;
+        VkDescriptorBufferInfo * dbi = &descriptor_buffer_infos[idx] ;
+        dbi->buffer  = buffers[i] ;
+        dbi->offset  = offset ;
+        dbi->range   = range ;
+    }
+
+    ++ *descriptor_buffer_infos_count ;
+
+    end_timed_block() ;
+}
+
+
+void
+add_descriptor_image_info(
+    VkDescriptorImageInfo * descriptor_image_infos
+,   uint32_t *              descriptor_image_infos_count
+,   uint32_t const          descriptor_image_infos_count_max
+,   uint32_t const          frames_in_flight_count
+,   VkImageView const       image_view
+,   VkSampler const         sampler
+)
+{
+    require(descriptor_image_infos) ;
+    require(descriptor_image_infos_count) ;
+    require(*descriptor_image_infos_count < descriptor_image_infos_count_max) ;
+    require(frames_in_flight_count < max_vulkan_frames_in_flight) ;
+    require(image_view) ;
+    require(sampler) ;
+    begin_timed_block() ;
+
+    for(
+        uint32_t i = 0
+    ;   i < frames_in_flight_count
+    ;   ++i
+    )
+    {
+        uint32_t const idx = *descriptor_image_infos_count ;
+        require(idx < max_vulkan_frames_in_flight) ;
+        require(idx < frames_in_flight_count) ;
+
+        // typedef struct VkDescriptorImageInfo {
+        //     VkSampler        sampler;
+        //     VkImageView      imageView;
+        //     VkImageLayout    imageLayout;
+        // } VkDescriptorImageInfo;
+        VkDescriptorImageInfo * dii = &descriptor_image_infos[idx] ;
+        dii->sampler     = sampler ;
+        dii->imageView   = image_view ;
+        dii->imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL ;
+    }
+
+    ++ *descriptor_image_infos_count ;
+
+    end_timed_block() ;
+}
+
+
+void
+add_write_descriptor_buffer_set(
+    VkWriteDescriptorSet *          write_descriptor_sets
+,   uint32_t *                      write_descriptor_sets_count
+,   uint32_t const                  write_descriptor_sets_count_max
+,   VkDescriptorSet const *         descriptor_sets
+,   uint32_t const                  descriptor_sets_count
+,   VkDescriptorBufferInfo const *  descriptor_buffer_infos
+,   uint32_t const                  descriptor_buffer_infos_count
+,   uint32_t const                  descriptor_buffer_infos_count_max
+,   uint32_t const                  frames_in_flight_count
+,   uint32_t const                  descriptor_buffer_info_index
+,   uint32_t const                  binding
+,   VkDescriptorType const          descriptor_type
+)
+{
+    require(write_descriptor_sets) ;
+    require(write_descriptor_sets_count) ;
+    require(*write_descriptor_sets_count < write_descriptor_sets_count_max) ;
+    require(descriptor_sets) ;
+    require(descriptor_sets_count == frames_in_flight_count) ;
+    require(descriptor_buffer_infos) ;
+    require(descriptor_buffer_infos_count < max_vulkan_frames_in_flight) ;
+    require(descriptor_buffer_info_index < descriptor_buffer_infos_count_max) ;
+    require(descriptor_buffer_info_index < descriptor_buffer_infos_count) ;
+
+    begin_timed_block() ;
+
+    for(
+        uint32_t i = 0
+    ;   i < frames_in_flight_count
+    ;   ++i
+    )
+    {
+        require(descriptor_sets[i]) ;
+
+        uint32_t const wds_idx = i * write_descriptor_sets_count_max * *write_descriptor_sets_count ;
+        require(wds_idx < write_descriptor_sets_count_max * max_vulkan_frames_in_flight) ;
+        require(wds_idx < write_descriptor_sets_count_max * frames_in_flight_count) ;
+        VkWriteDescriptorSet *  wds = &write_descriptor_sets[wds_idx] ;
+
+        uint32_t const dbi_idx = i * descriptor_buffer_infos_count_max + descriptor_buffer_info_index ;
+        require(dbi_idx < descriptor_buffer_infos_count_max * max_vulkan_frames_in_flight) ;
+        require(dbi_idx < descriptor_buffer_infos_count_max * frames_in_flight_count) ;
+
+        // typedef struct VkWriteDescriptorSet {
+        //     VkStructureType                  sType;
+        //     const void*                      pNext;
+        //     VkDescriptorSet                  dstSet;
+        //     uint32_t                         dstBinding;
+        //     uint32_t                         dstArrayElement;
+        //     uint32_t                         descriptorCount;
+        //     VkDescriptorType                 descriptorType;
+        //     const VkDescriptorImageInfo*     pImageInfo;
+        //     const VkDescriptorBufferInfo*    pBufferInfo;
+        //     const VkBufferView*              pTexelBufferView;
+        // } VkWriteDescriptorSet;
+        wds->sType               = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET ;
+        wds->pNext               = NULL ;
+        wds->dstSet              = descriptor_sets[i] ;
+        wds->dstBinding          = binding ;
+        wds->dstArrayElement     = 0 ;
+        wds->descriptorCount     = 1 ;
+        wds->descriptorType      = descriptor_type ;
+        wds->pImageInfo          = NULL ;
+        wds->pBufferInfo         = &descriptor_buffer_infos[dbi_idx] ;
+        wds->pTexelBufferView    = NULL ;
+    }
+
+    ++ *write_descriptor_sets_count ;
+
+    end_timed_block() ;
+}
+
+
+void
+add_write_descriptor_image_set(
+    VkWriteDescriptorSet *          write_descriptor_sets
+,   uint32_t *                      write_descriptor_sets_count
+,   uint32_t const                  write_descriptor_sets_count_max
+,   VkDescriptorSet const *         descriptor_sets
+,   uint32_t const                  descriptor_sets_count
+,   VkDescriptorImageInfo const *   descriptor_image_infos
+,   uint32_t const                  descriptor_image_infos_count
+,   uint32_t const                  descriptor_image_infos_count_max
+,   uint32_t const                  frames_in_flight_count
+,   uint32_t const                  descriptor_image_info_index
+,   uint32_t const                  binding
+,   VkDescriptorType const          descriptor_type
+)
+{
+    require(write_descriptor_sets) ;
+    require(write_descriptor_sets_count) ;
+    require(*write_descriptor_sets_count < write_descriptor_sets_count_max) ;
+    require(descriptor_sets) ;
+    require(descriptor_sets_count == frames_in_flight_count) ;
+    require(descriptor_image_infos) ;
+    require(descriptor_image_infos_count < max_vulkan_frames_in_flight) ;
+    require(descriptor_image_info_index < descriptor_image_infos_count_max) ;
+    require(descriptor_image_info_index < descriptor_image_infos_count) ;
+    begin_timed_block() ;
+
+    for(
+        uint32_t i = 0
+    ;   i < frames_in_flight_count
+    ;   ++i
+    )
+    {
+        require(descriptor_sets[i]) ;
+
+        uint32_t const wds_idx = i * write_descriptor_sets_count_max * *write_descriptor_sets_count ;
+        require(wds_idx < write_descriptor_sets_count_max * max_vulkan_frames_in_flight) ;
+        require(wds_idx < write_descriptor_sets_count_max * frames_in_flight_count) ;
+        VkWriteDescriptorSet *  wds = &write_descriptor_sets[wds_idx] ;
+
+        uint32_t const dii_idx = i * descriptor_image_infos_count_max + descriptor_image_info_index ;
+        require(dii_idx < descriptor_image_infos_count_max * max_vulkan_frames_in_flight) ;
+        require(dii_idx < descriptor_image_infos_count_max * frames_in_flight_count) ;
+
+        // typedef struct VkWriteDescriptorSet {
+        //     VkStructureType                  sType;
+        //     const void*                      pNext;
+        //     VkDescriptorSet                  dstSet;
+        //     uint32_t                         dstBinding;
+        //     uint32_t                         dstArrayElement;
+        //     uint32_t                         descriptorCount;
+        //     VkDescriptorType                 descriptorType;
+        //     const VkDescriptorImageInfo*     pImageInfo;
+        //     const VkDescriptorBufferInfo*    pBufferInfo;
+        //     const VkBufferView*              pTexelBufferView;
+        // } VkWriteDescriptorSet;
+        wds->sType               = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET ;
+        wds->pNext               = NULL ;
+        wds->dstSet              = descriptor_sets[i] ;
+        wds->dstBinding          = binding ;
+        wds->dstArrayElement     = 0 ;
+        wds->descriptorCount     = 1 ;
+        wds->descriptorType      = descriptor_type ;
+        wds->pImageInfo          = &descriptor_image_infos[dii_idx] ;
+        wds->pBufferInfo         = NULL ;
+        wds->pTexelBufferView    = NULL ;
+    }
+
+    ++ *write_descriptor_sets_count ;
+
+    end_timed_block() ;
+}
+
+
+void
+update_descriptor_sets(
+    VkWriteDescriptorSet *  write_descriptor_sets
+,   uint32_t const          write_descriptor_sets_count
+,   uint32_t const          write_descriptor_sets_count_max
+,   VkDevice const          device
+,   uint32_t const          frames_in_flight_count
+)
+{
+    require(write_descriptor_sets) ;
+    require(device) ;
+    require(frames_in_flight_count) ;
+    require(frames_in_flight_count < max_vulkan_frames_in_flight) ;
+
+    begin_timed_block() ;
+
+    for(
+        uint32_t i = 0
+    ;   i < frames_in_flight_count
+    ;   ++i
+    )
+    {
+        uint32_t const idx = i * write_descriptor_sets_count_max ;
+
+        // void vkUpdateDescriptorSets(
+        //     VkDevice                                    device,
+        //     uint32_t                                    descriptorWriteCount,
+        //     const VkWriteDescriptorSet*                 pDescriptorWrites,
+        //     uint32_t                                    descriptorCopyCount,
+        //     const VkCopyDescriptorSet*                  pDescriptorCopies);
+        vkUpdateDescriptorSets(
+            device
+        ,   write_descriptor_sets_count
+        ,   &write_descriptor_sets[idx]
+        ,   0
+        ,   NULL
+        ) ;
+    }
+    end_timed_block() ;
+}
+
+
+bool
+create_vertex_buffer(
+    VkBuffer *                                  out_buffer
+,   VkDeviceMemory *                            out_buffer_memory
+,   VkDevice const                              device
+,   VkCommandPool const                         command_pool
+,   VkQueue const                               graphics_queue
+,   VkPhysicalDeviceMemoryProperties const *    pdmp
+,   void const *                                vbo_data
+,   VkDeviceSize const                          vbo_data_size
+)
+{
+    require(out_buffer) ;
+    require(out_buffer_memory) ;
+    require(device) ;
+    require(command_pool) ;
+    require(graphics_queue) ;
+    require(pdmp) ;
+    require(vbo_data) ;
+    require(vbo_data_size)
+
+    begin_timed_block() ;
+
+    VkDeviceSize const buffer_size = vbo_data_size ;
+
+    VkBuffer staging_buffer = NULL ;
+    VkDeviceMemory staging_buffer_memory = NULL ;
+
+    if(check(create_buffer(
+                &staging_buffer
+            ,   &staging_buffer_memory
+            ,   device
+            ,   pdmp
+            ,   buffer_size
+            ,   VK_BUFFER_USAGE_TRANSFER_SRC_BIT
+            ,   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+    require(staging_buffer) ;
+    require(staging_buffer_memory) ;
+
+    void * data = NULL ;
+
+    // VkResult vkMapMemory(
+    //     VkDevice                                    device,
+    //     VkDeviceMemory                              memory,
+    //     VkDeviceSize                                offset,
+    //     VkDeviceSize                                size,
+    //     VkMemoryMapFlags                            flags,
+    //     void**                                      ppData);
+    if(check_vulkan(vkMapMemory(
+                device
+            ,   staging_buffer_memory
+            ,   0
+            ,   buffer_size
+            ,   0
+            ,   &data
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+    require(data) ;
+
+    SDL_memcpy(data, vbo_data, buffer_size) ;
+
+    // void vkUnmapMemory(
+    //     VkDevice                                    device,
+    //     VkDeviceMemory                              memory);
+    vkUnmapMemory(device, staging_buffer_memory) ;
+
+    if(check(create_buffer(
+                out_buffer
+            ,   out_buffer_memory
+            ,   device
+            ,   pdmp
+            ,   buffer_size
+            ,   VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
+            ,   VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+    require(*out_buffer) ;
+    require(*out_buffer_memory) ;
+
+
+    if(check(copy_buffer(
+                device
+            ,   command_pool
+            ,   graphics_queue
+            ,   staging_buffer
+            ,   *out_buffer
+            ,   buffer_size
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
+    vkDestroyBuffer(device, staging_buffer, NULL) ;
+    vkFreeMemory(device, staging_buffer_memory, NULL) ;
+
+    end_timed_block() ;
+    return true ;
+}
+
+
+bool
+create_index_buffer(
+    VkBuffer *                                  out_buffer
+,   VkDeviceMemory *                            out_buffer_memory
+,   VkDevice const                              device
+,   VkCommandPool const                         command_pool
+,   VkQueue const                               graphics_queue
+,   VkPhysicalDeviceMemoryProperties const *    pdmp
+,   void const *                                ibo_data
+,   VkDeviceSize const                          ibo_data_size
+)
+{
+    require(out_buffer) ;
+    require(out_buffer_memory) ;
+    require(device) ;
+    require(command_pool) ;
+    require(graphics_queue) ;
+    require(pdmp) ;
+    require(ibo_data) ;
+    require(ibo_data_size)
+
+    begin_timed_block() ;
+
+    VkDeviceSize const buffer_size = ibo_data_size ;
+    VkBuffer staging_buffer = NULL ;
+    VkDeviceMemory staging_buffer_memory = NULL ;
+
+    if(check(create_buffer(
+                &staging_buffer
+            ,   &staging_buffer_memory
+            ,   device
+            ,   pdmp
+            ,   buffer_size
+            ,   VK_BUFFER_USAGE_TRANSFER_SRC_BIT
+            ,   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+    require(staging_buffer) ;
+    require(staging_buffer_memory) ;
+
+    void * data = NULL ;
+
+    // VkResult vkMapMemory(
+    //     VkDevice                                    device,
+    //     VkDeviceMemory                              memory,
+    //     VkDeviceSize                                offset,
+    //     VkDeviceSize                                size,
+    //     VkMemoryMapFlags                            flags,
+    //     void**                                      ppData);
+    if(check_vulkan(vkMapMemory(
+                device
+            ,   staging_buffer_memory
+            ,   0
+            ,   buffer_size
+            ,   0
+            ,   &data
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+    require(data) ;
+
+    SDL_memcpy(data, indices, buffer_size) ;
+
+    // void vkUnmapMemory(
+    //     VkDevice                                    device,
+    //     VkDeviceMemory                              memory);
+    vkUnmapMemory(device, staging_buffer_memory) ;
+
+    if(check(create_buffer(
+                out_buffer
+            ,   out_buffer_memory
+            ,   device
+            ,   pdmp
+            ,   buffer_size
+            ,   VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT
+            ,   VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+    require(*out_buffer) ;
+    require(*out_buffer_memory) ;
+
+    if(check(copy_buffer(
+                device
+            ,   command_pool
+            ,   graphics_queue
+            ,   staging_buffer
+            ,   *out_buffer
+            ,   buffer_size
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
+    vkDestroyBuffer(device, staging_buffer, NULL) ;
+    vkFreeMemory(device, staging_buffer_memory, NULL) ;
+
+    end_timed_block() ;
+    return true ;
+}
+
+
+bool
+load_shader_file(
+    VkShaderModule *    out_shader_module
+,   VkDevice const      device
+,   char const * const  shader_full_name
+)
+{
+    require(out_shader_module) ;
+    require(device) ;
+    require(shader_full_name) ;
+    require(*shader_full_name) ;
+
+    begin_timed_block() ;
+
+    void *      code = NULL ;
+    uint64_t    size = 0 ;
+
+    if(check(load_file(&code, &size, shader_full_name)))
+    {
+        end_timed_block() ;
+        return false ;
+    }
+    require(code) ;
+    require(size) ;
+
+
+    if(check(create_shader_module(
+                out_shader_module
+            ,   device
+            ,   code
+            ,   size
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+    require(*out_shader_module) ;
+
+    if(code)
+    {
+        free_memory(code) ;
+    }
 
     end_timed_block() ;
     return true ;

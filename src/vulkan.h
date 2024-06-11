@@ -290,3 +290,125 @@ create_texture_image(
 ,   VkPhysicalDeviceMemoryProperties const *    pdmp
 ,   uint32_t const                              mip_levels
 ) ;
+
+
+bool
+create_texture_image_view(
+    VkImageView *       out_image_view
+,   VkDevice const      device
+,   VkImage const       image
+,   uint32_t const      mip_levels
+) ;
+
+
+bool
+create_texture_sampler(
+    VkSampler *     out_sampler
+,   VkDevice const  device
+,   uint32_t const  mip_levels
+,   VkBool32 const  enable_anisotropy
+,   float const     max_anisotropy
+) ;
+
+
+void
+add_descriptor_buffer_info(
+    VkDescriptorBufferInfo *    descriptor_buffer_infos
+,   uint32_t *                  descriptor_buffer_infos_count
+,   uint32_t const              descriptor_buffer_infos_count_max
+,   uint32_t const              frames_in_flight_count
+,   VkBuffer const *            buffers
+,   VkDeviceSize const          offset
+,   VkDeviceSize const          range
+) ;
+
+
+void
+add_descriptor_image_info(
+    VkDescriptorImageInfo * descriptor_image_infos
+,   uint32_t *              descriptor_image_infos_count
+,   uint32_t const          descriptor_image_infos_count_max
+,   uint32_t const          frames_in_flight_count
+,   VkImageView const       image_view
+,   VkSampler const         sampler
+) ;
+
+
+void
+add_write_descriptor_buffer_set(
+    VkWriteDescriptorSet *          write_descriptor_sets
+,   uint32_t *                      write_descriptor_sets_count
+,   uint32_t const                  write_descriptor_sets_count_max
+,   VkDescriptorSet const *         descriptor_sets
+,   uint32_t const                  descriptor_sets_count
+,   VkDescriptorBufferInfo const *  descriptor_buffer_infos
+,   uint32_t const                  descriptor_buffer_infos_count
+,   uint32_t const                  descriptor_buffer_infos_count_max
+,   uint32_t const                  frames_in_flight_count
+,   uint32_t const                  descriptor_buffer_info_index
+,   uint32_t const                  binding
+,   VkDescriptorType const          descriptor_type
+) ;
+
+
+void
+add_write_descriptor_image_set(
+    VkWriteDescriptorSet *          write_descriptor_sets
+,   uint32_t *                      write_descriptor_sets_count
+,   uint32_t const                  write_descriptor_sets_count_max
+,   VkDescriptorSet const *         descriptor_sets
+,   uint32_t const                  descriptor_sets_count
+,   VkDescriptorImageInfo const *   descriptor_image_infos
+,   uint32_t const                  descriptor_image_infos_count
+,   uint32_t const                  descriptor_image_infos_count_max
+,   uint32_t const                  frames_in_flight_count
+,   uint32_t const                  descriptor_image_info_index
+,   uint32_t const                  binding
+,   VkDescriptorType const          descriptor_type
+) ;
+
+
+void
+update_descriptor_sets(
+    VkWriteDescriptorSet *  write_descriptor_sets
+,   uint32_t const          write_descriptor_sets_count
+,   uint32_t const          write_descriptor_sets_count_max
+,   VkDevice const          device
+,   uint32_t const          frames_in_flight_count
+) ;
+
+
+bool
+create_vertex_buffer(
+    VkBuffer *                                  out_buffer
+,   VkDeviceMemory *                            out_buffer_memory
+,   VkDevice const                              device
+,   VkCommandPool const                         command_pool
+,   VkQueue const                               graphics_queue
+,   VkPhysicalDeviceMemoryProperties const *    pdmp
+,   void const *                                vbo_data
+,   VkDeviceSize const                          vbo_data_size
+) ;
+
+
+bool
+create_index_buffer(
+    VkBuffer *                                  out_buffer
+,   VkDeviceMemory *                            out_buffer_memory
+,   VkDevice const                              device
+,   VkCommandPool const                         command_pool
+,   VkQueue const                               graphics_queue
+,   VkPhysicalDeviceMemoryProperties const *    pdmp
+,   void const *                                ibo_data
+,   VkDeviceSize const                          ibo_data_size
+) ;
+
+
+bool
+load_shader_file(
+    VkShaderModule *    out_shader_module
+,   VkDevice const      device
+,   char const * const  shader_full_name
+) ;
+
+
