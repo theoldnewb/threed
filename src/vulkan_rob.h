@@ -14,3 +14,16 @@ create_rob(
     vulkan_context *    vc
 ) ;
 
+
+bool
+update_rob(
+    vulkan_context *    vc
+) ;
+
+
+bool
+draw_rob(
+    vulkan_context *    vc
+) ;
+
+

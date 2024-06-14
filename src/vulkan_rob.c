@@ -1,3 +1,4 @@
+#include "app.h"
 #include "vulkan_rob.h"
 #include "vulkan.h"
 #include "defines.h"
@@ -5,20 +6,23 @@
 #include "check.h"
 
 
-// #include <cglm/vec2.h>
-// #include <cglm/vec3.h>
+#include <cglm/vec2.h>
+#include <cglm/vec3.h>
 #include <cglm/mat4.h>
-// #include <cglm/affine.h>
-// #include <cglm/cam.h>
+#include <cglm/affine.h>
+#include <cglm/cam.h>
+
+#include <SDL3/SDL_stdinc.h>
 
 
-
-#define max_vulkan_descriptor_set_layout_binding    4
-#define max_vulkan_descriptor_pool_size             4
-
-#define max_vulkan_descriptor_buffer_infos          1
-#define max_vulkan_descriptor_image_infos           1
-#define max_vulkan_write_descriptor_sets            1
+#define max_vulkan_descriptor_set_layout_binding        4
+#define max_vulkan_descriptor_pool_size                 4
+#define max_vulkan_pipeline_shader_stage_create_infos   2
+#define max_vulkan_vertex_input_attribute_descriptions  3
+#define max_vulkan_dynamic_states                       2
+#define max_vulkan_descriptor_buffer_infos              4
+#define max_vulkan_descriptor_image_infos               4
+#define max_vulkan_write_descriptor_sets                4
 
 
 typedef struct vulkan_rob
@@ -44,14 +48,11 @@ typedef struct vulkan_rob
     VkDeviceMemory  uniform_buffers_memory_[max_vulkan_frames_in_flight] ;
     void *          uniform_buffers_mapped_[max_vulkan_frames_in_flight] ;
 
-
-
     VkPipelineLayoutCreateInfo      pipeline_layout_create_info_ ;
     VkPipelineLayout                pipeline_layout_ ;
-
+    VkPipeline                      graphics_pipeline_ ;
 
     VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info_ ;
-
 
     uint32_t            texture_mip_levels_ ;
     VkImage             texture_image_ ;
@@ -61,7 +62,6 @@ typedef struct vulkan_rob
     VkBool32            texture_enable_anisotropy_ ;
     float               texture_anisotropy_ ;
 
-
     VkBuffer        vertex_buffer_ ;
     VkDeviceMemory  vertex_buffer_memory_ ;
     VkBuffer        index_buffer_ ;
@@ -69,6 +69,33 @@ typedef struct vulkan_rob
 
     VkShaderModule  vert_shader_ ;
     VkShaderModule  frag_shader_ ;
+
+
+    VkPipelineShaderStageCreateInfo pipeline_shader_stage_create_infos_[max_vulkan_pipeline_shader_stage_create_infos] ;
+    uint32_t                        pipeline_shader_stage_create_infos_count_ ;
+
+    VkVertexInputBindingDescription vertex_input_binding_description_ ;
+
+    VkVertexInputAttributeDescription   vertex_input_attribute_descriptions_[max_vulkan_vertex_input_attribute_descriptions] ;
+    uint32_t                            vertex_input_attribute_descriptions_count_ ;
+
+    VkPipelineVertexInputStateCreateInfo    pipeline_vertex_input_state_create_info_ ;
+    VkPipelineInputAssemblyStateCreateInfo  pipeline_input_assembly_state_create_info_ ;
+    VkPipelineViewportStateCreateInfo       pipeline_viewport_state_create_info_ ;
+    VkPipelineDynamicStateCreateInfo        pipeline_dynamic_state_create_info_ ;
+    VkPipelineRasterizationStateCreateInfo  pipeline_rasterization_state_create_info_ ;
+    VkPipelineMultisampleStateCreateInfo    pipeline_multisample_state_create_info_ ;
+    VkPipelineColorBlendAttachmentState     pipeline_color_blend_attachment_state_ ;
+    VkPipelineColorBlendStateCreateInfo     pipeline_color_blend_state_create_info_ ;
+    VkPipelineDepthStencilStateCreateInfo   pipeline_depth_stencil_state_create_info_ ;
+    VkGraphicsPipelineCreateInfo            graphics_pipeline_create_info_ ;
+
+    VkViewport  viewport_ ;
+    VkRect2D    scissor_ ;
+
+    VkDynamicState  dynamic_states_[max_vulkan_dynamic_states] ;
+    uint32_t        dynamic_states_count_ ;
+
 
 
 } vulkan_rob ;
@@ -121,8 +148,313 @@ typedef struct uniform_buffer_object
     mat4 proj ;
 } uniform_buffer_object ;
 
+
 static uint32_t const uniform_buffer_object_size = sizeof(uniform_buffer_object) ;
 
+
+
+static bool
+record_command_buffer(
+    vulkan_context *    vc
+,   vulkan_rob *        vr
+,   uint32_t const      current_frame
+,   uint32_t const      frame_buffer_index
+)
+{
+    require(vc) ;
+    require(vr) ;
+    require(current_frame < max_vulkan_frames_in_flight) ;
+    require(frame_buffer_index < max_vulkan_swapchain_images) ;
+
+    begin_timed_block() ;
+
+    VkCommandBuffer command_buffer = vc->command_buffer_[current_frame] ;
+    VkDescriptorSet desc_set = vr->descriptor_sets_[current_frame] ;
+
+    // VkResult vkResetCommandBuffer(
+    //     VkCommandBuffer                             commandBuffer,
+    //     VkCommandBufferResetFlags                   flags);
+    if(check_vulkan(vkResetCommandBuffer(
+                command_buffer
+            ,   0
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
+
+    // typedef struct VkCommandBufferBeginInfo {
+    //     VkStructureType                          sType;
+    //     const void*                              pNext;
+    //     VkCommandBufferUsageFlags                flags;
+    //     const VkCommandBufferInheritanceInfo*    pInheritanceInfo;
+    // } VkCommandBufferBeginInfo;
+    static VkCommandBufferBeginInfo cbbi = { 0 } ;
+    cbbi.sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO ;
+    cbbi.pNext              = NULL ;
+    cbbi.flags              = 0 ;
+    cbbi.pInheritanceInfo   = NULL ;
+
+    // VkResult vkBeginCommandBuffer(
+    //     VkCommandBuffer                             commandBuffer,
+    //     const VkCommandBufferBeginInfo*             pBeginInfo);
+    if(check_vulkan(vkBeginCommandBuffer(command_buffer, &cbbi)))
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
+    // typedef struct VkRenderPassBeginInfo {
+    //     VkStructureType        sType;
+    //     const void*            pNext;
+    //     VkRenderPass           renderPass;
+    //     VkFramebuffer          framebuffer;
+    //     VkRect2D               renderArea;
+    //     uint32_t               clearValueCount;
+    //     const VkClearValue*    pClearValues;
+    // } VkRenderPassBeginInfo;
+    // typedef union VkClearValue {
+    //     VkClearColorValue           color;
+    //     VkClearDepthStencilValue    depthStencil;
+    // } VkClearValue;
+    // typedef union VkClearColorValue {
+    //     float       float32[4];
+    //     int32_t     int32[4];
+    //     uint32_t    uint32[4];
+    // } VkClearColorValue;
+    // typedef struct VkClearDepthStencilValue {
+    //     float       depth;
+    //     uint32_t    stencil;
+    // } VkClearDepthStencilValue;
+    static VkClearValue    cv[2] = { 0 } ;
+    cv[0].color.float32[0]      = 0.0f ;
+    cv[0].color.float32[1]      = 0.0f ;
+    cv[0].color.float32[2]      = 0.0f ;
+    cv[0].color.float32[3]      = 1.0f ;
+    cv[1].depthStencil.depth    = 1.0f ;
+    cv[1].depthStencil.stencil  = 0 ;
+
+    static VkRenderPassBeginInfo rpbi = { 0 } ;
+    rpbi.sType                      = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO ;
+    rpbi.pNext                      = NULL ;
+    rpbi.renderPass                 = vc->render_pass_ ;
+    rpbi.framebuffer                = vc->framebuffers_[frame_buffer_index] ;
+    rpbi.renderArea.offset.x        = 0 ;
+    rpbi.renderArea.offset.y        = 0 ;
+    rpbi.renderArea.extent.width    = vc->swapchain_extent_.width ;
+    rpbi.renderArea.extent.height   = vc->swapchain_extent_.height ;
+    rpbi.clearValueCount            = array_count(cv) ;
+    rpbi.pClearValues               = cv ;
+
+    // void vkCmdBeginRenderPass(
+    //     VkCommandBuffer                             commandBuffer,
+    //     const VkRenderPassBeginInfo*                pRenderPassBegin,
+    //     VkSubpassContents                           contents);
+    vkCmdBeginRenderPass(command_buffer, &rpbi, VK_SUBPASS_CONTENTS_INLINE) ;
+
+    static VkViewport viewport = { 0 } ;
+    viewport.x          = 0.0f ;
+    viewport.y          = 0.0f ;
+    viewport.width      = (float) vc->swapchain_extent_.width ;
+    viewport.height     = (float) vc->swapchain_extent_.height ;
+    viewport.minDepth   = 0.0f ;
+    viewport.maxDepth   = 1.0f ;
+
+    // void vkCmdSetViewport(
+    //     VkCommandBuffer                             commandBuffer,
+    //     uint32_t                                    firstViewport,
+    //     uint32_t                                    viewportCount,
+    //     const VkViewport*                           pViewports);
+    vkCmdSetViewport(command_buffer, 0, 1, &viewport) ;
+
+    static VkRect2D scissor = { 0 } ;
+    scissor.offset.x        = 0 ;
+    scissor.offset.y        = 0 ;
+    scissor.extent.width    = vc->swapchain_extent_.width ;
+    scissor.extent.height   = vc->swapchain_extent_.height ;
+
+    // void vkCmdSetScissor(
+    //     VkCommandBuffer                             commandBuffer,
+    //     uint32_t                                    firstScissor,
+    //     uint32_t                                    scissorCount,
+    //     const VkRect2D*                             pScissors);
+    vkCmdSetScissor(command_buffer, 0, 1, &scissor) ;
+
+
+    // void vkCmdBindPipeline(
+    //     VkCommandBuffer                             commandBuffer,
+    //     VkPipelineBindPoint                         pipelineBindPoint,
+    //     VkPipeline                                  pipeline);
+    vkCmdBindPipeline(
+        command_buffer
+    ,   VK_PIPELINE_BIND_POINT_GRAPHICS
+    ,   vr->graphics_pipeline_
+    ) ;
+
+
+    VkBuffer vertex_buffers[] = { vr->vertex_buffer_} ;
+    VkDeviceSize offsets[] = { 0 } ;
+
+    // void vkCmdBindVertexBuffers(
+    //     VkCommandBuffer                             commandBuffer,
+    //     uint32_t                                    firstBinding,
+    //     uint32_t                                    bindingCount,
+    //     const VkBuffer*                             pBuffers,
+    //     const VkDeviceSize*                         pOffsets);
+    vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, offsets) ;
+
+
+    // void vkCmdBindIndexBuffer(
+    //     VkCommandBuffer                             commandBuffer,
+    //     VkBuffer                                    buffer,
+    //     VkDeviceSize                                offset,
+    //     VkIndexType                                 indexType);
+    vkCmdBindIndexBuffer(
+        command_buffer
+    ,   vr->index_buffer_
+    ,   0
+    ,   VK_INDEX_TYPE_UINT16
+    ) ;
+
+    // void vkCmdBindDescriptorSets(
+    //     VkCommandBuffer                             commandBuffer,
+    //     VkPipelineBindPoint                         pipelineBindPoint,
+    //     VkPipelineLayout                            layout,
+    //     uint32_t                                    firstSet,
+    //     uint32_t                                    descriptorSetCount,
+    //     const VkDescriptorSet*                      pDescriptorSets,
+    //     uint32_t                                    dynamicOffsetCount,
+    //     const uint32_t*                             pDynamicOffsets);
+    vkCmdBindDescriptorSets(
+        command_buffer
+    ,   VK_PIPELINE_BIND_POINT_GRAPHICS
+    ,   vr->pipeline_layout_
+    ,   0
+    ,   1
+    ,   &desc_set
+    ,   0
+    ,   NULL
+    ) ;
+
+    // void vkCmdDrawIndexed(
+    //     VkCommandBuffer                             commandBuffer,
+    //     uint32_t                                    indexCount,
+    //     uint32_t                                    instanceCount,
+    //     uint32_t                                    firstIndex,
+    //     int32_t                                     vertexOffset,
+    //     uint32_t                                    firstInstance);
+    vkCmdDrawIndexed(command_buffer, indices_count, 1, 0, 0, 0) ;
+
+    // void vkCmdEndRenderPass(
+    //     VkCommandBuffer                             commandBuffer);
+    vkCmdEndRenderPass(command_buffer) ;
+
+    // VkResult vkEndCommandBuffer(
+    //     VkCommandBuffer                             commandBuffer);
+    if(check_vulkan(vkEndCommandBuffer(command_buffer)))
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
+    end_timed_block() ;
+    return true ;
+
+}
+
+
+static void
+update_uniform_buffer(
+    vulkan_context *    vc
+,   uint32_t const      current_frame
+,   vulkan_rob *        vr
+)
+{
+    require(vc) ;
+    require(current_frame < max_vulkan_frames_in_flight) ;
+    require(current_frame < vc->frames_in_flight_count_) ;
+    require(vr) ;
+
+    static bool once = true ;
+    static uint64_t previous_time = 0 ;
+
+    uint64_t const current_time = get_app_time() ;
+
+    if(once)
+    {
+        once = false ;
+        previous_time = current_time ;
+    }
+
+    uint64_t const delta_time = (current_time - previous_time) / 10 ;
+    double const fractional_seconds = (double) delta_time * get_performance_frequency_inverse() ;
+    //log_debug("%f", fractional_seconds) ;
+
+    uniform_buffer_object ubo = { 0 } ;
+
+    // glm_mat4_identity(ubo.model) ;
+    // glm_mat4_identity(ubo.view) ;
+    // glm_mat4_identity(ubo.proj) ;
+
+    float angle = fractional_seconds ;
+    vec3 axis = {1.0f, 0.5f, 1.0f} ;
+    glm_rotate_make(ubo.model, angle, axis) ;
+
+    vec3 eye    = { 0.0f, 1.0f, 1.0f } ;
+    vec3 center = { 0.0f, 0.0f, 0.0f } ;
+    vec3 up     = { 0.0f, 0.0f, 1.0f } ;
+    glm_lookat(eye, center, up, ubo.view) ;
+
+    float fovy = glm_rad(45.0f) ;
+    float aspect_ratio = (float)vc->swapchain_extent_.width / (float)vc->swapchain_extent_.height ;
+    float near = 0.1f ;
+    float far = 10.f ;
+    glm_perspective(fovy, aspect_ratio, near, far, ubo.proj) ;
+
+    SDL_memcpy(vr->uniform_buffers_mapped_[current_frame], &ubo, sizeof(ubo)) ;
+}
+
+
+bool
+update_rob(
+    vulkan_context *    vc
+)
+{
+    require(vc) ;
+    begin_timed_block() ;
+
+    vulkan_rob *    vr = &the_vulkan_rob_ ;
+
+    update_uniform_buffer(vc, vc->current_frame_, vr) ;
+
+    end_timed_block() ;
+    return true ;
+}
+
+
+
+bool
+draw_rob(
+    vulkan_context *    vc
+)
+{
+    require(vc) ;
+    begin_timed_block() ;
+
+    vulkan_rob *    vr = &the_vulkan_rob_ ;
+
+    if(check(record_command_buffer(vc, vr, vc->current_frame_, vc->image_index_)))
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
+    end_timed_block() ;
+    return true ;
+}
 
 
 
@@ -204,7 +536,7 @@ create_rob(
     }
     require(vr->pipeline_layout_) ;
 
-
+    require(0 == vr->descriptor_pool_sizes_count_) ;
     add_descriptor_pool_size(
         vr->descriptor_pool_sizes_
     ,   &vr->descriptor_pool_sizes_count_
@@ -212,6 +544,7 @@ create_rob(
     ,   VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
     ,   vc->frames_in_flight_count_
     ) ;
+    require(1 == vr->descriptor_pool_sizes_count_) ;
 
     add_descriptor_pool_size(
         vr->descriptor_pool_sizes_
@@ -269,7 +602,6 @@ create_rob(
         end_timed_block() ;
         return false ;
     }
-
 
     if(check(create_texture_image(
                 &vr->texture_image_
@@ -452,6 +784,206 @@ create_rob(
     }
     require(vr->frag_shader_) ;
 
+    add_pipeline_shader_stage_create_info(
+        vr->pipeline_shader_stage_create_infos_
+    ,   &vr->pipeline_shader_stage_create_infos_count_
+    ,   max_vulkan_pipeline_shader_stage_create_infos
+    ,   vr->vert_shader_
+    ,   VK_SHADER_STAGE_VERTEX_BIT
+    ) ;
+
+    add_pipeline_shader_stage_create_info(
+        vr->pipeline_shader_stage_create_infos_
+    ,   &vr->pipeline_shader_stage_create_infos_count_
+    ,   max_vulkan_pipeline_shader_stage_create_infos
+    ,   vr->frag_shader_
+    ,   VK_SHADER_STAGE_FRAGMENT_BIT
+    ) ;
+
+
+    fill_vertex_input_binding_description(
+        &vr->vertex_input_binding_description_
+    ,   0
+    ,   vertex_size
+    ) ;
+
+
+    add_vertex_input_attribute_description(
+        vr->vertex_input_attribute_descriptions_
+    ,   &vr->vertex_input_attribute_descriptions_count_
+    ,   max_vulkan_vertex_input_attribute_descriptions
+    ,   0
+    ,   0
+    ,   VK_FORMAT_R32G32B32_SFLOAT
+    ,   offsetof(vertex, pos)
+    ) ;
+
+    add_vertex_input_attribute_description(
+        vr->vertex_input_attribute_descriptions_
+    ,   &vr->vertex_input_attribute_descriptions_count_
+    ,   max_vulkan_vertex_input_attribute_descriptions
+    ,   1
+    ,   0
+    ,   VK_FORMAT_R32G32B32_SFLOAT
+    ,   offsetof(vertex, color)
+    ) ;
+
+    add_vertex_input_attribute_description(
+        vr->vertex_input_attribute_descriptions_
+    ,   &vr->vertex_input_attribute_descriptions_count_
+    ,   max_vulkan_vertex_input_attribute_descriptions
+    ,   2
+    ,   0
+    ,   VK_FORMAT_R32G32_SFLOAT
+    ,   offsetof(vertex, uv)
+    ) ;
+
+    fill_pipeline_vertex_input_state_create_info(
+        &vr->pipeline_vertex_input_state_create_info_
+    ,   &vr->vertex_input_binding_description_
+    ,   vr->vertex_input_attribute_descriptions_
+    ,   vr->vertex_input_attribute_descriptions_count_
+    ) ;
+
+    fill_pipeline_input_assembly_state_create_info(
+        &vr->pipeline_input_assembly_state_create_info_
+    ,   VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST
+    ,   VK_FALSE
+    ) ;
+
+    fill_viewport(
+        &vr->viewport_
+    ,   0
+    ,   0
+    ,   vc->swapchain_extent_.width
+    ,   vc->swapchain_extent_.height
+    ,   0
+    ,   1
+    ) ;
+
+    fill_scissor(
+        &vr->scissor_
+    ,   0
+    ,   0
+    ,   vc->swapchain_extent_.width
+    ,   vc->swapchain_extent_.height
+    ) ;
+
+
+    fill_pipeline_viewport_state_create_info(
+        &vr->pipeline_viewport_state_create_info_
+    ,   &vr->viewport_
+    ,   &vr->scissor_
+    ) ;
+
+    add_to_dynamic_state(
+        vr->dynamic_states_
+    ,   &vr->dynamic_states_count_
+    ,   max_vulkan_dynamic_states
+    ,   VK_DYNAMIC_STATE_VIEWPORT
+    ) ;
+
+    add_to_dynamic_state(
+        vr->dynamic_states_
+    ,   &vr->dynamic_states_count_
+    ,   max_vulkan_dynamic_states
+    ,   VK_DYNAMIC_STATE_SCISSOR
+    ) ;
+
+
+    fill_pipeline_dynamic_state_create_info(
+        &vr->pipeline_dynamic_state_create_info_
+    ,   vr->dynamic_states_
+    ,   vr->dynamic_states_count_
+    ) ;
+
+
+    fill_pipeline_rasterization_state_create_info(
+        &vr->pipeline_rasterization_state_create_info_
+    ,   VK_POLYGON_MODE_FILL
+    ,   VK_CULL_MODE_NONE
+    ,   VK_FRONT_FACE_COUNTER_CLOCKWISE
+    ) ;
+
+    fill_pipeline_multisample_state_create_info(
+        &vr->pipeline_multisample_state_create_info_
+    ,   vc->enable_sampling_
+    ,   vc->sample_count_
+    ,   vc->enable_sample_shading_
+    ,   vc->min_sample_shading_
+    ) ;
+
+    fill_pipeline_color_blend_attachment_state(
+        &vr->pipeline_color_blend_attachment_state_
+    ,   VK_FALSE
+    ) ;
+
+    fill_pipeline_color_blend_state_create_info(
+        &vr->pipeline_color_blend_state_create_info_
+    ,   VK_TRUE
+    ,   VK_LOGIC_OP_COPY
+    ,   &vr->pipeline_color_blend_attachment_state_
+    ) ;
+
+    fill_pipeline_depth_stencil_state_create_info(
+        &vr->pipeline_depth_stencil_state_create_info_
+    ,   VK_TRUE
+    ,   VK_TRUE
+    ,   VK_COMPARE_OP_LESS
+    ) ;
+
+    fill_graphics_pipeline_create_info(
+        &vr->graphics_pipeline_create_info_
+    ,   vr->pipeline_layout_
+    ,   vc->render_pass_
+    ,   vr->pipeline_shader_stage_create_infos_
+    ,   vr->pipeline_shader_stage_create_infos_count_
+    ,   &vr->pipeline_vertex_input_state_create_info_
+    ,   &vr->pipeline_input_assembly_state_create_info_
+    ,   &vr->pipeline_viewport_state_create_info_
+    ,   &vr->pipeline_rasterization_state_create_info_
+    ,   &vr->pipeline_multisample_state_create_info_
+    ,   &vr->pipeline_depth_stencil_state_create_info_
+    ,   &vr->pipeline_color_blend_state_create_info_
+    ,   &vr->pipeline_dynamic_state_create_info_
+    ) ;
+
+    // VkResult vkCreateGraphicsPipelines(
+    //     VkDevice                                    device,
+    //     VkPipelineCache                             pipelineCache,
+    //     uint32_t                                    createInfoCount,
+    //     const VkGraphicsPipelineCreateInfo*         pCreateInfos,
+    //     const VkAllocationCallbacks*                pAllocator,
+    //     VkPipeline*                                 pPipelines);
+    if(check_vulkan(vkCreateGraphicsPipelines(
+                vc->device_
+            ,   VK_NULL_HANDLE
+            ,   1
+            ,   &vr->graphics_pipeline_create_info_
+            ,   NULL
+            ,   &vr->graphics_pipeline_
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+    require(vr->graphics_pipeline_) ;
+
+
+    // for(
+    //     uint32_t i = 0
+    // ;   i < 2
+    // ;   ++i
+    // )
+    // {
+    //     if(check(record_command_buffer(vc, vr, i, i)))
+    //     {
+    //         end_timed_block() ;
+    //         return false ;
+    //     }
+    // }
 
 
     end_timed_block() ;

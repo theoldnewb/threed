@@ -32,56 +32,55 @@ static char const vk_khr_swapchain_extension_name[]             = VK_KHR_SWAPCHA
 
 
 
+// typedef struct vertex {
+//     vec3 pos ;
+//     vec3 color ;
+//     vec2 uv ;
+// } vertex ;
+
+// static uint32_t const vertex_size = sizeof(vertex) ;
 
 
-typedef struct vertex {
-    vec3 pos ;
-    vec3 color ;
-    vec2 uv ;
-} vertex ;
+//     // {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+//     // {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+//     // {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
+//     // {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
 
-static uint32_t const vertex_size = sizeof(vertex) ;
+// static vertex const vertices[] =
+// {
+//     { {-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f} }
+// ,   { { 0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 1.0f}, {1.0f, 0.0f} }
+// ,   { { 0.5f,  0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f} }
+// ,   { {-0.5f,  0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f} }
+// ,   { {-0.5f, -0.5f,  0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f} }
+// ,   { { 0.5f, -0.5f,  0.5f}, {0.0f, 1.0f, 1.0f}, {1.0f, 0.0f} }
+// ,   { { 0.5f,  0.5f,  0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f} }
+// ,   { {-0.5f,  0.5f,  0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f} }
 
-    // {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-    // {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-    // {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-    // {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
-
-static vertex const vertices[] =
-{
-    { {-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f} }
-,   { { 0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 1.0f}, {1.0f, 0.0f} }
-,   { { 0.5f,  0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f} }
-,   { {-0.5f,  0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f} }
-,   { {-0.5f, -0.5f,  0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f} }
-,   { { 0.5f, -0.5f,  0.5f}, {0.0f, 1.0f, 1.0f}, {1.0f, 0.0f} }
-,   { { 0.5f,  0.5f,  0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f} }
-,   { {-0.5f,  0.5f,  0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f} }
-
-} ;
-static uint32_t const vertices_size = sizeof(vertices) ;
-static uint32_t const vertices_count = array_count(vertices) ;
+// } ;
+// static uint32_t const vertices_size = sizeof(vertices) ;
+// static uint32_t const vertices_count = array_count(vertices) ;
 
 
-static uint16_t const indices[] =
-{
-    0, 1, 2
-,   2, 3, 0
-,   4, 5, 6
-,   6, 7, 4
-} ;
-static uint32_t const   indices_size = sizeof(indices) ;
-static uint32_t const   indices_count = array_count(indices) ;
+// static uint16_t const indices[] =
+// {
+//     0, 1, 2
+// ,   2, 3, 0
+// ,   4, 5, 6
+// ,   6, 7, 4
+// } ;
+// static uint32_t const   indices_size = sizeof(indices) ;
+// static uint32_t const   indices_count = array_count(indices) ;
 
 
-typedef struct uniform_buffer_object
-{
-    mat4 model ;
-    mat4 view ;
-    mat4 proj ;
-} uniform_buffer_object ;
+// typedef struct uniform_buffer_object
+// {
+//     mat4 model ;
+//     mat4 view ;
+//     mat4 proj ;
+// } uniform_buffer_object ;
 
-static uint32_t const uniform_buffer_object_size = sizeof(uniform_buffer_object) ;
+// static uint32_t const uniform_buffer_object_size = sizeof(uniform_buffer_object) ;
 
 
 
@@ -105,52 +104,52 @@ create_image(
 ) ;
 
 
-static VkVertexInputBindingDescription
-get_binding_description()
-{
-    // typedef struct VkVertexInputBindingDescription {
-    //     uint32_t             binding;
-    //     uint32_t             stride;
-    //     VkVertexInputRate    inputRate;
-    // } VkVertexInputBindingDescription;
-    static VkVertexInputBindingDescription binding_description = { 0 } ;
-    binding_description.binding     = 0 ;
-    binding_description.stride      = vertex_size ;
-    binding_description.inputRate   = VK_VERTEX_INPUT_RATE_VERTEX ;
+// static VkVertexInputBindingDescription
+// get_binding_description()
+// {
+//     // typedef struct VkVertexInputBindingDescription {
+//     //     uint32_t             binding;
+//     //     uint32_t             stride;
+//     //     VkVertexInputRate    inputRate;
+//     // } VkVertexInputBindingDescription;
+//     static VkVertexInputBindingDescription binding_description = { 0 } ;
+//     binding_description.binding     = 0 ;
+//     binding_description.stride      = vertex_size ;
+//     binding_description.inputRate   = VK_VERTEX_INPUT_RATE_VERTEX ;
 
-    return binding_description ;
-}
+//     return binding_description ;
+// }
 
 
-static void
-get_attribute_descriptions(
-    VkVertexInputAttributeDescription * viad
-,   uint32_t const                      viad_count
-)
-{
-    require(viad) ;
-    require(viad_count == 3) ;
-    // typedef struct VkVertexInputAttributeDescription {
-    //     uint32_t    location;
-    //     uint32_t    binding;
-    //     VkFormat    format;
-    //     uint32_t    offset;
-    // } VkVertexInputAttributeDescription;
-    viad[0].location    = 0 ;
-    viad[0].binding     = 0 ;
-    viad[0].format      = VK_FORMAT_R32G32B32_SFLOAT ;
-    viad[0].offset      = offsetof(vertex, pos) ;
+// static void
+// get_attribute_descriptions(
+//     VkVertexInputAttributeDescription * viad
+// ,   uint32_t const                      viad_count
+// )
+// {
+//     require(viad) ;
+//     require(viad_count == 3) ;
+//     // typedef struct VkVertexInputAttributeDescription {
+//     //     uint32_t    location;
+//     //     uint32_t    binding;
+//     //     VkFormat    format;
+//     //     uint32_t    offset;
+//     // } VkVertexInputAttributeDescription;
+//     viad[0].location    = 0 ;
+//     viad[0].binding     = 0 ;
+//     viad[0].format      = VK_FORMAT_R32G32B32_SFLOAT ;
+//     viad[0].offset      = offsetof(vertex, pos) ;
 
-    viad[1].location    = 1 ;
-    viad[1].binding     = 0 ;
-    viad[1].format      = VK_FORMAT_R32G32B32_SFLOAT ;
-    viad[1].offset      = offsetof(vertex, color) ;
+//     viad[1].location    = 1 ;
+//     viad[1].binding     = 0 ;
+//     viad[1].format      = VK_FORMAT_R32G32B32_SFLOAT ;
+//     viad[1].offset      = offsetof(vertex, color) ;
 
-    viad[2].location    = 2 ;
-    viad[2].binding     = 0 ;
-    viad[2].format      = VK_FORMAT_R32G32_SFLOAT ;
-    viad[2].offset      = offsetof(vertex, uv) ;
-}
+//     viad[2].location    = 2 ;
+//     viad[2].binding     = 0 ;
+//     viad[2].format      = VK_FORMAT_R32G32_SFLOAT ;
+//     viad[2].offset      = offsetof(vertex, uv) ;
+// }
 
 
 
@@ -171,54 +170,54 @@ static_require(array_count(desired_formats) < max_vulkan_desired_format_properti
 
 
 
-static void
-update_uniform_buffer(
-    vulkan_context *    vc
-,   uint32_t const      current_frame
-)
-{
-    require(vc) ;
-    require(current_frame < max_vulkan_frames_in_flight) ;
-    require(current_frame < vc->frames_in_flight_count_) ;
+// static void
+// update_uniform_buffer(
+//     vulkan_context *    vc
+// ,   uint32_t const      current_frame
+// )
+// {
+//     require(vc) ;
+//     require(current_frame < max_vulkan_frames_in_flight) ;
+//     require(current_frame < vc->frames_in_flight_count_) ;
 
-    static bool once = true ;
-    static uint64_t previous_time = 0 ;
+//     static bool once = true ;
+//     static uint64_t previous_time = 0 ;
 
-    uint64_t const current_time = get_app_time() ;
+//     uint64_t const current_time = get_app_time() ;
 
-    if(once)
-    {
-        once = false ;
-        previous_time = current_time ;
-    }
+//     if(once)
+//     {
+//         once = false ;
+//         previous_time = current_time ;
+//     }
 
-    uint64_t const delta_time = (current_time - previous_time) / 10 ;
-    double const fractional_seconds = (double) delta_time * get_performance_frequency_inverse() ;
-    //log_debug("%f", fractional_seconds) ;
+//     uint64_t const delta_time = (current_time - previous_time) / 10 ;
+//     double const fractional_seconds = (double) delta_time * get_performance_frequency_inverse() ;
+//     //log_debug("%f", fractional_seconds) ;
 
-    uniform_buffer_object ubo = { 0 } ;
+//     uniform_buffer_object ubo = { 0 } ;
 
-    // glm_mat4_identity(ubo.model) ;
-    // glm_mat4_identity(ubo.view) ;
-    // glm_mat4_identity(ubo.proj) ;
+//     // glm_mat4_identity(ubo.model) ;
+//     // glm_mat4_identity(ubo.view) ;
+//     // glm_mat4_identity(ubo.proj) ;
 
-    float angle = fractional_seconds ;
-    vec3 axis = {1.0f, 0.5f, 1.0f} ;
-    glm_rotate_make(ubo.model, angle, axis) ;
+//     float angle = fractional_seconds ;
+//     vec3 axis = {1.0f, 0.5f, 1.0f} ;
+//     glm_rotate_make(ubo.model, angle, axis) ;
 
-    vec3 eye    = { 0.0f, 1.0f, 1.0f } ;
-    vec3 center = { 0.0f, 0.0f, 0.0f } ;
-    vec3 up     = { 0.0f, 0.0f, 1.0f } ;
-    glm_lookat(eye, center, up, ubo.view) ;
+//     vec3 eye    = { 0.0f, 1.0f, 1.0f } ;
+//     vec3 center = { 0.0f, 0.0f, 0.0f } ;
+//     vec3 up     = { 0.0f, 0.0f, 1.0f } ;
+//     glm_lookat(eye, center, up, ubo.view) ;
 
-    float fovy = glm_rad(45.0f) ;
-    float aspect_ratio = (float)vc->swapchain_extent_.width / (float)vc->swapchain_extent_.height ;
-    float near = 0.1f ;
-    float far = 10.f ;
-    glm_perspective(fovy, aspect_ratio, near, far, ubo.proj) ;
+//     float fovy = glm_rad(45.0f) ;
+//     float aspect_ratio = (float)vc->swapchain_extent_.width / (float)vc->swapchain_extent_.height ;
+//     float near = 0.1f ;
+//     float far = 10.f ;
+//     glm_perspective(fovy, aspect_ratio, near, far, ubo.proj) ;
 
-    SDL_memcpy(vc->uniform_buffers_mapped_[current_frame], &ubo, sizeof(ubo)) ;
-}
+//     SDL_memcpy(vc->uniform_buffers_mapped_[current_frame], &ubo, sizeof(ubo)) ;
+// }
 
 
 
@@ -5150,658 +5149,658 @@ create_shader_module(
 }
 
 
-static bool
-create_graphics_pipeline(
-    vulkan_context *    vc
-)
-{
-    require(vc) ;
-    begin_timed_block() ;
+// static bool
+// create_graphics_pipeline(
+//     vulkan_context *    vc
+// )
+// {
+//     require(vc) ;
+//     begin_timed_block() ;
 
-    if(check(load_file(
-                &vc->vert_shader_memory_
-            ,   &vc->vert_shader_memory_size_
-            ,   "ass/shaders/shader.vert.spv"
-            )
-        )
-    )
-    {
-        end_timed_block() ;
-        return false ;
-    }
+//     if(check(load_file(
+//                 &vc->vert_shader_memory_
+//             ,   &vc->vert_shader_memory_size_
+//             ,   "ass/shaders/shader.vert.spv"
+//             )
+//         )
+//     )
+//     {
+//         end_timed_block() ;
+//         return false ;
+//     }
 
-    log_debug_ptr(vc->vert_shader_memory_) ;
-    log_debug_u64(vc->vert_shader_memory_size_) ;
+//     log_debug_ptr(vc->vert_shader_memory_) ;
+//     log_debug_u64(vc->vert_shader_memory_size_) ;
 
-    if(check(load_file(
-                &vc->frag_shader_memory_
-            ,   &vc->frag_shader_memory_size_
-            ,   "ass/shaders/shader.frag.spv"
-            )
-        )
-    )
-    {
-        end_timed_block() ;
-        return false ;
-    }
+//     if(check(load_file(
+//                 &vc->frag_shader_memory_
+//             ,   &vc->frag_shader_memory_size_
+//             ,   "ass/shaders/shader.frag.spv"
+//             )
+//         )
+//     )
+//     {
+//         end_timed_block() ;
+//         return false ;
+//     }
 
-    log_debug_ptr(vc->frag_shader_memory_) ;
-    log_debug_u64(vc->frag_shader_memory_size_) ;
+//     log_debug_ptr(vc->frag_shader_memory_) ;
+//     log_debug_u64(vc->frag_shader_memory_size_) ;
 
-    if(check(create_shader_module(
-                &vc->vert_shader_
-            ,   vc->device_
-            ,   vc->vert_shader_memory_
-            ,   vc->vert_shader_memory_size_
-            )
-        )
-    )
-    {
-        end_timed_block() ;
-        return false ;
-    }
-    require(vc->vert_shader_) ;
-    log_debug_ptr(vc->vert_shader_) ;
+//     if(check(create_shader_module(
+//                 &vc->vert_shader_
+//             ,   vc->device_
+//             ,   vc->vert_shader_memory_
+//             ,   vc->vert_shader_memory_size_
+//             )
+//         )
+//     )
+//     {
+//         end_timed_block() ;
+//         return false ;
+//     }
+//     require(vc->vert_shader_) ;
+//     log_debug_ptr(vc->vert_shader_) ;
 
-    if(check(create_shader_module(
-                &vc->frag_shader_
-            ,   vc->device_
-            ,   vc->frag_shader_memory_
-            ,   vc->frag_shader_memory_size_
-            )
-        )
-    )
-    {
-        end_timed_block() ;
-        return false ;
-    }
-    require(vc->frag_shader_) ;
-    log_debug_ptr(vc->frag_shader_) ;
-
-
-    // typedef struct VkPipelineShaderStageCreateInfo {
-    //     VkStructureType                     sType;
-    //     const void*                         pNext;
-    //     VkPipelineShaderStageCreateFlags    flags;
-    //     VkShaderStageFlagBits               stage;
-    //     VkShaderModule                      module;
-    //     const char*                         pName;
-    //     const VkSpecializationInfo*         pSpecializationInfo;
-    // } VkPipelineShaderStageCreateInfo;
-    static VkPipelineShaderStageCreateInfo pssci[2] = { 0 } ;
-    pssci[0].sType                 = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO ;
-    pssci[0].pNext                 = NULL ;
-    pssci[0].flags                 = 0 ;
-    pssci[0].stage                 = VK_SHADER_STAGE_VERTEX_BIT ;
-    pssci[0].module                = vc->vert_shader_ ;
-    pssci[0].pName                 = "main" ;
-    pssci[0].pSpecializationInfo   = NULL ;
-
-    pssci[1].sType                 = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO ;
-    pssci[1].pNext                 = NULL ;
-    pssci[1].flags                 = 0 ;
-    pssci[1].stage                 = VK_SHADER_STAGE_FRAGMENT_BIT ;
-    pssci[1].module                = vc->frag_shader_ ;
-    pssci[1].pName                 = "main" ;
-    pssci[1].pSpecializationInfo   = NULL ;
+//     if(check(create_shader_module(
+//                 &vc->frag_shader_
+//             ,   vc->device_
+//             ,   vc->frag_shader_memory_
+//             ,   vc->frag_shader_memory_size_
+//             )
+//         )
+//     )
+//     {
+//         end_timed_block() ;
+//         return false ;
+//     }
+//     require(vc->frag_shader_) ;
+//     log_debug_ptr(vc->frag_shader_) ;
 
 
-    // typedef struct VkPipelineDynamicStateCreateInfo {
-    //     VkStructureType                      sType;
-    //     const void*                          pNext;
-    //     VkPipelineDynamicStateCreateFlags    flags;
-    //     uint32_t                             dynamicStateCount;
-    //     const VkDynamicState*                pDynamicStates;
-    // } VkPipelineDynamicStateCreateInfo;
-    // typedef enum VkDynamicState {
-    //     VK_DYNAMIC_STATE_VIEWPORT = 0,
-    //     VK_DYNAMIC_STATE_SCISSOR = 1,
-    //     VK_DYNAMIC_STATE_LINE_WIDTH = 2,
-    //     VK_DYNAMIC_STATE_DEPTH_BIAS = 3,
-    //     VK_DYNAMIC_STATE_BLEND_CONSTANTS = 4,
-    //     VK_DYNAMIC_STATE_DEPTH_BOUNDS = 5,
-    //     VK_DYNAMIC_STATE_STENCIL_COMPARE_MASK = 6,
-    //     VK_DYNAMIC_STATE_STENCIL_WRITE_MASK = 7,
-    //     VK_DYNAMIC_STATE_STENCIL_REFERENCE = 8,
-    // // Provided by VK_VERSION_1_3
-    //     VK_DYNAMIC_STATE_CULL_MODE = 1000267000,
-    // // Provided by VK_VERSION_1_3
-    //     VK_DYNAMIC_STATE_FRONT_FACE = 1000267001,
-    // // Provided by VK_VERSION_1_3
-    //     VK_DYNAMIC_STATE_PRIMITIVE_TOPOLOGY = 1000267002,
-    // // Provided by VK_VERSION_1_3
-    //     VK_DYNAMIC_STATE_VIEWPORT_WITH_COUNT = 1000267003,
-    // // Provided by VK_VERSION_1_3
-    //     VK_DYNAMIC_STATE_SCISSOR_WITH_COUNT = 1000267004,
-    // // Provided by VK_VERSION_1_3
-    //     VK_DYNAMIC_STATE_VERTEX_INPUT_BINDING_STRIDE = 1000267005,
-    // // Provided by VK_VERSION_1_3
-    //     VK_DYNAMIC_STATE_DEPTH_TEST_ENABLE = 1000267006,
-    // // Provided by VK_VERSION_1_3
-    //     VK_DYNAMIC_STATE_DEPTH_WRITE_ENABLE = 1000267007,
-    // // Provided by VK_VERSION_1_3
-    //     VK_DYNAMIC_STATE_DEPTH_COMPARE_OP = 1000267008,
-    // // Provided by VK_VERSION_1_3
-    //     VK_DYNAMIC_STATE_DEPTH_BOUNDS_TEST_ENABLE = 1000267009,
-    // // Provided by VK_VERSION_1_3
-    //     VK_DYNAMIC_STATE_STENCIL_TEST_ENABLE = 1000267010,
-    // // Provided by VK_VERSION_1_3
-    //     VK_DYNAMIC_STATE_STENCIL_OP = 1000267011,
-    // // Provided by VK_VERSION_1_3
-    //     VK_DYNAMIC_STATE_RASTERIZER_DISCARD_ENABLE = 1000377001,
-    // // Provided by VK_VERSION_1_3
-    //     VK_DYNAMIC_STATE_DEPTH_BIAS_ENABLE = 1000377002,
-    // // Provided by VK_VERSION_1_3
-    //     VK_DYNAMIC_STATE_PRIMITIVE_RESTART_ENABLE = 1000377004,
-    // // Provided by VK_NV_clip_space_w_scaling
-    //     VK_DYNAMIC_STATE_VIEWPORT_W_SCALING_NV = 1000087000,
-    // // Provided by VK_EXT_discard_rectangles
-    //     VK_DYNAMIC_STATE_DISCARD_RECTANGLE_EXT = 1000099000,
-    // // Provided by VK_EXT_discard_rectangles
-    //     VK_DYNAMIC_STATE_DISCARD_RECTANGLE_ENABLE_EXT = 1000099001,
-    // // Provided by VK_EXT_discard_rectangles
-    //     VK_DYNAMIC_STATE_DISCARD_RECTANGLE_MODE_EXT = 1000099002,
-    // // Provided by VK_EXT_sample_locations
-    //     VK_DYNAMIC_STATE_SAMPLE_LOCATIONS_EXT = 1000143000,
-    // // Provided by VK_KHR_ray_tracing_pipeline
-    //     VK_DYNAMIC_STATE_RAY_TRACING_PIPELINE_STACK_SIZE_KHR = 1000347000,
-    // // Provided by VK_NV_shading_rate_image
-    //     VK_DYNAMIC_STATE_VIEWPORT_SHADING_RATE_PALETTE_NV = 1000164004,
-    // // Provided by VK_NV_shading_rate_image
-    //     VK_DYNAMIC_STATE_VIEWPORT_COARSE_SAMPLE_ORDER_NV = 1000164006,
-    // // Provided by VK_NV_scissor_exclusive
-    //     VK_DYNAMIC_STATE_EXCLUSIVE_SCISSOR_ENABLE_NV = 1000205000,
-    // // Provided by VK_NV_scissor_exclusive
-    //     VK_DYNAMIC_STATE_EXCLUSIVE_SCISSOR_NV = 1000205001,
-    // // Provided by VK_KHR_fragment_shading_rate
-    //     VK_DYNAMIC_STATE_FRAGMENT_SHADING_RATE_KHR = 1000226000,
-    // // Provided by VK_EXT_vertex_input_dynamic_state
-    //     VK_DYNAMIC_STATE_VERTEX_INPUT_EXT = 1000352000,
-    // // Provided by VK_EXT_extended_dynamic_state2
-    //     VK_DYNAMIC_STATE_PATCH_CONTROL_POINTS_EXT = 1000377000,
-    // // Provided by VK_EXT_extended_dynamic_state2
-    //     VK_DYNAMIC_STATE_LOGIC_OP_EXT = 1000377003,
-    // // Provided by VK_EXT_color_write_enable
-    //     VK_DYNAMIC_STATE_COLOR_WRITE_ENABLE_EXT = 1000381000,
-    // // Provided by VK_EXT_extended_dynamic_state3
-    //     VK_DYNAMIC_STATE_DEPTH_CLAMP_ENABLE_EXT = 1000455003,
-    // // Provided by VK_EXT_extended_dynamic_state3
-    //     VK_DYNAMIC_STATE_POLYGON_MODE_EXT = 1000455004,
-    // // Provided by VK_EXT_extended_dynamic_state3
-    //     VK_DYNAMIC_STATE_RASTERIZATION_SAMPLES_EXT = 1000455005,
-    // // Provided by VK_EXT_extended_dynamic_state3
-    //     VK_DYNAMIC_STATE_SAMPLE_MASK_EXT = 1000455006,
-    // // Provided by VK_EXT_extended_dynamic_state3
-    //     VK_DYNAMIC_STATE_ALPHA_TO_COVERAGE_ENABLE_EXT = 1000455007,
-    // // Provided by VK_EXT_extended_dynamic_state3
-    //     VK_DYNAMIC_STATE_ALPHA_TO_ONE_ENABLE_EXT = 1000455008,
-    // // Provided by VK_EXT_extended_dynamic_state3
-    //     VK_DYNAMIC_STATE_LOGIC_OP_ENABLE_EXT = 1000455009,
-    // // Provided by VK_EXT_extended_dynamic_state3
-    //     VK_DYNAMIC_STATE_COLOR_BLEND_ENABLE_EXT = 1000455010,
-    // // Provided by VK_EXT_extended_dynamic_state3
-    //     VK_DYNAMIC_STATE_COLOR_BLEND_EQUATION_EXT = 1000455011,
-    // // Provided by VK_EXT_extended_dynamic_state3
-    //     VK_DYNAMIC_STATE_COLOR_WRITE_MASK_EXT = 1000455012,
-    // // Provided by VK_EXT_extended_dynamic_state3 with VK_KHR_maintenance2 or VK_VERSION_1_1
-    //     VK_DYNAMIC_STATE_TESSELLATION_DOMAIN_ORIGIN_EXT = 1000455002,
-    // // Provided by VK_EXT_extended_dynamic_state3 with VK_EXT_transform_feedback
-    //     VK_DYNAMIC_STATE_RASTERIZATION_STREAM_EXT = 1000455013,
-    // // Provided by VK_EXT_conservative_rasterization with VK_EXT_extended_dynamic_state3
-    //     VK_DYNAMIC_STATE_CONSERVATIVE_RASTERIZATION_MODE_EXT = 1000455014,
-    // // Provided by VK_EXT_conservative_rasterization with VK_EXT_extended_dynamic_state3
-    //     VK_DYNAMIC_STATE_EXTRA_PRIMITIVE_OVERESTIMATION_SIZE_EXT = 1000455015,
-    // // Provided by VK_EXT_depth_clip_enable with VK_EXT_extended_dynamic_state3
-    //     VK_DYNAMIC_STATE_DEPTH_CLIP_ENABLE_EXT = 1000455016,
-    // // Provided by VK_EXT_extended_dynamic_state3 with VK_EXT_sample_locations
-    //     VK_DYNAMIC_STATE_SAMPLE_LOCATIONS_ENABLE_EXT = 1000455017,
-    // // Provided by VK_EXT_blend_operation_advanced with VK_EXT_extended_dynamic_state3
-    //     VK_DYNAMIC_STATE_COLOR_BLEND_ADVANCED_EXT = 1000455018,
-    // // Provided by VK_EXT_extended_dynamic_state3 with VK_EXT_provoking_vertex
-    //     VK_DYNAMIC_STATE_PROVOKING_VERTEX_MODE_EXT = 1000455019,
-    // // Provided by VK_EXT_extended_dynamic_state3 with VK_EXT_line_rasterization
-    //     VK_DYNAMIC_STATE_LINE_RASTERIZATION_MODE_EXT = 1000455020,
-    // // Provided by VK_EXT_extended_dynamic_state3 with VK_EXT_line_rasterization
-    //     VK_DYNAMIC_STATE_LINE_STIPPLE_ENABLE_EXT = 1000455021,
-    // // Provided by VK_EXT_depth_clip_control with VK_EXT_extended_dynamic_state3
-    //     VK_DYNAMIC_STATE_DEPTH_CLIP_NEGATIVE_ONE_TO_ONE_EXT = 1000455022,
-    // // Provided by VK_EXT_extended_dynamic_state3 with VK_NV_clip_space_w_scaling
-    //     VK_DYNAMIC_STATE_VIEWPORT_W_SCALING_ENABLE_NV = 1000455023,
-    // // Provided by VK_EXT_extended_dynamic_state3 with VK_NV_viewport_swizzle
-    //     VK_DYNAMIC_STATE_VIEWPORT_SWIZZLE_NV = 1000455024,
-    // // Provided by VK_EXT_extended_dynamic_state3 with VK_NV_fragment_coverage_to_color
-    //     VK_DYNAMIC_STATE_COVERAGE_TO_COLOR_ENABLE_NV = 1000455025,
-    // // Provided by VK_EXT_extended_dynamic_state3 with VK_NV_fragment_coverage_to_color
-    //     VK_DYNAMIC_STATE_COVERAGE_TO_COLOR_LOCATION_NV = 1000455026,
-    // // Provided by VK_EXT_extended_dynamic_state3 with VK_NV_framebuffer_mixed_samples
-    //     VK_DYNAMIC_STATE_COVERAGE_MODULATION_MODE_NV = 1000455027,
-    // // Provided by VK_EXT_extended_dynamic_state3 with VK_NV_framebuffer_mixed_samples
-    //     VK_DYNAMIC_STATE_COVERAGE_MODULATION_TABLE_ENABLE_NV = 1000455028,
-    // // Provided by VK_EXT_extended_dynamic_state3 with VK_NV_framebuffer_mixed_samples
-    //     VK_DYNAMIC_STATE_COVERAGE_MODULATION_TABLE_NV = 1000455029,
-    // // Provided by VK_EXT_extended_dynamic_state3 with VK_NV_shading_rate_image
-    //     VK_DYNAMIC_STATE_SHADING_RATE_IMAGE_ENABLE_NV = 1000455030,
-    // // Provided by VK_EXT_extended_dynamic_state3 with VK_NV_representative_fragment_test
-    //     VK_DYNAMIC_STATE_REPRESENTATIVE_FRAGMENT_TEST_ENABLE_NV = 1000455031,
-    // // Provided by VK_EXT_extended_dynamic_state3 with VK_NV_coverage_reduction_mode
-    //     VK_DYNAMIC_STATE_COVERAGE_REDUCTION_MODE_NV = 1000455032,
-    // // Provided by VK_EXT_attachment_feedback_loop_dynamic_state
-    //     VK_DYNAMIC_STATE_ATTACHMENT_FEEDBACK_LOOP_ENABLE_EXT = 1000524000,
-    // // Provided by VK_KHR_line_rasterization
-    //     VK_DYNAMIC_STATE_LINE_STIPPLE_KHR = 1000259000,
-    // // Provided by VK_EXT_line_rasterization
-    //     VK_DYNAMIC_STATE_LINE_STIPPLE_EXT = VK_DYNAMIC_STATE_LINE_STIPPLE_KHR,
-    // // Provided by VK_EXT_extended_dynamic_state
-    //     VK_DYNAMIC_STATE_CULL_MODE_EXT = VK_DYNAMIC_STATE_CULL_MODE,
-    // // Provided by VK_EXT_extended_dynamic_state
-    //     VK_DYNAMIC_STATE_FRONT_FACE_EXT = VK_DYNAMIC_STATE_FRONT_FACE,
-    // // Provided by VK_EXT_extended_dynamic_state
-    //     VK_DYNAMIC_STATE_PRIMITIVE_TOPOLOGY_EXT = VK_DYNAMIC_STATE_PRIMITIVE_TOPOLOGY,
-    // // Provided by VK_EXT_extended_dynamic_state
-    //     VK_DYNAMIC_STATE_VIEWPORT_WITH_COUNT_EXT = VK_DYNAMIC_STATE_VIEWPORT_WITH_COUNT,
-    // // Provided by VK_EXT_extended_dynamic_state
-    //     VK_DYNAMIC_STATE_SCISSOR_WITH_COUNT_EXT = VK_DYNAMIC_STATE_SCISSOR_WITH_COUNT,
-    // // Provided by VK_EXT_extended_dynamic_state
-    //     VK_DYNAMIC_STATE_VERTEX_INPUT_BINDING_STRIDE_EXT = VK_DYNAMIC_STATE_VERTEX_INPUT_BINDING_STRIDE,
-    // // Provided by VK_EXT_extended_dynamic_state
-    //     VK_DYNAMIC_STATE_DEPTH_TEST_ENABLE_EXT = VK_DYNAMIC_STATE_DEPTH_TEST_ENABLE,
-    // // Provided by VK_EXT_extended_dynamic_state
-    //     VK_DYNAMIC_STATE_DEPTH_WRITE_ENABLE_EXT = VK_DYNAMIC_STATE_DEPTH_WRITE_ENABLE,
-    // // Provided by VK_EXT_extended_dynamic_state
-    //     VK_DYNAMIC_STATE_DEPTH_COMPARE_OP_EXT = VK_DYNAMIC_STATE_DEPTH_COMPARE_OP,
-    // // Provided by VK_EXT_extended_dynamic_state
-    //     VK_DYNAMIC_STATE_DEPTH_BOUNDS_TEST_ENABLE_EXT = VK_DYNAMIC_STATE_DEPTH_BOUNDS_TEST_ENABLE,
-    // // Provided by VK_EXT_extended_dynamic_state
-    //     VK_DYNAMIC_STATE_STENCIL_TEST_ENABLE_EXT = VK_DYNAMIC_STATE_STENCIL_TEST_ENABLE,
-    // // Provided by VK_EXT_extended_dynamic_state
-    //     VK_DYNAMIC_STATE_STENCIL_OP_EXT = VK_DYNAMIC_STATE_STENCIL_OP,
-    // // Provided by VK_EXT_extended_dynamic_state2
-    //     VK_DYNAMIC_STATE_RASTERIZER_DISCARD_ENABLE_EXT = VK_DYNAMIC_STATE_RASTERIZER_DISCARD_ENABLE,
-    // // Provided by VK_EXT_extended_dynamic_state2
-    //     VK_DYNAMIC_STATE_DEPTH_BIAS_ENABLE_EXT = VK_DYNAMIC_STATE_DEPTH_BIAS_ENABLE,
-    // // Provided by VK_EXT_extended_dynamic_state2
-    //     VK_DYNAMIC_STATE_PRIMITIVE_RESTART_ENABLE_EXT = VK_DYNAMIC_STATE_PRIMITIVE_RESTART_ENABLE,
-    // } VkDynamicState;
+//     // typedef struct VkPipelineShaderStageCreateInfo {
+//     //     VkStructureType                     sType;
+//     //     const void*                         pNext;
+//     //     VkPipelineShaderStageCreateFlags    flags;
+//     //     VkShaderStageFlagBits               stage;
+//     //     VkShaderModule                      module;
+//     //     const char*                         pName;
+//     //     const VkSpecializationInfo*         pSpecializationInfo;
+//     // } VkPipelineShaderStageCreateInfo;
+//     static VkPipelineShaderStageCreateInfo pssci[2] = { 0 } ;
+//     pssci[0].sType                 = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO ;
+//     pssci[0].pNext                 = NULL ;
+//     pssci[0].flags                 = 0 ;
+//     pssci[0].stage                 = VK_SHADER_STAGE_VERTEX_BIT ;
+//     pssci[0].module                = vc->vert_shader_ ;
+//     pssci[0].pName                 = "main" ;
+//     pssci[0].pSpecializationInfo   = NULL ;
 
-    static VkDynamicState   dynamic_states[2] = { 0 } ;
-    dynamic_states[0] = VK_DYNAMIC_STATE_VIEWPORT ;
-    dynamic_states[1] = VK_DYNAMIC_STATE_SCISSOR ;
+//     pssci[1].sType                 = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO ;
+//     pssci[1].pNext                 = NULL ;
+//     pssci[1].flags                 = 0 ;
+//     pssci[1].stage                 = VK_SHADER_STAGE_FRAGMENT_BIT ;
+//     pssci[1].module                = vc->frag_shader_ ;
+//     pssci[1].pName                 = "main" ;
+//     pssci[1].pSpecializationInfo   = NULL ;
 
 
-    // typedef struct VkPipelineDynamicStateCreateInfo {
-    //     VkStructureType                      sType;
-    //     const void*                          pNext;
-    //     VkPipelineDynamicStateCreateFlags    flags;
-    //     uint32_t                             dynamicStateCount;
-    //     const VkDynamicState*                pDynamicStates;
-    // } VkPipelineDynamicStateCreateInfo;
+//     // typedef struct VkPipelineDynamicStateCreateInfo {
+//     //     VkStructureType                      sType;
+//     //     const void*                          pNext;
+//     //     VkPipelineDynamicStateCreateFlags    flags;
+//     //     uint32_t                             dynamicStateCount;
+//     //     const VkDynamicState*                pDynamicStates;
+//     // } VkPipelineDynamicStateCreateInfo;
+//     // typedef enum VkDynamicState {
+//     //     VK_DYNAMIC_STATE_VIEWPORT = 0,
+//     //     VK_DYNAMIC_STATE_SCISSOR = 1,
+//     //     VK_DYNAMIC_STATE_LINE_WIDTH = 2,
+//     //     VK_DYNAMIC_STATE_DEPTH_BIAS = 3,
+//     //     VK_DYNAMIC_STATE_BLEND_CONSTANTS = 4,
+//     //     VK_DYNAMIC_STATE_DEPTH_BOUNDS = 5,
+//     //     VK_DYNAMIC_STATE_STENCIL_COMPARE_MASK = 6,
+//     //     VK_DYNAMIC_STATE_STENCIL_WRITE_MASK = 7,
+//     //     VK_DYNAMIC_STATE_STENCIL_REFERENCE = 8,
+//     // // Provided by VK_VERSION_1_3
+//     //     VK_DYNAMIC_STATE_CULL_MODE = 1000267000,
+//     // // Provided by VK_VERSION_1_3
+//     //     VK_DYNAMIC_STATE_FRONT_FACE = 1000267001,
+//     // // Provided by VK_VERSION_1_3
+//     //     VK_DYNAMIC_STATE_PRIMITIVE_TOPOLOGY = 1000267002,
+//     // // Provided by VK_VERSION_1_3
+//     //     VK_DYNAMIC_STATE_VIEWPORT_WITH_COUNT = 1000267003,
+//     // // Provided by VK_VERSION_1_3
+//     //     VK_DYNAMIC_STATE_SCISSOR_WITH_COUNT = 1000267004,
+//     // // Provided by VK_VERSION_1_3
+//     //     VK_DYNAMIC_STATE_VERTEX_INPUT_BINDING_STRIDE = 1000267005,
+//     // // Provided by VK_VERSION_1_3
+//     //     VK_DYNAMIC_STATE_DEPTH_TEST_ENABLE = 1000267006,
+//     // // Provided by VK_VERSION_1_3
+//     //     VK_DYNAMIC_STATE_DEPTH_WRITE_ENABLE = 1000267007,
+//     // // Provided by VK_VERSION_1_3
+//     //     VK_DYNAMIC_STATE_DEPTH_COMPARE_OP = 1000267008,
+//     // // Provided by VK_VERSION_1_3
+//     //     VK_DYNAMIC_STATE_DEPTH_BOUNDS_TEST_ENABLE = 1000267009,
+//     // // Provided by VK_VERSION_1_3
+//     //     VK_DYNAMIC_STATE_STENCIL_TEST_ENABLE = 1000267010,
+//     // // Provided by VK_VERSION_1_3
+//     //     VK_DYNAMIC_STATE_STENCIL_OP = 1000267011,
+//     // // Provided by VK_VERSION_1_3
+//     //     VK_DYNAMIC_STATE_RASTERIZER_DISCARD_ENABLE = 1000377001,
+//     // // Provided by VK_VERSION_1_3
+//     //     VK_DYNAMIC_STATE_DEPTH_BIAS_ENABLE = 1000377002,
+//     // // Provided by VK_VERSION_1_3
+//     //     VK_DYNAMIC_STATE_PRIMITIVE_RESTART_ENABLE = 1000377004,
+//     // // Provided by VK_NV_clip_space_w_scaling
+//     //     VK_DYNAMIC_STATE_VIEWPORT_W_SCALING_NV = 1000087000,
+//     // // Provided by VK_EXT_discard_rectangles
+//     //     VK_DYNAMIC_STATE_DISCARD_RECTANGLE_EXT = 1000099000,
+//     // // Provided by VK_EXT_discard_rectangles
+//     //     VK_DYNAMIC_STATE_DISCARD_RECTANGLE_ENABLE_EXT = 1000099001,
+//     // // Provided by VK_EXT_discard_rectangles
+//     //     VK_DYNAMIC_STATE_DISCARD_RECTANGLE_MODE_EXT = 1000099002,
+//     // // Provided by VK_EXT_sample_locations
+//     //     VK_DYNAMIC_STATE_SAMPLE_LOCATIONS_EXT = 1000143000,
+//     // // Provided by VK_KHR_ray_tracing_pipeline
+//     //     VK_DYNAMIC_STATE_RAY_TRACING_PIPELINE_STACK_SIZE_KHR = 1000347000,
+//     // // Provided by VK_NV_shading_rate_image
+//     //     VK_DYNAMIC_STATE_VIEWPORT_SHADING_RATE_PALETTE_NV = 1000164004,
+//     // // Provided by VK_NV_shading_rate_image
+//     //     VK_DYNAMIC_STATE_VIEWPORT_COARSE_SAMPLE_ORDER_NV = 1000164006,
+//     // // Provided by VK_NV_scissor_exclusive
+//     //     VK_DYNAMIC_STATE_EXCLUSIVE_SCISSOR_ENABLE_NV = 1000205000,
+//     // // Provided by VK_NV_scissor_exclusive
+//     //     VK_DYNAMIC_STATE_EXCLUSIVE_SCISSOR_NV = 1000205001,
+//     // // Provided by VK_KHR_fragment_shading_rate
+//     //     VK_DYNAMIC_STATE_FRAGMENT_SHADING_RATE_KHR = 1000226000,
+//     // // Provided by VK_EXT_vertex_input_dynamic_state
+//     //     VK_DYNAMIC_STATE_VERTEX_INPUT_EXT = 1000352000,
+//     // // Provided by VK_EXT_extended_dynamic_state2
+//     //     VK_DYNAMIC_STATE_PATCH_CONTROL_POINTS_EXT = 1000377000,
+//     // // Provided by VK_EXT_extended_dynamic_state2
+//     //     VK_DYNAMIC_STATE_LOGIC_OP_EXT = 1000377003,
+//     // // Provided by VK_EXT_color_write_enable
+//     //     VK_DYNAMIC_STATE_COLOR_WRITE_ENABLE_EXT = 1000381000,
+//     // // Provided by VK_EXT_extended_dynamic_state3
+//     //     VK_DYNAMIC_STATE_DEPTH_CLAMP_ENABLE_EXT = 1000455003,
+//     // // Provided by VK_EXT_extended_dynamic_state3
+//     //     VK_DYNAMIC_STATE_POLYGON_MODE_EXT = 1000455004,
+//     // // Provided by VK_EXT_extended_dynamic_state3
+//     //     VK_DYNAMIC_STATE_RASTERIZATION_SAMPLES_EXT = 1000455005,
+//     // // Provided by VK_EXT_extended_dynamic_state3
+//     //     VK_DYNAMIC_STATE_SAMPLE_MASK_EXT = 1000455006,
+//     // // Provided by VK_EXT_extended_dynamic_state3
+//     //     VK_DYNAMIC_STATE_ALPHA_TO_COVERAGE_ENABLE_EXT = 1000455007,
+//     // // Provided by VK_EXT_extended_dynamic_state3
+//     //     VK_DYNAMIC_STATE_ALPHA_TO_ONE_ENABLE_EXT = 1000455008,
+//     // // Provided by VK_EXT_extended_dynamic_state3
+//     //     VK_DYNAMIC_STATE_LOGIC_OP_ENABLE_EXT = 1000455009,
+//     // // Provided by VK_EXT_extended_dynamic_state3
+//     //     VK_DYNAMIC_STATE_COLOR_BLEND_ENABLE_EXT = 1000455010,
+//     // // Provided by VK_EXT_extended_dynamic_state3
+//     //     VK_DYNAMIC_STATE_COLOR_BLEND_EQUATION_EXT = 1000455011,
+//     // // Provided by VK_EXT_extended_dynamic_state3
+//     //     VK_DYNAMIC_STATE_COLOR_WRITE_MASK_EXT = 1000455012,
+//     // // Provided by VK_EXT_extended_dynamic_state3 with VK_KHR_maintenance2 or VK_VERSION_1_1
+//     //     VK_DYNAMIC_STATE_TESSELLATION_DOMAIN_ORIGIN_EXT = 1000455002,
+//     // // Provided by VK_EXT_extended_dynamic_state3 with VK_EXT_transform_feedback
+//     //     VK_DYNAMIC_STATE_RASTERIZATION_STREAM_EXT = 1000455013,
+//     // // Provided by VK_EXT_conservative_rasterization with VK_EXT_extended_dynamic_state3
+//     //     VK_DYNAMIC_STATE_CONSERVATIVE_RASTERIZATION_MODE_EXT = 1000455014,
+//     // // Provided by VK_EXT_conservative_rasterization with VK_EXT_extended_dynamic_state3
+//     //     VK_DYNAMIC_STATE_EXTRA_PRIMITIVE_OVERESTIMATION_SIZE_EXT = 1000455015,
+//     // // Provided by VK_EXT_depth_clip_enable with VK_EXT_extended_dynamic_state3
+//     //     VK_DYNAMIC_STATE_DEPTH_CLIP_ENABLE_EXT = 1000455016,
+//     // // Provided by VK_EXT_extended_dynamic_state3 with VK_EXT_sample_locations
+//     //     VK_DYNAMIC_STATE_SAMPLE_LOCATIONS_ENABLE_EXT = 1000455017,
+//     // // Provided by VK_EXT_blend_operation_advanced with VK_EXT_extended_dynamic_state3
+//     //     VK_DYNAMIC_STATE_COLOR_BLEND_ADVANCED_EXT = 1000455018,
+//     // // Provided by VK_EXT_extended_dynamic_state3 with VK_EXT_provoking_vertex
+//     //     VK_DYNAMIC_STATE_PROVOKING_VERTEX_MODE_EXT = 1000455019,
+//     // // Provided by VK_EXT_extended_dynamic_state3 with VK_EXT_line_rasterization
+//     //     VK_DYNAMIC_STATE_LINE_RASTERIZATION_MODE_EXT = 1000455020,
+//     // // Provided by VK_EXT_extended_dynamic_state3 with VK_EXT_line_rasterization
+//     //     VK_DYNAMIC_STATE_LINE_STIPPLE_ENABLE_EXT = 1000455021,
+//     // // Provided by VK_EXT_depth_clip_control with VK_EXT_extended_dynamic_state3
+//     //     VK_DYNAMIC_STATE_DEPTH_CLIP_NEGATIVE_ONE_TO_ONE_EXT = 1000455022,
+//     // // Provided by VK_EXT_extended_dynamic_state3 with VK_NV_clip_space_w_scaling
+//     //     VK_DYNAMIC_STATE_VIEWPORT_W_SCALING_ENABLE_NV = 1000455023,
+//     // // Provided by VK_EXT_extended_dynamic_state3 with VK_NV_viewport_swizzle
+//     //     VK_DYNAMIC_STATE_VIEWPORT_SWIZZLE_NV = 1000455024,
+//     // // Provided by VK_EXT_extended_dynamic_state3 with VK_NV_fragment_coverage_to_color
+//     //     VK_DYNAMIC_STATE_COVERAGE_TO_COLOR_ENABLE_NV = 1000455025,
+//     // // Provided by VK_EXT_extended_dynamic_state3 with VK_NV_fragment_coverage_to_color
+//     //     VK_DYNAMIC_STATE_COVERAGE_TO_COLOR_LOCATION_NV = 1000455026,
+//     // // Provided by VK_EXT_extended_dynamic_state3 with VK_NV_framebuffer_mixed_samples
+//     //     VK_DYNAMIC_STATE_COVERAGE_MODULATION_MODE_NV = 1000455027,
+//     // // Provided by VK_EXT_extended_dynamic_state3 with VK_NV_framebuffer_mixed_samples
+//     //     VK_DYNAMIC_STATE_COVERAGE_MODULATION_TABLE_ENABLE_NV = 1000455028,
+//     // // Provided by VK_EXT_extended_dynamic_state3 with VK_NV_framebuffer_mixed_samples
+//     //     VK_DYNAMIC_STATE_COVERAGE_MODULATION_TABLE_NV = 1000455029,
+//     // // Provided by VK_EXT_extended_dynamic_state3 with VK_NV_shading_rate_image
+//     //     VK_DYNAMIC_STATE_SHADING_RATE_IMAGE_ENABLE_NV = 1000455030,
+//     // // Provided by VK_EXT_extended_dynamic_state3 with VK_NV_representative_fragment_test
+//     //     VK_DYNAMIC_STATE_REPRESENTATIVE_FRAGMENT_TEST_ENABLE_NV = 1000455031,
+//     // // Provided by VK_EXT_extended_dynamic_state3 with VK_NV_coverage_reduction_mode
+//     //     VK_DYNAMIC_STATE_COVERAGE_REDUCTION_MODE_NV = 1000455032,
+//     // // Provided by VK_EXT_attachment_feedback_loop_dynamic_state
+//     //     VK_DYNAMIC_STATE_ATTACHMENT_FEEDBACK_LOOP_ENABLE_EXT = 1000524000,
+//     // // Provided by VK_KHR_line_rasterization
+//     //     VK_DYNAMIC_STATE_LINE_STIPPLE_KHR = 1000259000,
+//     // // Provided by VK_EXT_line_rasterization
+//     //     VK_DYNAMIC_STATE_LINE_STIPPLE_EXT = VK_DYNAMIC_STATE_LINE_STIPPLE_KHR,
+//     // // Provided by VK_EXT_extended_dynamic_state
+//     //     VK_DYNAMIC_STATE_CULL_MODE_EXT = VK_DYNAMIC_STATE_CULL_MODE,
+//     // // Provided by VK_EXT_extended_dynamic_state
+//     //     VK_DYNAMIC_STATE_FRONT_FACE_EXT = VK_DYNAMIC_STATE_FRONT_FACE,
+//     // // Provided by VK_EXT_extended_dynamic_state
+//     //     VK_DYNAMIC_STATE_PRIMITIVE_TOPOLOGY_EXT = VK_DYNAMIC_STATE_PRIMITIVE_TOPOLOGY,
+//     // // Provided by VK_EXT_extended_dynamic_state
+//     //     VK_DYNAMIC_STATE_VIEWPORT_WITH_COUNT_EXT = VK_DYNAMIC_STATE_VIEWPORT_WITH_COUNT,
+//     // // Provided by VK_EXT_extended_dynamic_state
+//     //     VK_DYNAMIC_STATE_SCISSOR_WITH_COUNT_EXT = VK_DYNAMIC_STATE_SCISSOR_WITH_COUNT,
+//     // // Provided by VK_EXT_extended_dynamic_state
+//     //     VK_DYNAMIC_STATE_VERTEX_INPUT_BINDING_STRIDE_EXT = VK_DYNAMIC_STATE_VERTEX_INPUT_BINDING_STRIDE,
+//     // // Provided by VK_EXT_extended_dynamic_state
+//     //     VK_DYNAMIC_STATE_DEPTH_TEST_ENABLE_EXT = VK_DYNAMIC_STATE_DEPTH_TEST_ENABLE,
+//     // // Provided by VK_EXT_extended_dynamic_state
+//     //     VK_DYNAMIC_STATE_DEPTH_WRITE_ENABLE_EXT = VK_DYNAMIC_STATE_DEPTH_WRITE_ENABLE,
+//     // // Provided by VK_EXT_extended_dynamic_state
+//     //     VK_DYNAMIC_STATE_DEPTH_COMPARE_OP_EXT = VK_DYNAMIC_STATE_DEPTH_COMPARE_OP,
+//     // // Provided by VK_EXT_extended_dynamic_state
+//     //     VK_DYNAMIC_STATE_DEPTH_BOUNDS_TEST_ENABLE_EXT = VK_DYNAMIC_STATE_DEPTH_BOUNDS_TEST_ENABLE,
+//     // // Provided by VK_EXT_extended_dynamic_state
+//     //     VK_DYNAMIC_STATE_STENCIL_TEST_ENABLE_EXT = VK_DYNAMIC_STATE_STENCIL_TEST_ENABLE,
+//     // // Provided by VK_EXT_extended_dynamic_state
+//     //     VK_DYNAMIC_STATE_STENCIL_OP_EXT = VK_DYNAMIC_STATE_STENCIL_OP,
+//     // // Provided by VK_EXT_extended_dynamic_state2
+//     //     VK_DYNAMIC_STATE_RASTERIZER_DISCARD_ENABLE_EXT = VK_DYNAMIC_STATE_RASTERIZER_DISCARD_ENABLE,
+//     // // Provided by VK_EXT_extended_dynamic_state2
+//     //     VK_DYNAMIC_STATE_DEPTH_BIAS_ENABLE_EXT = VK_DYNAMIC_STATE_DEPTH_BIAS_ENABLE,
+//     // // Provided by VK_EXT_extended_dynamic_state2
+//     //     VK_DYNAMIC_STATE_PRIMITIVE_RESTART_ENABLE_EXT = VK_DYNAMIC_STATE_PRIMITIVE_RESTART_ENABLE,
+//     // } VkDynamicState;
 
-    static VkPipelineDynamicStateCreateInfo pdsci = { 0 } ;
-    pdsci.sType                 = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO ;
-    pdsci.pNext                 = NULL ;
-    pdsci.flags                 = 0 ;
-    pdsci.dynamicStateCount     = array_count(dynamic_states) ;
-    pdsci.pDynamicStates        = dynamic_states ;
+//     static VkDynamicState   dynamic_states[2] = { 0 } ;
+//     dynamic_states[0] = VK_DYNAMIC_STATE_VIEWPORT ;
+//     dynamic_states[1] = VK_DYNAMIC_STATE_SCISSOR ;
 
 
+//     // typedef struct VkPipelineDynamicStateCreateInfo {
+//     //     VkStructureType                      sType;
+//     //     const void*                          pNext;
+//     //     VkPipelineDynamicStateCreateFlags    flags;
+//     //     uint32_t                             dynamicStateCount;
+//     //     const VkDynamicState*                pDynamicStates;
+//     // } VkPipelineDynamicStateCreateInfo;
 
-    VkVertexInputBindingDescription     vibd = get_binding_description() ;
-    VkVertexInputAttributeDescription   viad[3] = { 0 } ;
-    get_attribute_descriptions(viad, 3) ;
-
-    // typedef struct VkPipelineVertexInputStateCreateInfo {
-    //     VkStructureType                             sType;
-    //     const void*                                 pNext;
-    //     VkPipelineVertexInputStateCreateFlags       flags;
-    //     uint32_t                                    vertexBindingDescriptionCount;
-    //     const VkVertexInputBindingDescription*      pVertexBindingDescriptions;
-    //     uint32_t                                    vertexAttributeDescriptionCount;
-    //     const VkVertexInputAttributeDescription*    pVertexAttributeDescriptions;
-    // } VkPipelineVertexInputStateCreateInfo;
-    static VkPipelineVertexInputStateCreateInfo pvisci = { 0 } ;
-    pvisci.sType                            = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO ;
-    pvisci.pNext                            = NULL ;
-    pvisci.flags                            = 0 ;
-    pvisci.vertexBindingDescriptionCount    = 1 ;
-    pvisci.pVertexBindingDescriptions       = &vibd ;
-    pvisci.vertexAttributeDescriptionCount  = array_count(viad) ;
-    pvisci.pVertexAttributeDescriptions     = viad ;
-
-
-    // typedef struct VkPipelineInputAssemblyStateCreateInfo {
-    //     VkStructureType                            sType;
-    //     const void*                                pNext;
-    //     VkPipelineInputAssemblyStateCreateFlags    flags;
-    //     VkPrimitiveTopology                        topology;
-    //     VkBool32                                   primitiveRestartEnable;
-    // } VkPipelineInputAssemblyStateCreateInfo;
-    static VkPipelineInputAssemblyStateCreateInfo piasci = { 0 } ;
-    piasci.sType                    = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO ;
-    piasci.pNext                    = NULL ;
-    piasci.flags                    = 0 ;
-    piasci.topology                 = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST ;
-    piasci.primitiveRestartEnable   = VK_FALSE ;
+//     static VkPipelineDynamicStateCreateInfo pdsci = { 0 } ;
+//     pdsci.sType                 = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO ;
+//     pdsci.pNext                 = NULL ;
+//     pdsci.flags                 = 0 ;
+//     pdsci.dynamicStateCount     = array_count(dynamic_states) ;
+//     pdsci.pDynamicStates        = dynamic_states ;
 
 
 
-    // typedef struct VkViewport {
-    //     float    x;
-    //     float    y;
-    //     float    width;
-    //     float    height;
-    //     float    minDepth;
-    //     float    maxDepth;
-    // } VkViewport;
-    // static VkViewport viewport = { 0 } ;
-    // viewport.x          = 0.0f ;
-    // viewport.y          = 0.0f ;
-    // viewport.width      = (float) vc->swapchain_extent_.width ;
-    // viewport.height     = (float) vc->swapchain_extent_.height ;
-    // viewport.minDepth   = 0.0f ;
-    // viewport.maxDepth   = 1.0f ;
+//     VkVertexInputBindingDescription     vibd = get_binding_description() ;
+//     VkVertexInputAttributeDescription   viad[3] = { 0 } ;
+//     get_attribute_descriptions(viad, 3) ;
+
+//     // typedef struct VkPipelineVertexInputStateCreateInfo {
+//     //     VkStructureType                             sType;
+//     //     const void*                                 pNext;
+//     //     VkPipelineVertexInputStateCreateFlags       flags;
+//     //     uint32_t                                    vertexBindingDescriptionCount;
+//     //     const VkVertexInputBindingDescription*      pVertexBindingDescriptions;
+//     //     uint32_t                                    vertexAttributeDescriptionCount;
+//     //     const VkVertexInputAttributeDescription*    pVertexAttributeDescriptions;
+//     // } VkPipelineVertexInputStateCreateInfo;
+//     static VkPipelineVertexInputStateCreateInfo pvisci = { 0 } ;
+//     pvisci.sType                            = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO ;
+//     pvisci.pNext                            = NULL ;
+//     pvisci.flags                            = 0 ;
+//     pvisci.vertexBindingDescriptionCount    = 1 ;
+//     pvisci.pVertexBindingDescriptions       = &vibd ;
+//     pvisci.vertexAttributeDescriptionCount  = array_count(viad) ;
+//     pvisci.pVertexAttributeDescriptions     = viad ;
 
 
-    // typedef struct VkRect2D {
-    //     VkOffset2D    offset;
-    //     VkExtent2D    extent;
-    // } VkRect2D;
-    // typedef struct VkOffset2D {
-    //     int32_t    x;
-    //     int32_t    y;
-    // } VkOffset2D;
-    // typedef struct VkExtent2D {
-    //     uint32_t    width;
-    //     uint32_t    height;
-    // } VkExtent2D;
-    // static VkRect2D scissor = { 0 } ;
-    // scissor.offset.x        = 0 ;
-    // scissor.offset.y        = 0 ;
-    // scissor.extent.width    = vc->swapchain_extent_.width ;
-    // scissor.extent.height   = vc->swapchain_extent_.height ;
-
-
-    // typedef struct VkPipelineViewportStateCreateInfo {
-    //     VkStructureType                       sType;
-    //     const void*                           pNext;
-    //     VkPipelineViewportStateCreateFlags    flags;
-    //     uint32_t                              viewportCount;
-    //     const VkViewport*                     pViewports;
-    //     uint32_t                              scissorCount;
-    //     const VkRect2D*                       pScissors;
-    // } VkPipelineViewportStateCreateInfo;
-    static VkPipelineViewportStateCreateInfo pvsci = { 0 } ;
-    pvsci.sType             = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO ;
-    pvsci.pNext             = NULL ;
-    pvsci.flags             = 0 ;
-    pvsci.viewportCount     = 1 ;
-    pvsci.pViewports        = NULL ;
-    pvsci.scissorCount      = 1 ;
-    pvsci.pScissors         = NULL ;
-
-
-    // typedef struct VkPipelineRasterizationStateCreateInfo {
-    //     VkStructureType                            sType;
-    //     const void*                                pNext;
-    //     VkPipelineRasterizationStateCreateFlags    flags;
-    //     VkBool32                                   depthClampEnable;
-    //     VkBool32                                   rasterizerDiscardEnable;
-    //     VkPolygonMode                              polygonMode;
-    //     VkCullModeFlags                            cullMode;
-    //     VkFrontFace                                frontFace;
-    //     VkBool32                                   depthBiasEnable;
-    //     float                                      depthBiasConstantFactor;
-    //     float                                      depthBiasClamp;
-    //     float                                      depthBiasSlopeFactor;
-    //     float                                      lineWidth;
-    // } VkPipelineRasterizationStateCreateInfo;
-    static VkPipelineRasterizationStateCreateInfo prsci = { 0 } ;
-    prsci.sType                     = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO ;
-    prsci.pNext                     = NULL ;
-    prsci.flags                     = 0 ;
-    prsci.depthClampEnable          = VK_FALSE ;
-    prsci.rasterizerDiscardEnable   = VK_FALSE ;
-    prsci.polygonMode               = VK_POLYGON_MODE_FILL ;
-    prsci.cullMode                  = VK_CULL_MODE_BACK_BIT ;
-    prsci.frontFace                 = VK_FRONT_FACE_COUNTER_CLOCKWISE ;
-    prsci.depthBiasEnable           = VK_FALSE ;
-    prsci.depthBiasConstantFactor   = 0.0f ;
-    prsci.depthBiasClamp            = 0.0f ;
-    prsci.depthBiasSlopeFactor      = 0.0f ;
-    prsci.lineWidth                 = 1.0f ;
-
-
-    // typedef struct VkPipelineMultisampleStateCreateInfo {
-    //     VkStructureType                          sType;
-    //     const void*                              pNext;
-    //     VkPipelineMultisampleStateCreateFlags    flags;
-    //     VkSampleCountFlagBits                    rasterizationSamples;
-    //     VkBool32                                 sampleShadingEnable;
-    //     float                                    minSampleShading;
-    //     const VkSampleMask*                      pSampleMask;
-    //     VkBool32                                 alphaToCoverageEnable;
-    //     VkBool32                                 alphaToOneEnable;
-    // } VkPipelineMultisampleStateCreateInfo;
-    static VkPipelineMultisampleStateCreateInfo pmssci = { 0 } ;
-    pmssci.sType                    = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO ;
-    pmssci.pNext                    = NULL ;
-    pmssci.flags                    = 0 ;
-    if(vc->enable_sampling_)
-    {
-        pmssci.rasterizationSamples = vc->sample_count_ ;
-    }
-    else
-    {
-        pmssci.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT ;
-    }
-    if(vc->enable_sample_shading_)
-    {
-        pmssci.sampleShadingEnable  = vc->enable_sample_shading_ ;
-        pmssci.minSampleShading     = vc->min_sample_shading_ ;
-    }
-    else
-    {
-        pmssci.sampleShadingEnable  = VK_FALSE ;
-        pmssci.minSampleShading     = 1.0f ;
-    }
-    pmssci.pSampleMask              = NULL ;
-    pmssci.alphaToCoverageEnable    = VK_FALSE ;
-    pmssci.alphaToOneEnable         = VK_FALSE ;
-
-    // typedef struct VkPipelineColorBlendAttachmentState {
-    //     VkBool32                 blendEnable;
-    //     VkBlendFactor            srcColorBlendFactor;
-    //     VkBlendFactor            dstColorBlendFactor;
-    //     VkBlendOp                colorBlendOp;
-    //     VkBlendFactor            srcAlphaBlendFactor;
-    //     VkBlendFactor            dstAlphaBlendFactor;
-    //     VkBlendOp                alphaBlendOp;
-    //     VkColorComponentFlags    colorWriteMask;
-    // } VkPipelineColorBlendAttachmentState;
-    static VkPipelineColorBlendAttachmentState pcbas = { 0 } ;
-    pcbas.blendEnable           = VK_FALSE ;
-    pcbas.srcColorBlendFactor   = VK_BLEND_FACTOR_ONE ;
-    pcbas.dstColorBlendFactor   = VK_BLEND_FACTOR_ZERO ;
-    pcbas.colorBlendOp          = VK_BLEND_OP_ADD ;
-    pcbas.srcAlphaBlendFactor   = VK_BLEND_FACTOR_ONE ;
-    pcbas.dstAlphaBlendFactor   = VK_BLEND_FACTOR_ZERO ;
-    pcbas.alphaBlendOp          = VK_BLEND_OP_ADD ;
-    pcbas.colorWriteMask        = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT ;
-    // transparency
-    // pcbas.blendEnable           = VK_TRUE ;
-    // pcbas.srcColorBlendFactor   = VK_BLEND_FACTOR_SRC_ALPHA ;
-    // pcbas.dstColorBlendFactor   = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA ;
-    // pcbas.colorBlendOp          = VK_BLEND_OP_ADD ;
-    // pcbas.srcAlphaBlendFactor   = VK_BLEND_FACTOR_ONE ;
-    // pcbas.dstAlphaBlendFactor   = VK_BLEND_FACTOR_ZERO ;
-    // pcbas.alphaBlendOp          = VK_BLEND_OP_ADD ;
-    // pcbas.colorWriteMask        = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT ;
-
-
-    // typedef struct VkPipelineColorBlendStateCreateInfo {
-    //     VkStructureType                               sType;
-    //     const void*                                   pNext;
-    //     VkPipelineColorBlendStateCreateFlags          flags;
-    //     VkBool32                                      logicOpEnable;
-    //     VkLogicOp                                     logicOp;
-    //     uint32_t                                      attachmentCount;
-    //     const VkPipelineColorBlendAttachmentState*    pAttachments;
-    //     float                                         blendConstants[4];
-    // } VkPipelineColorBlendStateCreateInfo;
-    static VkPipelineColorBlendStateCreateInfo pcbsci = { 0 } ;
-    pcbsci.sType                = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO ;
-    pcbsci.pNext                = NULL ;
-    pcbsci.flags                = 0 ;
-    pcbsci.logicOpEnable        = VK_FALSE ;
-    pcbsci.logicOp              = VK_LOGIC_OP_COPY ;
-    pcbsci.attachmentCount      = 1 ;
-    pcbsci.pAttachments         = &pcbas ;
-    pcbsci.blendConstants[0]    = 0.0f ;
-    pcbsci.blendConstants[1]    = 0.0f ;
-    pcbsci.blendConstants[2]    = 0.0f ;
-    pcbsci.blendConstants[3]    = 0.0f ;
-
-    // typedef struct VkPipelineDepthStencilStateCreateInfo {
-    //     VkStructureType                           sType;
-    //     const void*                               pNext;
-    //     VkPipelineDepthStencilStateCreateFlags    flags;
-    //     VkBool32                                  depthTestEnable;
-    //     VkBool32                                  depthWriteEnable;
-    //     VkCompareOp                               depthCompareOp;
-    //     VkBool32                                  depthBoundsTestEnable;
-    //     VkBool32                                  stencilTestEnable;
-    //     VkStencilOpState                          front;
-    //     VkStencilOpState                          back;
-    //     float                                     minDepthBounds;
-    //     float                                     maxDepthBounds;
-    // } VkPipelineDepthStencilStateCreateInfo;
-    // typedef struct VkStencilOpState {
-    //     VkStencilOp    failOp;
-    //     VkStencilOp    passOp;
-    //     VkStencilOp    depthFailOp;
-    //     VkCompareOp    compareOp;
-    //     uint32_t       compareMask;
-    //     uint32_t       writeMask;
-    //     uint32_t       reference;
-    // } VkStencilOpState;
-    // typedef enum VkStencilOp {
-    //     VK_STENCIL_OP_KEEP = 0,
-    //     VK_STENCIL_OP_ZERO = 1,
-    //     VK_STENCIL_OP_REPLACE = 2,
-    //     VK_STENCIL_OP_INCREMENT_AND_CLAMP = 3,
-    //     VK_STENCIL_OP_DECREMENT_AND_CLAMP = 4,
-    //     VK_STENCIL_OP_INVERT = 5,
-    //     VK_STENCIL_OP_INCREMENT_AND_WRAP = 6,
-    //     VK_STENCIL_OP_DECREMENT_AND_WRAP = 7,
-    // } VkStencilOp;
-
-    static VkPipelineDepthStencilStateCreateInfo pdssci = { 0 } ;
-    pdssci.sType                    = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO ;
-    pdssci.pNext                    = NULL ;
-    pdssci.flags                    = 0 ;
-    pdssci.depthTestEnable          = VK_TRUE ;
-    pdssci.depthWriteEnable         = VK_TRUE ;
-    pdssci.depthCompareOp           = VK_COMPARE_OP_LESS ;
-    pdssci.depthBoundsTestEnable    = VK_FALSE ;
-    pdssci.stencilTestEnable        = VK_FALSE ;
-    pdssci.front.failOp             = 0 ;
-    pdssci.front.passOp             = 0 ;
-    pdssci.front.depthFailOp        = 0 ;
-    pdssci.front.compareOp          = 0 ;
-    pdssci.front.compareMask        = 0 ;
-    pdssci.front.writeMask          = 0 ;
-    pdssci.front.reference          = 0 ;
-    pdssci.back.failOp              = 0 ;
-    pdssci.back.passOp              = 0 ;
-    pdssci.back.depthFailOp         = 0 ;
-    pdssci.back.compareOp           = 0 ;
-    pdssci.back.compareMask         = 0 ;
-    pdssci.back.writeMask           = 0 ;
-    pdssci.back.reference           = 0 ;
-    pdssci.minDepthBounds           = 0.0f ;
-    pdssci.maxDepthBounds           = 1.0f ;
-
-
-    // typedef struct VkGraphicsPipelineCreateInfo {
-    //     VkStructureType                                  sType;
-    //     const void*                                      pNext;
-    //     VkPipelineCreateFlags                            flags;
-    //     uint32_t                                         stageCount;
-    //     const VkPipelineShaderStageCreateInfo*           pStages;
-    //     const VkPipelineVertexInputStateCreateInfo*      pVertexInputState;
-    //     const VkPipelineInputAssemblyStateCreateInfo*    pInputAssemblyState;
-    //     const VkPipelineTessellationStateCreateInfo*     pTessellationState;
-    //     const VkPipelineViewportStateCreateInfo*         pViewportState;
-    //     const VkPipelineRasterizationStateCreateInfo*    pRasterizationState;
-    //     const VkPipelineMultisampleStateCreateInfo*      pMultisampleState;
-    //     const VkPipelineDepthStencilStateCreateInfo*     pDepthStencilState;
-    //     const VkPipelineColorBlendStateCreateInfo*       pColorBlendState;
-    //     const VkPipelineDynamicStateCreateInfo*          pDynamicState;
-    //     VkPipelineLayout                                 layout;
-    //     VkRenderPass                                     renderPass;
-    //     uint32_t                                         subpass;
-    //     VkPipeline                                       basePipelineHandle;
-    //     int32_t                                          basePipelineIndex;
-    // } VkGraphicsPipelineCreateInfo;
-    static VkGraphicsPipelineCreateInfo gpci = { 0 } ;
-    // away
-    // gpci.sType                  = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO ;
-    // gpci.pNext                  = NULL ;
-    // gpci.flags                  = 0 ;
-    // gpci.stageCount             = array_count(pssci) ;
-    // gpci.pStages                = pssci ;
-    // gpci.pVertexInputState      = &pvisci ;
-    // gpci.pInputAssemblyState    = &piasci ;
-    // gpci.pTessellationState     = NULL ;
-    // gpci.pViewportState         = &pvsci ;
-    // gpci.pRasterizationState    = &prsci ;
-    // gpci.pMultisampleState      = &pmssci ;
-    // gpci.pDepthStencilState     = &pdssci ;
-    // gpci.pColorBlendState       = &pcbsci ;
-    // gpci.pDynamicState          = &pdsci ;
-    // gpci.layout                 = vc->pipeline_layout_ ;
-    // gpci.renderPass             = vc->render_pass_ ;
-    // gpci.subpass                = 0 ;
-    // gpci.basePipelineHandle     = VK_NULL_HANDLE ;
-    // gpci.basePipelineIndex      = -1 ;
+//     // typedef struct VkPipelineInputAssemblyStateCreateInfo {
+//     //     VkStructureType                            sType;
+//     //     const void*                                pNext;
+//     //     VkPipelineInputAssemblyStateCreateFlags    flags;
+//     //     VkPrimitiveTopology                        topology;
+//     //     VkBool32                                   primitiveRestartEnable;
+//     // } VkPipelineInputAssemblyStateCreateInfo;
+//     static VkPipelineInputAssemblyStateCreateInfo piasci = { 0 } ;
+//     piasci.sType                    = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO ;
+//     piasci.pNext                    = NULL ;
+//     piasci.flags                    = 0 ;
+//     piasci.topology                 = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST ;
+//     piasci.primitiveRestartEnable   = VK_FALSE ;
 
 
 
-    // VkResult vkCreateGraphicsPipelines(
-    //     VkDevice                                    device,
-    //     VkPipelineCache                             pipelineCache,
-    //     uint32_t                                    createInfoCount,
-    //     const VkGraphicsPipelineCreateInfo*         pCreateInfos,
-    //     const VkAllocationCallbacks*                pAllocator,
-    //     VkPipeline*                                 pPipelines);
-    if(check_vulkan(vkCreateGraphicsPipelines(
-                vc->device_
-            ,   VK_NULL_HANDLE
-            ,   1
-            ,   &gpci
-            ,   NULL
-            ,   &vc->graphics_pipeline_
-            )
-        )
-    )
-    {
-        end_timed_block() ;
-        return false ;
-    }
-    require(vc->graphics_pipeline_) ;
+//     // typedef struct VkViewport {
+//     //     float    x;
+//     //     float    y;
+//     //     float    width;
+//     //     float    height;
+//     //     float    minDepth;
+//     //     float    maxDepth;
+//     // } VkViewport;
+//     // static VkViewport viewport = { 0 } ;
+//     // viewport.x          = 0.0f ;
+//     // viewport.y          = 0.0f ;
+//     // viewport.width      = (float) vc->swapchain_extent_.width ;
+//     // viewport.height     = (float) vc->swapchain_extent_.height ;
+//     // viewport.minDepth   = 0.0f ;
+//     // viewport.maxDepth   = 1.0f ;
 
 
-    // void vkDestroyShaderModule(
-    //     VkDevice                                    device,
-    //     VkShaderModule                              shaderModule,
-    //     const VkAllocationCallbacks*                pAllocator);
-    vkDestroyShaderModule(vc->device_, vc->vert_shader_, NULL) ;
-    vkDestroyShaderModule(vc->device_, vc->frag_shader_, NULL) ;
-    vc->vert_shader_ = NULL ;
-    vc->frag_shader_ = NULL ;
+//     // typedef struct VkRect2D {
+//     //     VkOffset2D    offset;
+//     //     VkExtent2D    extent;
+//     // } VkRect2D;
+//     // typedef struct VkOffset2D {
+//     //     int32_t    x;
+//     //     int32_t    y;
+//     // } VkOffset2D;
+//     // typedef struct VkExtent2D {
+//     //     uint32_t    width;
+//     //     uint32_t    height;
+//     // } VkExtent2D;
+//     // static VkRect2D scissor = { 0 } ;
+//     // scissor.offset.x        = 0 ;
+//     // scissor.offset.y        = 0 ;
+//     // scissor.extent.width    = vc->swapchain_extent_.width ;
+//     // scissor.extent.height   = vc->swapchain_extent_.height ;
 
-    end_timed_block() ;
-    return true ;
-}
+
+//     // typedef struct VkPipelineViewportStateCreateInfo {
+//     //     VkStructureType                       sType;
+//     //     const void*                           pNext;
+//     //     VkPipelineViewportStateCreateFlags    flags;
+//     //     uint32_t                              viewportCount;
+//     //     const VkViewport*                     pViewports;
+//     //     uint32_t                              scissorCount;
+//     //     const VkRect2D*                       pScissors;
+//     // } VkPipelineViewportStateCreateInfo;
+//     static VkPipelineViewportStateCreateInfo pvsci = { 0 } ;
+//     pvsci.sType             = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO ;
+//     pvsci.pNext             = NULL ;
+//     pvsci.flags             = 0 ;
+//     pvsci.viewportCount     = 1 ;
+//     pvsci.pViewports        = NULL ;
+//     pvsci.scissorCount      = 1 ;
+//     pvsci.pScissors         = NULL ;
+
+
+//     // typedef struct VkPipelineRasterizationStateCreateInfo {
+//     //     VkStructureType                            sType;
+//     //     const void*                                pNext;
+//     //     VkPipelineRasterizationStateCreateFlags    flags;
+//     //     VkBool32                                   depthClampEnable;
+//     //     VkBool32                                   rasterizerDiscardEnable;
+//     //     VkPolygonMode                              polygonMode;
+//     //     VkCullModeFlags                            cullMode;
+//     //     VkFrontFace                                frontFace;
+//     //     VkBool32                                   depthBiasEnable;
+//     //     float                                      depthBiasConstantFactor;
+//     //     float                                      depthBiasClamp;
+//     //     float                                      depthBiasSlopeFactor;
+//     //     float                                      lineWidth;
+//     // } VkPipelineRasterizationStateCreateInfo;
+//     static VkPipelineRasterizationStateCreateInfo prsci = { 0 } ;
+//     prsci.sType                     = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO ;
+//     prsci.pNext                     = NULL ;
+//     prsci.flags                     = 0 ;
+//     prsci.depthClampEnable          = VK_FALSE ;
+//     prsci.rasterizerDiscardEnable   = VK_FALSE ;
+//     prsci.polygonMode               = VK_POLYGON_MODE_FILL ;
+//     prsci.cullMode                  = VK_CULL_MODE_BACK_BIT ;
+//     prsci.frontFace                 = VK_FRONT_FACE_COUNTER_CLOCKWISE ;
+//     prsci.depthBiasEnable           = VK_FALSE ;
+//     prsci.depthBiasConstantFactor   = 0.0f ;
+//     prsci.depthBiasClamp            = 0.0f ;
+//     prsci.depthBiasSlopeFactor      = 0.0f ;
+//     prsci.lineWidth                 = 1.0f ;
+
+
+//     // typedef struct VkPipelineMultisampleStateCreateInfo {
+//     //     VkStructureType                          sType;
+//     //     const void*                              pNext;
+//     //     VkPipelineMultisampleStateCreateFlags    flags;
+//     //     VkSampleCountFlagBits                    rasterizationSamples;
+//     //     VkBool32                                 sampleShadingEnable;
+//     //     float                                    minSampleShading;
+//     //     const VkSampleMask*                      pSampleMask;
+//     //     VkBool32                                 alphaToCoverageEnable;
+//     //     VkBool32                                 alphaToOneEnable;
+//     // } VkPipelineMultisampleStateCreateInfo;
+//     static VkPipelineMultisampleStateCreateInfo pmssci = { 0 } ;
+//     pmssci.sType                    = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO ;
+//     pmssci.pNext                    = NULL ;
+//     pmssci.flags                    = 0 ;
+//     if(vc->enable_sampling_)
+//     {
+//         pmssci.rasterizationSamples = vc->sample_count_ ;
+//     }
+//     else
+//     {
+//         pmssci.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT ;
+//     }
+//     if(vc->enable_sample_shading_)
+//     {
+//         pmssci.sampleShadingEnable  = vc->enable_sample_shading_ ;
+//         pmssci.minSampleShading     = vc->min_sample_shading_ ;
+//     }
+//     else
+//     {
+//         pmssci.sampleShadingEnable  = VK_FALSE ;
+//         pmssci.minSampleShading     = 1.0f ;
+//     }
+//     pmssci.pSampleMask              = NULL ;
+//     pmssci.alphaToCoverageEnable    = VK_FALSE ;
+//     pmssci.alphaToOneEnable         = VK_FALSE ;
+
+//     // typedef struct VkPipelineColorBlendAttachmentState {
+//     //     VkBool32                 blendEnable;
+//     //     VkBlendFactor            srcColorBlendFactor;
+//     //     VkBlendFactor            dstColorBlendFactor;
+//     //     VkBlendOp                colorBlendOp;
+//     //     VkBlendFactor            srcAlphaBlendFactor;
+//     //     VkBlendFactor            dstAlphaBlendFactor;
+//     //     VkBlendOp                alphaBlendOp;
+//     //     VkColorComponentFlags    colorWriteMask;
+//     // } VkPipelineColorBlendAttachmentState;
+//     static VkPipelineColorBlendAttachmentState pcbas = { 0 } ;
+//     pcbas.blendEnable           = VK_FALSE ;
+//     pcbas.srcColorBlendFactor   = VK_BLEND_FACTOR_ONE ;
+//     pcbas.dstColorBlendFactor   = VK_BLEND_FACTOR_ZERO ;
+//     pcbas.colorBlendOp          = VK_BLEND_OP_ADD ;
+//     pcbas.srcAlphaBlendFactor   = VK_BLEND_FACTOR_ONE ;
+//     pcbas.dstAlphaBlendFactor   = VK_BLEND_FACTOR_ZERO ;
+//     pcbas.alphaBlendOp          = VK_BLEND_OP_ADD ;
+//     pcbas.colorWriteMask        = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT ;
+//     // transparency
+//     // pcbas.blendEnable           = VK_TRUE ;
+//     // pcbas.srcColorBlendFactor   = VK_BLEND_FACTOR_SRC_ALPHA ;
+//     // pcbas.dstColorBlendFactor   = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA ;
+//     // pcbas.colorBlendOp          = VK_BLEND_OP_ADD ;
+//     // pcbas.srcAlphaBlendFactor   = VK_BLEND_FACTOR_ONE ;
+//     // pcbas.dstAlphaBlendFactor   = VK_BLEND_FACTOR_ZERO ;
+//     // pcbas.alphaBlendOp          = VK_BLEND_OP_ADD ;
+//     // pcbas.colorWriteMask        = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT ;
+
+
+//     // typedef struct VkPipelineColorBlendStateCreateInfo {
+//     //     VkStructureType                               sType;
+//     //     const void*                                   pNext;
+//     //     VkPipelineColorBlendStateCreateFlags          flags;
+//     //     VkBool32                                      logicOpEnable;
+//     //     VkLogicOp                                     logicOp;
+//     //     uint32_t                                      attachmentCount;
+//     //     const VkPipelineColorBlendAttachmentState*    pAttachments;
+//     //     float                                         blendConstants[4];
+//     // } VkPipelineColorBlendStateCreateInfo;
+//     static VkPipelineColorBlendStateCreateInfo pcbsci = { 0 } ;
+//     pcbsci.sType                = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO ;
+//     pcbsci.pNext                = NULL ;
+//     pcbsci.flags                = 0 ;
+//     pcbsci.logicOpEnable        = VK_FALSE ;
+//     pcbsci.logicOp              = VK_LOGIC_OP_COPY ;
+//     pcbsci.attachmentCount      = 1 ;
+//     pcbsci.pAttachments         = &pcbas ;
+//     pcbsci.blendConstants[0]    = 0.0f ;
+//     pcbsci.blendConstants[1]    = 0.0f ;
+//     pcbsci.blendConstants[2]    = 0.0f ;
+//     pcbsci.blendConstants[3]    = 0.0f ;
+
+//     // typedef struct VkPipelineDepthStencilStateCreateInfo {
+//     //     VkStructureType                           sType;
+//     //     const void*                               pNext;
+//     //     VkPipelineDepthStencilStateCreateFlags    flags;
+//     //     VkBool32                                  depthTestEnable;
+//     //     VkBool32                                  depthWriteEnable;
+//     //     VkCompareOp                               depthCompareOp;
+//     //     VkBool32                                  depthBoundsTestEnable;
+//     //     VkBool32                                  stencilTestEnable;
+//     //     VkStencilOpState                          front;
+//     //     VkStencilOpState                          back;
+//     //     float                                     minDepthBounds;
+//     //     float                                     maxDepthBounds;
+//     // } VkPipelineDepthStencilStateCreateInfo;
+//     // typedef struct VkStencilOpState {
+//     //     VkStencilOp    failOp;
+//     //     VkStencilOp    passOp;
+//     //     VkStencilOp    depthFailOp;
+//     //     VkCompareOp    compareOp;
+//     //     uint32_t       compareMask;
+//     //     uint32_t       writeMask;
+//     //     uint32_t       reference;
+//     // } VkStencilOpState;
+//     // typedef enum VkStencilOp {
+//     //     VK_STENCIL_OP_KEEP = 0,
+//     //     VK_STENCIL_OP_ZERO = 1,
+//     //     VK_STENCIL_OP_REPLACE = 2,
+//     //     VK_STENCIL_OP_INCREMENT_AND_CLAMP = 3,
+//     //     VK_STENCIL_OP_DECREMENT_AND_CLAMP = 4,
+//     //     VK_STENCIL_OP_INVERT = 5,
+//     //     VK_STENCIL_OP_INCREMENT_AND_WRAP = 6,
+//     //     VK_STENCIL_OP_DECREMENT_AND_WRAP = 7,
+//     // } VkStencilOp;
+
+//     static VkPipelineDepthStencilStateCreateInfo pdssci = { 0 } ;
+//     pdssci.sType                    = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO ;
+//     pdssci.pNext                    = NULL ;
+//     pdssci.flags                    = 0 ;
+//     pdssci.depthTestEnable          = VK_TRUE ;
+//     pdssci.depthWriteEnable         = VK_TRUE ;
+//     pdssci.depthCompareOp           = VK_COMPARE_OP_LESS ;
+//     pdssci.depthBoundsTestEnable    = VK_FALSE ;
+//     pdssci.stencilTestEnable        = VK_FALSE ;
+//     pdssci.front.failOp             = 0 ;
+//     pdssci.front.passOp             = 0 ;
+//     pdssci.front.depthFailOp        = 0 ;
+//     pdssci.front.compareOp          = 0 ;
+//     pdssci.front.compareMask        = 0 ;
+//     pdssci.front.writeMask          = 0 ;
+//     pdssci.front.reference          = 0 ;
+//     pdssci.back.failOp              = 0 ;
+//     pdssci.back.passOp              = 0 ;
+//     pdssci.back.depthFailOp         = 0 ;
+//     pdssci.back.compareOp           = 0 ;
+//     pdssci.back.compareMask         = 0 ;
+//     pdssci.back.writeMask           = 0 ;
+//     pdssci.back.reference           = 0 ;
+//     pdssci.minDepthBounds           = 0.0f ;
+//     pdssci.maxDepthBounds           = 1.0f ;
+
+
+//     // typedef struct VkGraphicsPipelineCreateInfo {
+//     //     VkStructureType                                  sType;
+//     //     const void*                                      pNext;
+//     //     VkPipelineCreateFlags                            flags;
+//     //     uint32_t                                         stageCount;
+//     //     const VkPipelineShaderStageCreateInfo*           pStages;
+//     //     const VkPipelineVertexInputStateCreateInfo*      pVertexInputState;
+//     //     const VkPipelineInputAssemblyStateCreateInfo*    pInputAssemblyState;
+//     //     const VkPipelineTessellationStateCreateInfo*     pTessellationState;
+//     //     const VkPipelineViewportStateCreateInfo*         pViewportState;
+//     //     const VkPipelineRasterizationStateCreateInfo*    pRasterizationState;
+//     //     const VkPipelineMultisampleStateCreateInfo*      pMultisampleState;
+//     //     const VkPipelineDepthStencilStateCreateInfo*     pDepthStencilState;
+//     //     const VkPipelineColorBlendStateCreateInfo*       pColorBlendState;
+//     //     const VkPipelineDynamicStateCreateInfo*          pDynamicState;
+//     //     VkPipelineLayout                                 layout;
+//     //     VkRenderPass                                     renderPass;
+//     //     uint32_t                                         subpass;
+//     //     VkPipeline                                       basePipelineHandle;
+//     //     int32_t                                          basePipelineIndex;
+//     // } VkGraphicsPipelineCreateInfo;
+//     static VkGraphicsPipelineCreateInfo gpci = { 0 } ;
+//     // away
+//     // gpci.sType                  = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO ;
+//     // gpci.pNext                  = NULL ;
+//     // gpci.flags                  = 0 ;
+//     // gpci.stageCount             = array_count(pssci) ;
+//     // gpci.pStages                = pssci ;
+//     // gpci.pVertexInputState      = &pvisci ;
+//     // gpci.pInputAssemblyState    = &piasci ;
+//     // gpci.pTessellationState     = NULL ;
+//     // gpci.pViewportState         = &pvsci ;
+//     // gpci.pRasterizationState    = &prsci ;
+//     // gpci.pMultisampleState      = &pmssci ;
+//     // gpci.pDepthStencilState     = &pdssci ;
+//     // gpci.pColorBlendState       = &pcbsci ;
+//     // gpci.pDynamicState          = &pdsci ;
+//     // gpci.layout                 = vc->pipeline_layout_ ;
+//     // gpci.renderPass             = vc->render_pass_ ;
+//     // gpci.subpass                = 0 ;
+//     // gpci.basePipelineHandle     = VK_NULL_HANDLE ;
+//     // gpci.basePipelineIndex      = -1 ;
+
+
+
+//     // VkResult vkCreateGraphicsPipelines(
+//     //     VkDevice                                    device,
+//     //     VkPipelineCache                             pipelineCache,
+//     //     uint32_t                                    createInfoCount,
+//     //     const VkGraphicsPipelineCreateInfo*         pCreateInfos,
+//     //     const VkAllocationCallbacks*                pAllocator,
+//     //     VkPipeline*                                 pPipelines);
+//     if(check_vulkan(vkCreateGraphicsPipelines(
+//                 vc->device_
+//             ,   VK_NULL_HANDLE
+//             ,   1
+//             ,   &gpci
+//             ,   NULL
+//             ,   &vc->graphics_pipeline_
+//             )
+//         )
+//     )
+//     {
+//         end_timed_block() ;
+//         return false ;
+//     }
+//     require(vc->graphics_pipeline_) ;
+
+
+//     // void vkDestroyShaderModule(
+//     //     VkDevice                                    device,
+//     //     VkShaderModule                              shaderModule,
+//     //     const VkAllocationCallbacks*                pAllocator);
+//     vkDestroyShaderModule(vc->device_, vc->vert_shader_, NULL) ;
+//     vkDestroyShaderModule(vc->device_, vc->frag_shader_, NULL) ;
+//     vc->vert_shader_ = NULL ;
+//     vc->frag_shader_ = NULL ;
+
+//     end_timed_block() ;
+//     return true ;
+// }
 
 
 static bool
@@ -6088,209 +6087,209 @@ create_command_buffer(
 }
 
 
-static bool
-record_command_buffer(
-    vulkan_context *    vc
-,   VkCommandBuffer     command_buffer
-,   uint32_t const      image_index
-)
-{
-    require(vc) ;
-    require(command_buffer) ;
-    require(image_index < max_vulkan_swapchain_images) ;
-    require(image_index < vc->swapchain_images_count_) ;
+// static bool
+// record_command_buffer(
+//     vulkan_context *    vc
+// ,   VkCommandBuffer     command_buffer
+// ,   uint32_t const      image_index
+// )
+// {
+//     require(vc) ;
+//     require(command_buffer) ;
+//     require(image_index < max_vulkan_swapchain_images) ;
+//     require(image_index < vc->swapchain_images_count_) ;
 
-    begin_timed_block() ;
+//     begin_timed_block() ;
 
-    // typedef struct VkCommandBufferBeginInfo {
-    //     VkStructureType                          sType;
-    //     const void*                              pNext;
-    //     VkCommandBufferUsageFlags                flags;
-    //     const VkCommandBufferInheritanceInfo*    pInheritanceInfo;
-    // } VkCommandBufferBeginInfo;
-    static VkCommandBufferBeginInfo cbbi = { 0 } ;
-    cbbi.sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO ;
-    cbbi.pNext              = NULL ;
-    cbbi.flags              = 0 ;
-    cbbi.pInheritanceInfo   = NULL ;
+//     // typedef struct VkCommandBufferBeginInfo {
+//     //     VkStructureType                          sType;
+//     //     const void*                              pNext;
+//     //     VkCommandBufferUsageFlags                flags;
+//     //     const VkCommandBufferInheritanceInfo*    pInheritanceInfo;
+//     // } VkCommandBufferBeginInfo;
+//     static VkCommandBufferBeginInfo cbbi = { 0 } ;
+//     cbbi.sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO ;
+//     cbbi.pNext              = NULL ;
+//     cbbi.flags              = 0 ;
+//     cbbi.pInheritanceInfo   = NULL ;
 
-    // VkResult vkBeginCommandBuffer(
-    //     VkCommandBuffer                             commandBuffer,
-    //     const VkCommandBufferBeginInfo*             pBeginInfo);
-    if(check_vulkan(vkBeginCommandBuffer(command_buffer, &cbbi)))
-    {
-        end_timed_block() ;
-        return false ;
-    }
-
-
-    // typedef struct VkRenderPassBeginInfo {
-    //     VkStructureType        sType;
-    //     const void*            pNext;
-    //     VkRenderPass           renderPass;
-    //     VkFramebuffer          framebuffer;
-    //     VkRect2D               renderArea;
-    //     uint32_t               clearValueCount;
-    //     const VkClearValue*    pClearValues;
-    // } VkRenderPassBeginInfo;
-    // typedef union VkClearValue {
-    //     VkClearColorValue           color;
-    //     VkClearDepthStencilValue    depthStencil;
-    // } VkClearValue;
-    // typedef union VkClearColorValue {
-    //     float       float32[4];
-    //     int32_t     int32[4];
-    //     uint32_t    uint32[4];
-    // } VkClearColorValue;
-    // typedef struct VkClearDepthStencilValue {
-    //     float       depth;
-    //     uint32_t    stencil;
-    // } VkClearDepthStencilValue;
-    static VkClearValue    cv[2] = { 0 } ;
-    cv[0].color.float32[0]      = 0.0f ;
-    cv[0].color.float32[1]      = 0.0f ;
-    cv[0].color.float32[2]      = 0.0f ;
-    cv[0].color.float32[3]      = 1.0f ;
-    cv[1].depthStencil.depth    = 1.0f ;
-    cv[1].depthStencil.stencil  = 0 ;
-
-    static VkRenderPassBeginInfo rpbi = { 0 } ;
-    rpbi.sType                      = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO ;
-    rpbi.pNext                      = NULL ;
-    rpbi.renderPass                 = vc->render_pass_ ;
-    rpbi.framebuffer                = vc->framebuffers_[image_index] ;
-    rpbi.renderArea.offset.x        = 0 ;
-    rpbi.renderArea.offset.y        = 0 ;
-    rpbi.renderArea.extent.width    = vc->swapchain_extent_.width ;
-    rpbi.renderArea.extent.height   = vc->swapchain_extent_.height ;
-    rpbi.clearValueCount            = array_count(cv) ;
-    rpbi.pClearValues               = cv ;
-
-    // void vkCmdBeginRenderPass(
-    //     VkCommandBuffer                             commandBuffer,
-    //     const VkRenderPassBeginInfo*                pRenderPassBegin,
-    //     VkSubpassContents                           contents);
-    vkCmdBeginRenderPass(command_buffer, &rpbi, VK_SUBPASS_CONTENTS_INLINE) ;
-
-    // void vkCmdBindPipeline(
-    //     VkCommandBuffer                             commandBuffer,
-    //     VkPipelineBindPoint                         pipelineBindPoint,
-    //     VkPipeline                                  pipeline);
-    vkCmdBindPipeline(
-        command_buffer
-    ,   VK_PIPELINE_BIND_POINT_GRAPHICS
-    ,   vc->graphics_pipeline_
-    ) ;
+//     // VkResult vkBeginCommandBuffer(
+//     //     VkCommandBuffer                             commandBuffer,
+//     //     const VkCommandBufferBeginInfo*             pBeginInfo);
+//     if(check_vulkan(vkBeginCommandBuffer(command_buffer, &cbbi)))
+//     {
+//         end_timed_block() ;
+//         return false ;
+//     }
 
 
-    VkBuffer vertex_buffers[] = { vc->vertex_buffer_} ;
-    VkDeviceSize offsets[] = { 0 } ;
+//     // typedef struct VkRenderPassBeginInfo {
+//     //     VkStructureType        sType;
+//     //     const void*            pNext;
+//     //     VkRenderPass           renderPass;
+//     //     VkFramebuffer          framebuffer;
+//     //     VkRect2D               renderArea;
+//     //     uint32_t               clearValueCount;
+//     //     const VkClearValue*    pClearValues;
+//     // } VkRenderPassBeginInfo;
+//     // typedef union VkClearValue {
+//     //     VkClearColorValue           color;
+//     //     VkClearDepthStencilValue    depthStencil;
+//     // } VkClearValue;
+//     // typedef union VkClearColorValue {
+//     //     float       float32[4];
+//     //     int32_t     int32[4];
+//     //     uint32_t    uint32[4];
+//     // } VkClearColorValue;
+//     // typedef struct VkClearDepthStencilValue {
+//     //     float       depth;
+//     //     uint32_t    stencil;
+//     // } VkClearDepthStencilValue;
+//     static VkClearValue    cv[2] = { 0 } ;
+//     cv[0].color.float32[0]      = 0.0f ;
+//     cv[0].color.float32[1]      = 0.0f ;
+//     cv[0].color.float32[2]      = 0.0f ;
+//     cv[0].color.float32[3]      = 1.0f ;
+//     cv[1].depthStencil.depth    = 1.0f ;
+//     cv[1].depthStencil.stencil  = 0 ;
 
-    // void vkCmdBindVertexBuffers(
-    //     VkCommandBuffer                             commandBuffer,
-    //     uint32_t                                    firstBinding,
-    //     uint32_t                                    bindingCount,
-    //     const VkBuffer*                             pBuffers,
-    //     const VkDeviceSize*                         pOffsets);
-    vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, offsets) ;
+//     static VkRenderPassBeginInfo rpbi = { 0 } ;
+//     rpbi.sType                      = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO ;
+//     rpbi.pNext                      = NULL ;
+//     rpbi.renderPass                 = vc->render_pass_ ;
+//     rpbi.framebuffer                = vc->framebuffers_[image_index] ;
+//     rpbi.renderArea.offset.x        = 0 ;
+//     rpbi.renderArea.offset.y        = 0 ;
+//     rpbi.renderArea.extent.width    = vc->swapchain_extent_.width ;
+//     rpbi.renderArea.extent.height   = vc->swapchain_extent_.height ;
+//     rpbi.clearValueCount            = array_count(cv) ;
+//     rpbi.pClearValues               = cv ;
+
+//     // void vkCmdBeginRenderPass(
+//     //     VkCommandBuffer                             commandBuffer,
+//     //     const VkRenderPassBeginInfo*                pRenderPassBegin,
+//     //     VkSubpassContents                           contents);
+//     vkCmdBeginRenderPass(command_buffer, &rpbi, VK_SUBPASS_CONTENTS_INLINE) ;
+
+//     // void vkCmdBindPipeline(
+//     //     VkCommandBuffer                             commandBuffer,
+//     //     VkPipelineBindPoint                         pipelineBindPoint,
+//     //     VkPipeline                                  pipeline);
+//     vkCmdBindPipeline(
+//         command_buffer
+//     ,   VK_PIPELINE_BIND_POINT_GRAPHICS
+//     ,   vc->graphics_pipeline_
+//     ) ;
 
 
-    // void vkCmdBindIndexBuffer(
-    //     VkCommandBuffer                             commandBuffer,
-    //     VkBuffer                                    buffer,
-    //     VkDeviceSize                                offset,
-    //     VkIndexType                                 indexType);
-    vkCmdBindIndexBuffer(
-        command_buffer
-    ,   vc->index_buffer_
-    ,   0
-    ,   VK_INDEX_TYPE_UINT16
-    ) ;
+//     VkBuffer vertex_buffers[] = { vc->vertex_buffer_} ;
+//     VkDeviceSize offsets[] = { 0 } ;
+
+//     // void vkCmdBindVertexBuffers(
+//     //     VkCommandBuffer                             commandBuffer,
+//     //     uint32_t                                    firstBinding,
+//     //     uint32_t                                    bindingCount,
+//     //     const VkBuffer*                             pBuffers,
+//     //     const VkDeviceSize*                         pOffsets);
+//     vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, offsets) ;
 
 
-    static VkViewport viewport = { 0 } ;
-    viewport.x          = 0.0f ;
-    viewport.y          = 0.0f ;
-    viewport.width      = (float) vc->swapchain_extent_.width ;
-    viewport.height     = (float) vc->swapchain_extent_.height ;
-    viewport.minDepth   = 0.0f ;
-    viewport.maxDepth   = 1.0f ;
-
-    // void vkCmdSetViewport(
-    //     VkCommandBuffer                             commandBuffer,
-    //     uint32_t                                    firstViewport,
-    //     uint32_t                                    viewportCount,
-    //     const VkViewport*                           pViewports);
-    vkCmdSetViewport(command_buffer, 0, 1, &viewport) ;
+//     // void vkCmdBindIndexBuffer(
+//     //     VkCommandBuffer                             commandBuffer,
+//     //     VkBuffer                                    buffer,
+//     //     VkDeviceSize                                offset,
+//     //     VkIndexType                                 indexType);
+//     vkCmdBindIndexBuffer(
+//         command_buffer
+//     ,   vc->index_buffer_
+//     ,   0
+//     ,   VK_INDEX_TYPE_UINT16
+//     ) ;
 
 
-    static VkRect2D scissor = { 0 } ;
-    scissor.offset.x        = 0 ;
-    scissor.offset.y        = 0 ;
-    scissor.extent.width    = vc->swapchain_extent_.width ;
-    scissor.extent.height   = vc->swapchain_extent_.height ;
+//     static VkViewport viewport = { 0 } ;
+//     viewport.x          = 0.0f ;
+//     viewport.y          = 0.0f ;
+//     viewport.width      = (float) vc->swapchain_extent_.width ;
+//     viewport.height     = (float) vc->swapchain_extent_.height ;
+//     viewport.minDepth   = 0.0f ;
+//     viewport.maxDepth   = 1.0f ;
 
-    // void vkCmdSetScissor(
-    //     VkCommandBuffer                             commandBuffer,
-    //     uint32_t                                    firstScissor,
-    //     uint32_t                                    scissorCount,
-    //     const VkRect2D*                             pScissors);
-    vkCmdSetScissor(command_buffer, 0, 1, &scissor) ;
+//     // void vkCmdSetViewport(
+//     //     VkCommandBuffer                             commandBuffer,
+//     //     uint32_t                                    firstViewport,
+//     //     uint32_t                                    viewportCount,
+//     //     const VkViewport*                           pViewports);
+//     vkCmdSetViewport(command_buffer, 0, 1, &viewport) ;
 
-    // // void vkCmdDraw(
-    // //     VkCommandBuffer                             commandBuffer,
-    // //     uint32_t                                    vertexCount,
-    // //     uint32_t                                    instanceCount,
-    // //     uint32_t                                    firstVertex,
-    // //     uint32_t                                    firstInstance);
-    // vkCmdDraw(command_buffer, vertices_count, 1, 0, 0) ;
 
-    // void vkCmdBindDescriptorSets(
-    //     VkCommandBuffer                             commandBuffer,
-    //     VkPipelineBindPoint                         pipelineBindPoint,
-    //     VkPipelineLayout                            layout,
-    //     uint32_t                                    firstSet,
-    //     uint32_t                                    descriptorSetCount,
-    //     const VkDescriptorSet*                      pDescriptorSets,
-    //     uint32_t                                    dynamicOffsetCount,
-    //     const uint32_t*                             pDynamicOffsets);
-    // away
-    // vkCmdBindDescriptorSets(
-    //     command_buffer
-    // ,   VK_PIPELINE_BIND_POINT_GRAPHICS
-    // ,   vc->pipeline_layout_
-    // ,   0
-    // ,   1
-    // ,   &vc->descriptor_sets_[vc->current_frame_]
-    // ,   0
-    // ,   NULL
-    // ) ;
+//     static VkRect2D scissor = { 0 } ;
+//     scissor.offset.x        = 0 ;
+//     scissor.offset.y        = 0 ;
+//     scissor.extent.width    = vc->swapchain_extent_.width ;
+//     scissor.extent.height   = vc->swapchain_extent_.height ;
 
-    // void vkCmdDrawIndexed(
-    //     VkCommandBuffer                             commandBuffer,
-    //     uint32_t                                    indexCount,
-    //     uint32_t                                    instanceCount,
-    //     uint32_t                                    firstIndex,
-    //     int32_t                                     vertexOffset,
-    //     uint32_t                                    firstInstance);
-    vkCmdDrawIndexed(command_buffer, indices_count, 1, 0, 0, 0) ;
+//     // void vkCmdSetScissor(
+//     //     VkCommandBuffer                             commandBuffer,
+//     //     uint32_t                                    firstScissor,
+//     //     uint32_t                                    scissorCount,
+//     //     const VkRect2D*                             pScissors);
+//     vkCmdSetScissor(command_buffer, 0, 1, &scissor) ;
 
-    // void vkCmdEndRenderPass(
-    //     VkCommandBuffer                             commandBuffer);
-    vkCmdEndRenderPass(command_buffer) ;
+//     // // void vkCmdDraw(
+//     // //     VkCommandBuffer                             commandBuffer,
+//     // //     uint32_t                                    vertexCount,
+//     // //     uint32_t                                    instanceCount,
+//     // //     uint32_t                                    firstVertex,
+//     // //     uint32_t                                    firstInstance);
+//     // vkCmdDraw(command_buffer, vertices_count, 1, 0, 0) ;
 
-    // VkResult vkEndCommandBuffer(
-    //     VkCommandBuffer                             commandBuffer);
-    if(check_vulkan(vkEndCommandBuffer(command_buffer)))
-    {
-        end_timed_block() ;
-        return false ;
-    }
+//     // void vkCmdBindDescriptorSets(
+//     //     VkCommandBuffer                             commandBuffer,
+//     //     VkPipelineBindPoint                         pipelineBindPoint,
+//     //     VkPipelineLayout                            layout,
+//     //     uint32_t                                    firstSet,
+//     //     uint32_t                                    descriptorSetCount,
+//     //     const VkDescriptorSet*                      pDescriptorSets,
+//     //     uint32_t                                    dynamicOffsetCount,
+//     //     const uint32_t*                             pDynamicOffsets);
+//     // away
+//     // vkCmdBindDescriptorSets(
+//     //     command_buffer
+//     // ,   VK_PIPELINE_BIND_POINT_GRAPHICS
+//     // ,   vc->pipeline_layout_
+//     // ,   0
+//     // ,   1
+//     // ,   &vc->descriptor_sets_[vc->current_frame_]
+//     // ,   0
+//     // ,   NULL
+//     // ) ;
 
-    end_timed_block() ;
-    return true ;
+//     // void vkCmdDrawIndexed(
+//     //     VkCommandBuffer                             commandBuffer,
+//     //     uint32_t                                    indexCount,
+//     //     uint32_t                                    instanceCount,
+//     //     uint32_t                                    firstIndex,
+//     //     int32_t                                     vertexOffset,
+//     //     uint32_t                                    firstInstance);
+//     vkCmdDrawIndexed(command_buffer, indices_count, 1, 0, 0, 0) ;
 
-}
+//     // void vkCmdEndRenderPass(
+//     //     VkCommandBuffer                             commandBuffer);
+//     vkCmdEndRenderPass(command_buffer) ;
+
+//     // VkResult vkEndCommandBuffer(
+//     //     VkCommandBuffer                             commandBuffer);
+//     if(check_vulkan(vkEndCommandBuffer(command_buffer)))
+//     {
+//         end_timed_block() ;
+//         return false ;
+//     }
+
+//     end_timed_block() ;
+//     return true ;
+
+// }
 
 
 static bool
@@ -6454,7 +6453,15 @@ draw_frame(
         return true ;
     }
 
-    update_uniform_buffer(vc, vc->current_frame_) ;
+    //update_uniform_buffer(vc, vc->current_frame_) ;
+
+    vc->image_index_ = image_index ;
+
+    if(check(update_rob(vc)))
+    {
+        end_timed_block() ;
+        return false ;
+    }
 
     // VkResult vkResetFences(
     //     VkDevice                                    device,
@@ -6472,33 +6479,37 @@ draw_frame(
         return false ;
     }
 
-
-
-    // VkResult vkResetCommandBuffer(
-    //     VkCommandBuffer                             commandBuffer,
-    //     VkCommandBufferResetFlags                   flags);
-    if(check_vulkan(vkResetCommandBuffer(
-                vc->command_buffer_[vc->current_frame_]
-            ,   0
-            )
-        )
-    )
+    if(check(draw_rob(vc)))
     {
         end_timed_block() ;
         return false ;
     }
 
-    if(check(record_command_buffer(
-                vc
-            ,   vc->command_buffer_[vc->current_frame_]
-            ,   image_index
-            )
-        )
-    )
-    {
-        end_timed_block() ;
-        return false ;
-    }
+    // // VkResult vkResetCommandBuffer(
+    // //     VkCommandBuffer                             commandBuffer,
+    // //     VkCommandBufferResetFlags                   flags);
+    // if(check_vulkan(vkResetCommandBuffer(
+    //             vc->command_buffer_[vc->current_frame_]
+    //         ,   0
+    //         )
+    //     )
+    // )
+    // {
+    //     end_timed_block() ;
+    //     return false ;
+    // }
+
+    // if(check(record_command_buffer(
+    //             vc
+    //         ,   vc->command_buffer_[vc->current_frame_]
+    //         ,   image_index
+    //         )
+    //     )
+    // )
+    // {
+    //     end_timed_block() ;
+    //     return false ;
+    // }
 
 
     VkSemaphore wait_semaphores[] = {
@@ -8398,11 +8409,11 @@ create_vulkan()
     }
 
 
-    if(check(create_graphics_pipeline(vc_)))
-    {
-        end_timed_block() ;
-        return false ;
-    }
+    // if(check(create_graphics_pipeline(vc_)))
+    // {
+    //     end_timed_block() ;
+    //     return false ;
+    // }
 
     // if(check(create_vertex_buffer(
     //             &vc_->vertex_buffer_
@@ -8653,6 +8664,8 @@ add_descriptor_pool_size(
     VkDescriptorPoolSize * dps = &pool_sizes[idx] ;
     dps->type            = descriptor_type ;
     dps->descriptorCount = frames_in_flight_count ;
+
+    ++ *pool_sizes_count ;
 
     end_timed_block() ;
 }
@@ -9190,9 +9203,9 @@ add_descriptor_buffer_info(
     )
     {
         require(buffers[i]) ;
-        uint32_t const idx = *descriptor_buffer_infos_count ;
-        require(idx < max_vulkan_frames_in_flight) ;
-        require(idx < frames_in_flight_count) ;
+        uint32_t const idx = i * descriptor_buffer_infos_count_max + *descriptor_buffer_infos_count ;
+        require(idx < descriptor_buffer_infos_count_max * max_vulkan_frames_in_flight) ;
+        require(idx < descriptor_buffer_infos_count_max * frames_in_flight_count) ;
 
         // typedef struct VkDescriptorBufferInfo {
         //     VkBuffer        buffer;
@@ -9235,9 +9248,9 @@ add_descriptor_image_info(
     ;   ++i
     )
     {
-        uint32_t const idx = *descriptor_image_infos_count ;
-        require(idx < max_vulkan_frames_in_flight) ;
-        require(idx < frames_in_flight_count) ;
+        uint32_t const idx = i * descriptor_image_infos_count_max + *descriptor_image_infos_count ;
+        require(idx < descriptor_image_infos_count_max * max_vulkan_frames_in_flight) ;
+        require(idx < descriptor_image_infos_count_max * frames_in_flight_count) ;
 
         // typedef struct VkDescriptorImageInfo {
         //     VkSampler        sampler;
@@ -9292,7 +9305,7 @@ add_write_descriptor_buffer_set(
     {
         require(descriptor_sets[i]) ;
 
-        uint32_t const wds_idx = i * write_descriptor_sets_count_max * *write_descriptor_sets_count ;
+        uint32_t const wds_idx = i * write_descriptor_sets_count_max + *write_descriptor_sets_count ;
         require(wds_idx < write_descriptor_sets_count_max * max_vulkan_frames_in_flight) ;
         require(wds_idx < write_descriptor_sets_count_max * frames_in_flight_count) ;
         VkWriteDescriptorSet *  wds = &write_descriptor_sets[wds_idx] ;
@@ -9366,7 +9379,7 @@ add_write_descriptor_image_set(
     {
         require(descriptor_sets[i]) ;
 
-        uint32_t const wds_idx = i * write_descriptor_sets_count_max * *write_descriptor_sets_count ;
+        uint32_t const wds_idx = i * write_descriptor_sets_count_max + *write_descriptor_sets_count ;
         require(wds_idx < write_descriptor_sets_count_max * max_vulkan_frames_in_flight) ;
         require(wds_idx < write_descriptor_sets_count_max * frames_in_flight_count) ;
         VkWriteDescriptorSet *  wds = &write_descriptor_sets[wds_idx] ;
@@ -9428,6 +9441,7 @@ update_descriptor_sets(
     )
     {
         uint32_t const idx = i * write_descriptor_sets_count_max ;
+        //uint32_t const idx = 0 ; // i * write_descriptor_sets_count_max ;
 
         // void vkUpdateDescriptorSets(
         //     VkDevice                                    device,
@@ -9637,7 +9651,7 @@ create_index_buffer(
     }
     require(data) ;
 
-    SDL_memcpy(data, indices, buffer_size) ;
+    SDL_memcpy(data, ibo_data, buffer_size) ;
 
     // void vkUnmapMemory(
     //     VkDevice                                    device,
@@ -9732,4 +9746,607 @@ load_shader_file(
 
     end_timed_block() ;
     return true ;
+}
+
+
+void
+add_pipeline_shader_stage_create_info(
+    VkPipelineShaderStageCreateInfo *   pipeline_shader_stage_create_infos
+,   uint32_t *                          pipeline_shader_stage_create_infos_count
+,   uint32_t const                      pipeline_shader_stage_create_infos_count_max
+,   VkShaderModule const                shader_module
+,   VkShaderStageFlagBits const         stage_flag_bits
+)
+{
+    require(pipeline_shader_stage_create_infos) ;
+    require(pipeline_shader_stage_create_infos_count) ;
+    require(*pipeline_shader_stage_create_infos_count < pipeline_shader_stage_create_infos_count_max) ;
+    begin_timed_block() ;
+
+    uint32_t const idx = *pipeline_shader_stage_create_infos_count ;
+
+    // typedef struct VkPipelineShaderStageCreateInfo {
+    //     VkStructureType                     sType;
+    //     const void*                         pNext;
+    //     VkPipelineShaderStageCreateFlags    flags;
+    //     VkShaderStageFlagBits               stage;
+    //     VkShaderModule                      module;
+    //     const char*                         pName;
+    //     const VkSpecializationInfo*         pSpecializationInfo;
+    // } VkPipelineShaderStageCreateInfo;
+    VkPipelineShaderStageCreateInfo * pssci = &pipeline_shader_stage_create_infos[idx] ;
+    pssci->sType                 = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO ;
+    pssci->pNext                 = NULL ;
+    pssci->flags                 = 0 ;
+    pssci->stage                 = stage_flag_bits ;
+    pssci->module                = shader_module ;
+    pssci->pName                 = "main" ;
+    pssci->pSpecializationInfo   = NULL ;
+
+    ++ *pipeline_shader_stage_create_infos_count ;
+    end_timed_block() ;
+}
+
+
+void
+fill_vertex_input_binding_description(
+    VkVertexInputBindingDescription *   vertex_input_binding_description
+,   uint32_t const                      binding
+,   uint32_t const                      stride
+)
+{
+    require(vertex_input_binding_description) ;
+    begin_timed_block() ;
+
+    // typedef struct VkVertexInputBindingDescription {
+    //     uint32_t             binding;
+    //     uint32_t             stride;
+    //     VkVertexInputRate    inputRate;
+    // } VkVertexInputBindingDescription;
+    vertex_input_binding_description->binding     = binding ;
+    vertex_input_binding_description->stride      = stride ;
+    vertex_input_binding_description->inputRate   = VK_VERTEX_INPUT_RATE_VERTEX ;
+
+    end_timed_block() ;
+}
+
+
+void
+add_vertex_input_attribute_description(
+    VkVertexInputAttributeDescription * vertex_input_attribute_descriptions
+,   uint32_t *                          vertex_input_attribute_descriptions_count
+,   uint32_t const                      vertex_input_attribute_descriptions_count_max
+,   uint32_t const                      location
+,   uint32_t const                      binding
+,   VkFormat const                      format
+,   uint32_t const                      offset
+)
+{
+    require(vertex_input_attribute_descriptions) ;
+    require(vertex_input_attribute_descriptions_count) ;
+    require(*vertex_input_attribute_descriptions_count < vertex_input_attribute_descriptions_count_max) ;
+    begin_timed_block() ;
+
+    uint32_t const idx = *vertex_input_attribute_descriptions_count ;
+    VkVertexInputAttributeDescription * viad = &vertex_input_attribute_descriptions[idx] ;
+    viad->location    = location ;
+    viad->binding     = binding ;
+    viad->format      = format ;
+    viad->offset      = offset ;
+
+    ++ *vertex_input_attribute_descriptions_count ;
+
+    end_timed_block() ;
+}
+
+
+void
+fill_pipeline_vertex_input_state_create_info(
+    VkPipelineVertexInputStateCreateInfo *      pvisci
+,   VkVertexInputBindingDescription const *     vertex_input_binding_description
+,   VkVertexInputAttributeDescription const *   vertex_input_attribute_descriptions
+,   uint32_t const                              vertex_input_attribute_descriptions_count
+)
+{
+    require(pvisci) ;
+    begin_timed_block() ;
+
+    // typedef struct VkPipelineVertexInputStateCreateInfo {
+    //     VkStructureType                             sType;
+    //     const void*                                 pNext;
+    //     VkPipelineVertexInputStateCreateFlags       flags;
+    //     uint32_t                                    vertexBindingDescriptionCount;
+    //     const VkVertexInputBindingDescription*      pVertexBindingDescriptions;
+    //     uint32_t                                    vertexAttributeDescriptionCount;
+    //     const VkVertexInputAttributeDescription*    pVertexAttributeDescriptions;
+    // } VkPipelineVertexInputStateCreateInfo;
+    pvisci->sType                            = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO ;
+    pvisci->pNext                            = NULL ;
+    pvisci->flags                            = 0 ;
+    pvisci->vertexBindingDescriptionCount    = 1 ;
+    pvisci->pVertexBindingDescriptions       = vertex_input_binding_description ;
+    pvisci->vertexAttributeDescriptionCount  = vertex_input_attribute_descriptions_count ;
+    pvisci->pVertexAttributeDescriptions     = vertex_input_attribute_descriptions ;
+
+    end_timed_block() ;
+}
+
+
+void
+fill_pipeline_input_assembly_state_create_info(
+    VkPipelineInputAssemblyStateCreateInfo *    piasci
+,   VkPrimitiveTopology const                   topology
+,   VkBool32 const                              restart_enable
+)
+{
+    require(piasci) ;
+    begin_timed_block() ;
+    // typedef struct VkPipelineInputAssemblyStateCreateInfo {
+    //     VkStructureType                            sType;
+    //     const void*                                pNext;
+    //     VkPipelineInputAssemblyStateCreateFlags    flags;
+    //     VkPrimitiveTopology                        topology;
+    //     VkBool32                                   primitiveRestartEnable;
+    // } VkPipelineInputAssemblyStateCreateInfo;
+    piasci->sType                    = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO ;
+    piasci->pNext                    = NULL ;
+    piasci->flags                    = 0 ;
+    piasci->topology                 = topology ;
+    piasci->primitiveRestartEnable   = restart_enable ;
+
+    end_timed_block() ;
+}
+
+
+
+void
+fill_viewport(
+    VkViewport *    viewport
+,   float const     left
+,   float const     top
+,   float const     width
+,   float const     height
+,   float const     min_depth
+,   float const     max_depth
+)
+{
+    require(viewport) ;
+    begin_timed_block() ;
+
+    // typedef struct VkViewport {
+    //     float    x;
+    //     float    y;
+    //     float    width;
+    //     float    height;
+    //     float    minDepth;
+    //     float    maxDepth;
+    // } VkViewport;
+    viewport->x         = left ;
+    viewport->y         = top ;
+    viewport->width     = width ;
+    viewport->height    = height ;
+    viewport->minDepth  = min_depth ;
+    viewport->maxDepth  = max_depth ;
+    end_timed_block() ;
+}
+
+
+void
+fill_scissor(
+    VkRect2D *      scissor
+,   int32_t const   left
+,   int32_t const   top
+,   uint32_t const  width
+,   uint32_t const  height
+)
+{
+    require(scissor) ;
+    begin_timed_block() ;
+    // typedef struct VkRect2D {
+    //     VkOffset2D    offset;
+    //     VkExtent2D    extent;
+    // } VkRect2D;
+    // typedef struct VkOffset2D {
+    //     int32_t    x;
+    //     int32_t    y;
+    // } VkOffset2D;
+    // typedef struct VkExtent2D {
+    //     uint32_t    width;
+    //     uint32_t    height;
+    // } VkExtent2D;
+    // static VkRect2D scissor = { 0 } ;
+    scissor->offset.x        = left ;
+    scissor->offset.y        = top ;
+    scissor->extent.width    = width ;
+    scissor->extent.height   = height ;
+    end_timed_block() ;
+}
+
+
+void
+fill_pipeline_viewport_state_create_info(
+    VkPipelineViewportStateCreateInfo * pvsci
+,   VkViewport const *                  viewport
+,   VkRect2D const *                    scissor
+)
+{
+    require(pvsci) ;
+    require(viewport) ;
+    require(scissor) ;
+    begin_timed_block() ;
+
+    // typedef struct VkPipelineViewportStateCreateInfo {
+    //     VkStructureType                       sType;
+    //     const void*                           pNext;
+    //     VkPipelineViewportStateCreateFlags    flags;
+    //     uint32_t                              viewportCount;
+    //     const VkViewport*                     pViewports;
+    //     uint32_t                              scissorCount;
+    //     const VkRect2D*                       pScissors;
+    // } VkPipelineViewportStateCreateInfo;
+    pvsci->sType             = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO ;
+    pvsci->pNext             = NULL ;
+    pvsci->flags             = 0 ;
+    pvsci->viewportCount     = 1 ;
+    pvsci->pViewports        = viewport ;
+    pvsci->scissorCount      = 1 ;
+    pvsci->pScissors         = scissor ;
+
+    end_timed_block() ;
+}
+
+
+void
+add_to_dynamic_state(
+    VkDynamicState *        dynamic_states
+,   uint32_t *              dynamic_states_count
+,   uint32_t const          dynamic_states_count_max
+,   VkDynamicState const    state
+)
+{
+    require(dynamic_states) ;
+    require(dynamic_states_count) ;
+    require(*dynamic_states_count < dynamic_states_count_max) ;
+    begin_timed_block() ;
+    dynamic_states[*dynamic_states_count] = state ;
+    ++ *dynamic_states_count ;
+    end_timed_block() ;
+}
+
+
+void
+fill_pipeline_dynamic_state_create_info(
+    VkPipelineDynamicStateCreateInfo *  pdsci
+,   VkDynamicState const *              dynamic_states
+,   uint32_t const                      dynamic_states_count
+)
+{
+    require(pdsci) ;
+
+    begin_timed_block() ;
+    // typedef struct VkPipelineDynamicStateCreateInfo {
+    //     VkStructureType                      sType;
+    //     const void*                          pNext;
+    //     VkPipelineDynamicStateCreateFlags    flags;
+    //     uint32_t                             dynamicStateCount;
+    //     const VkDynamicState*                pDynamicStates;
+    // } VkPipelineDynamicStateCreateInfo;
+    pdsci->sType                 = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO ;
+    pdsci->pNext                 = NULL ;
+    pdsci->flags                 = 0 ;
+    pdsci->dynamicStateCount     = dynamic_states_count ;
+    pdsci->pDynamicStates        = dynamic_states ;
+
+    end_timed_block() ;
+}
+
+
+void
+fill_pipeline_rasterization_state_create_info(
+    VkPipelineRasterizationStateCreateInfo *    prsci
+,   VkPolygonMode const                         polygon_mode
+,   VkCullModeFlags const                       cull_mode_flags
+,   VkFrontFace const                           front_face
+)
+{
+    require(prsci) ;
+    begin_timed_block() ;
+    // typedef struct VkPipelineRasterizationStateCreateInfo {
+    //     VkStructureType                            sType;
+    //     const void*                                pNext;
+    //     VkPipelineRasterizationStateCreateFlags    flags;
+    //     VkBool32                                   depthClampEnable;
+    //     VkBool32                                   rasterizerDiscardEnable;
+    //     VkPolygonMode                              polygonMode;
+    //     VkCullModeFlags                            cullMode;
+    //     VkFrontFace                                frontFace;
+    //     VkBool32                                   depthBiasEnable;
+    //     float                                      depthBiasConstantFactor;
+    //     float                                      depthBiasClamp;
+    //     float                                      depthBiasSlopeFactor;
+    //     float                                      lineWidth;
+    // } VkPipelineRasterizationStateCreateInfo;
+    prsci->sType                     = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO ;
+    prsci->pNext                     = NULL ;
+    prsci->flags                     = 0 ;
+    prsci->depthClampEnable          = VK_FALSE ;
+    prsci->rasterizerDiscardEnable   = VK_FALSE ;
+    prsci->polygonMode               = polygon_mode ;
+    prsci->cullMode                  = cull_mode_flags ;
+    prsci->frontFace                 = front_face ;
+    prsci->depthBiasEnable           = VK_FALSE ;
+    prsci->depthBiasConstantFactor   = 0.0f ;
+    prsci->depthBiasClamp            = 0.0f ;
+    prsci->depthBiasSlopeFactor      = 0.0f ;
+    prsci->lineWidth                 = 1.0f ;
+
+    end_timed_block() ;
+}
+
+
+void
+fill_pipeline_multisample_state_create_info(
+    VkPipelineMultisampleStateCreateInfo *  pmssci
+,   VkBool32 const                          enable_sampling
+,   VkSampleCountFlagBits const             sampling_count
+,   VkBool32 const                          enable_sampling_in_shader
+,   float const                             sampling_in_shader_count
+)
+{
+    require(pmssci) ;
+    begin_timed_block() ;
+
+    // typedef struct VkPipelineMultisampleStateCreateInfo {
+    //     VkStructureType                          sType;
+    //     const void*                              pNext;
+    //     VkPipelineMultisampleStateCreateFlags    flags;
+    //     VkSampleCountFlagBits                    rasterizationSamples;
+    //     VkBool32                                 sampleShadingEnable;
+    //     float                                    minSampleShading;
+    //     const VkSampleMask*                      pSampleMask;
+    //     VkBool32                                 alphaToCoverageEnable;
+    //     VkBool32                                 alphaToOneEnable;
+    // } VkPipelineMultisampleStateCreateInfo;
+    pmssci->sType                    = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO ;
+    pmssci->pNext                    = NULL ;
+    pmssci->flags                    = 0 ;
+    if(enable_sampling)
+    {
+        pmssci->rasterizationSamples = sampling_count ;
+    }
+    else
+    {
+        pmssci->rasterizationSamples = VK_SAMPLE_COUNT_1_BIT ;
+    }
+    if(enable_sampling_in_shader)
+    {
+        pmssci->sampleShadingEnable  = enable_sampling_in_shader ;
+        pmssci->minSampleShading     = sampling_in_shader_count ;
+    }
+    else
+    {
+        pmssci->sampleShadingEnable  = VK_FALSE ;
+        pmssci->minSampleShading     = 1.0f ;
+    }
+    pmssci->pSampleMask              = NULL ;
+    pmssci->alphaToCoverageEnable    = VK_FALSE ;
+    pmssci->alphaToOneEnable         = VK_FALSE ;
+
+    end_timed_block() ;
+}
+
+
+void
+fill_pipeline_color_blend_attachment_state(
+    VkPipelineColorBlendAttachmentState *   pcbas
+,   VkBool32 const                          enable_blending
+)
+{
+    require(pcbas) ;
+    begin_timed_block() ;
+    // typedef struct VkPipelineColorBlendAttachmentState {
+    //     VkBool32                 blendEnable;
+    //     VkBlendFactor            srcColorBlendFactor;
+    //     VkBlendFactor            dstColorBlendFactor;
+    //     VkBlendOp                colorBlendOp;
+    //     VkBlendFactor            srcAlphaBlendFactor;
+    //     VkBlendFactor            dstAlphaBlendFactor;
+    //     VkBlendOp                alphaBlendOp;
+    //     VkColorComponentFlags    colorWriteMask;
+    // } VkPipelineColorBlendAttachmentState;
+    if(enable_blending)
+    {
+        // transparency
+        pcbas->blendEnable           = VK_TRUE ;
+        pcbas->srcColorBlendFactor   = VK_BLEND_FACTOR_SRC_ALPHA ;
+        pcbas->dstColorBlendFactor   = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA ;
+        pcbas->colorBlendOp          = VK_BLEND_OP_ADD ;
+        pcbas->srcAlphaBlendFactor   = VK_BLEND_FACTOR_ONE ;
+        pcbas->dstAlphaBlendFactor   = VK_BLEND_FACTOR_ZERO ;
+        pcbas->alphaBlendOp          = VK_BLEND_OP_ADD ;
+        pcbas->colorWriteMask        = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT ;
+    }
+    else
+    {
+        pcbas->blendEnable           = VK_FALSE ;
+        pcbas->srcColorBlendFactor   = VK_BLEND_FACTOR_ONE ;
+        pcbas->dstColorBlendFactor   = VK_BLEND_FACTOR_ZERO ;
+        pcbas->colorBlendOp          = VK_BLEND_OP_ADD ;
+        pcbas->srcAlphaBlendFactor   = VK_BLEND_FACTOR_ONE ;
+        pcbas->dstAlphaBlendFactor   = VK_BLEND_FACTOR_ZERO ;
+        pcbas->alphaBlendOp          = VK_BLEND_OP_ADD ;
+        pcbas->colorWriteMask        = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT ;
+    }
+
+    end_timed_block() ;
+}
+
+
+void
+fill_pipeline_color_blend_state_create_info(
+    VkPipelineColorBlendStateCreateInfo *       pcbsci
+,   VkBool32 const                              logic_op_enable
+,   VkLogicOp const                             logic_op
+,   VkPipelineColorBlendAttachmentState const * attachement
+)
+{
+    require(pcbsci) ;
+    begin_timed_block() ;
+    // typedef struct VkPipelineColorBlendStateCreateInfo {
+    //     VkStructureType                               sType;
+    //     const void*                                   pNext;
+    //     VkPipelineColorBlendStateCreateFlags          flags;
+    //     VkBool32                                      logicOpEnable;
+    //     VkLogicOp                                     logicOp;
+    //     uint32_t                                      attachmentCount;
+    //     const VkPipelineColorBlendAttachmentState*    pAttachments;
+    //     float                                         blendConstants[4];
+    // } VkPipelineColorBlendStateCreateInfo;
+    pcbsci->sType                = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO ;
+    pcbsci->pNext                = NULL ;
+    pcbsci->flags                = 0 ;
+    pcbsci->logicOpEnable        = logic_op_enable ;
+    pcbsci->logicOp              = logic_op ;
+    pcbsci->attachmentCount      = 1 ;
+    pcbsci->pAttachments         = attachement ;
+    pcbsci->blendConstants[0]    = 0.0f ;
+    pcbsci->blendConstants[1]    = 0.0f ;
+    pcbsci->blendConstants[2]    = 0.0f ;
+    pcbsci->blendConstants[3]    = 0.0f ;
+    end_timed_block() ;
+}
+
+
+void
+fill_pipeline_depth_stencil_state_create_info(
+    VkPipelineDepthStencilStateCreateInfo * pdssci
+,   VkBool32 const                          enable_depth_test
+,   VkBool32 const                          enable_depth_write
+,   VkCompareOp const                       compare_op
+)
+{
+    require(pdssci) ;
+    begin_timed_block() ;
+
+    // typedef struct VkPipelineDepthStencilStateCreateInfo {
+    //     VkStructureType                           sType;
+    //     const void*                               pNext;
+    //     VkPipelineDepthStencilStateCreateFlags    flags;
+    //     VkBool32                                  depthTestEnable;
+    //     VkBool32                                  depthWriteEnable;
+    //     VkCompareOp                               depthCompareOp;
+    //     VkBool32                                  depthBoundsTestEnable;
+    //     VkBool32                                  stencilTestEnable;
+    //     VkStencilOpState                          front;
+    //     VkStencilOpState                          back;
+    //     float                                     minDepthBounds;
+    //     float                                     maxDepthBounds;
+    // } VkPipelineDepthStencilStateCreateInfo;
+    // typedef struct VkStencilOpState {
+    //     VkStencilOp    failOp;
+    //     VkStencilOp    passOp;
+    //     VkStencilOp    depthFailOp;
+    //     VkCompareOp    compareOp;
+    //     uint32_t       compareMask;
+    //     uint32_t       writeMask;
+    //     uint32_t       reference;
+    // } VkStencilOpState;
+    // typedef enum VkStencilOp {
+    //     VK_STENCIL_OP_KEEP = 0,
+    //     VK_STENCIL_OP_ZERO = 1,
+    //     VK_STENCIL_OP_REPLACE = 2,
+    //     VK_STENCIL_OP_INCREMENT_AND_CLAMP = 3,
+    //     VK_STENCIL_OP_DECREMENT_AND_CLAMP = 4,
+    //     VK_STENCIL_OP_INVERT = 5,
+    //     VK_STENCIL_OP_INCREMENT_AND_WRAP = 6,
+    //     VK_STENCIL_OP_DECREMENT_AND_WRAP = 7,
+    // } VkStencilOp;
+    pdssci->sType                    = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO ;
+    pdssci->pNext                    = NULL ;
+    pdssci->flags                    = 0 ;
+    pdssci->depthTestEnable          = enable_depth_test ;
+    pdssci->depthWriteEnable         = enable_depth_write ;
+    pdssci->depthCompareOp           = compare_op ;
+    pdssci->depthBoundsTestEnable    = VK_FALSE ;
+    pdssci->stencilTestEnable        = VK_FALSE ;
+    pdssci->front.failOp             = 0 ;
+    pdssci->front.passOp             = 0 ;
+    pdssci->front.depthFailOp        = 0 ;
+    pdssci->front.compareOp          = 0 ;
+    pdssci->front.compareMask        = 0 ;
+    pdssci->front.writeMask          = 0 ;
+    pdssci->front.reference          = 0 ;
+    pdssci->back.failOp              = 0 ;
+    pdssci->back.passOp              = 0 ;
+    pdssci->back.depthFailOp         = 0 ;
+    pdssci->back.compareOp           = 0 ;
+    pdssci->back.compareMask         = 0 ;
+    pdssci->back.writeMask           = 0 ;
+    pdssci->back.reference           = 0 ;
+    pdssci->minDepthBounds           = 0.0f ;
+    pdssci->maxDepthBounds           = 1.0f ;
+    end_timed_block() ;
+}
+
+
+void
+fill_graphics_pipeline_create_info(
+    VkGraphicsPipelineCreateInfo *                  gpci
+,   VkPipelineLayout const                          pipeline_layout
+,   VkRenderPass const                              render_pass
+,   VkPipelineShaderStageCreateInfo const *         pipeline_shader_stage_create_infos
+,   uint32_t const                                  pipeline_shader_stage_create_infos_count
+,   VkPipelineVertexInputStateCreateInfo const *    pipeline_vertex_input_state_create_info
+,   VkPipelineInputAssemblyStateCreateInfo const *  pipeline_input_assembly_state_create_info
+,   VkPipelineViewportStateCreateInfo const *       pipeline_viewport_state_create_info
+,   VkPipelineRasterizationStateCreateInfo const *  pipeline_rasterization_state_create_info
+,   VkPipelineMultisampleStateCreateInfo const *    pipeline_multisample_state_create_info
+,   VkPipelineDepthStencilStateCreateInfo const *   pipeline_depth_stencil_state_create_info
+,   VkPipelineColorBlendStateCreateInfo const *     pipeline_color_blend_state_create_info
+,   VkPipelineDynamicStateCreateInfo const *        pipeline_dynamic_state_create_info
+)
+{
+    require(gpci) ;
+    begin_timed_block() ;
+    // typedef struct VkGraphicsPipelineCreateInfo {
+    //     VkStructureType                                  sType;
+    //     const void*                                      pNext;
+    //     VkPipelineCreateFlags                            flags;
+    //     uint32_t                                         stageCount;
+    //     const VkPipelineShaderStageCreateInfo*           pStages;
+    //     const VkPipelineVertexInputStateCreateInfo*      pVertexInputState;
+    //     const VkPipelineInputAssemblyStateCreateInfo*    pInputAssemblyState;
+    //     const VkPipelineTessellationStateCreateInfo*     pTessellationState;
+    //     const VkPipelineViewportStateCreateInfo*         pViewportState;
+    //     const VkPipelineRasterizationStateCreateInfo*    pRasterizationState;
+    //     const VkPipelineMultisampleStateCreateInfo*      pMultisampleState;
+    //     const VkPipelineDepthStencilStateCreateInfo*     pDepthStencilState;
+    //     const VkPipelineColorBlendStateCreateInfo*       pColorBlendState;
+    //     const VkPipelineDynamicStateCreateInfo*          pDynamicState;
+    //     VkPipelineLayout                                 layout;
+    //     VkRenderPass                                     renderPass;
+    //     uint32_t                                         subpass;
+    //     VkPipeline                                       basePipelineHandle;
+    //     int32_t                                          basePipelineIndex;
+    // } VkGraphicsPipelineCreateInfo;
+    gpci->sType                  = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO ;
+    gpci->pNext                  = NULL ;
+    gpci->flags                  = 0 ;
+    gpci->stageCount             = pipeline_shader_stage_create_infos_count ;
+    gpci->pStages                = pipeline_shader_stage_create_infos ;
+    gpci->pVertexInputState      = pipeline_vertex_input_state_create_info ;
+    gpci->pInputAssemblyState    = pipeline_input_assembly_state_create_info ;
+    gpci->pTessellationState     = NULL ;
+    gpci->pViewportState         = pipeline_viewport_state_create_info ;
+    gpci->pRasterizationState    = pipeline_rasterization_state_create_info ;
+    gpci->pMultisampleState      = pipeline_multisample_state_create_info ;
+    gpci->pDepthStencilState     = pipeline_depth_stencil_state_create_info ;
+    gpci->pColorBlendState       = pipeline_color_blend_state_create_info ;
+    gpci->pDynamicState          = pipeline_dynamic_state_create_info ;
+    gpci->layout                 = pipeline_layout ;
+    gpci->renderPass             = render_pass ;
+    gpci->subpass                = 0 ;
+    gpci->basePipelineHandle     = VK_NULL_HANDLE ;
+    gpci->basePipelineIndex      = -1 ;
+    end_timed_block() ;
 }

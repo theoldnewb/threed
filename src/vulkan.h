@@ -18,6 +18,17 @@
 #define max_vulkan_frames_in_flight             4
 
 
+typedef struct vulkan_context vulkan_context ;
+
+
+
+typedef bool (fn_rob_func)(vulkan_context * vc, void * p) ;
+
+
+
+
+
+
 typedef struct vulkan_desired_format_properties
 {
     VkFormat            format_ ;
@@ -155,6 +166,7 @@ typedef struct vulkan_context
     VkSemaphore render_finished_semaphore_[max_vulkan_frames_in_flight] ;
     VkFence     in_flight_fence_[max_vulkan_frames_in_flight] ;
     uint32_t    current_frame_ ;
+    uint32_t    image_index_ ;
     VkBool32    resizing_ ;
 
     VkBuffer        vertex_buffer_ ;
@@ -189,6 +201,9 @@ typedef struct vulkan_context
     VkImage         color_image_ ;
     VkDeviceMemory  color_image_memory_ ;
     VkImageView     color_image_view_ ;
+
+
+    fn_rob_func *   draw_rob_ ;
 
 
 } vulkan_context ;
@@ -409,6 +424,162 @@ load_shader_file(
     VkShaderModule *    out_shader_module
 ,   VkDevice const      device
 ,   char const * const  shader_full_name
+) ;
+
+
+void
+add_pipeline_shader_stage_create_info(
+    VkPipelineShaderStageCreateInfo *   pipeline_shader_stage_create_infos
+,   uint32_t *                          pipeline_shader_stage_create_infos_count
+,   uint32_t const                      pipeline_shader_stage_create_infos_count_max
+,   VkShaderModule const                shader_module
+,   VkShaderStageFlagBits const         stage_flag_bits
+) ;
+
+
+void
+fill_vertex_input_binding_description(
+    VkVertexInputBindingDescription *   vertex_input_binding_description
+,   uint32_t const                      binding
+,   uint32_t const                      stride
+) ;
+
+
+void
+add_vertex_input_attribute_description(
+    VkVertexInputAttributeDescription * vertex_input_attribute_descriptions
+,   uint32_t *                          vertex_input_attribute_descriptions_count
+,   uint32_t const                      vertex_input_attribute_descriptions_count_max
+,   uint32_t const                      location
+,   uint32_t const                      binding
+,   VkFormat const                      format
+,   uint32_t const                      offset
+) ;
+
+
+void
+fill_pipeline_vertex_input_state_create_info(
+    VkPipelineVertexInputStateCreateInfo *      pvisci
+,   VkVertexInputBindingDescription const *     vertex_input_binding_description
+,   VkVertexInputAttributeDescription const *   vertex_input_attribute_descriptions
+,   uint32_t const                              vertex_input_attribute_descriptions_count
+) ;
+
+
+void
+fill_pipeline_input_assembly_state_create_info(
+    VkPipelineInputAssemblyStateCreateInfo *    piasci
+,   VkPrimitiveTopology const                   topology
+,   VkBool32 const                              restart_enable
+) ;
+
+
+void
+fill_viewport(
+    VkViewport *    viewport
+,   float const     left
+,   float const     top
+,   float const     width
+,   float const     height
+,   float const     min_depth
+,   float const     max_depth
+) ;
+
+
+void
+fill_scissor(
+    VkRect2D *      scissor
+,   int32_t const   left
+,   int32_t const   top
+,   uint32_t const  width
+,   uint32_t const  height
+) ;
+
+
+void
+fill_pipeline_viewport_state_create_info(
+    VkPipelineViewportStateCreateInfo * pvsci
+,   VkViewport const *                  viewport
+,   VkRect2D const *                    scissor
+) ;
+
+
+void
+add_to_dynamic_state(
+    VkDynamicState *        dynamic_states
+,   uint32_t *              dynamic_states_count
+,   uint32_t const          dynamic_states_count_max
+,   VkDynamicState const    state
+) ;
+
+
+void
+fill_pipeline_dynamic_state_create_info(
+    VkPipelineDynamicStateCreateInfo *  pdsci
+,   VkDynamicState const *              dynamic_states
+,   uint32_t const                      dynamic_states_count
+) ;
+
+
+void
+fill_pipeline_rasterization_state_create_info(
+    VkPipelineRasterizationStateCreateInfo *    prsci
+,   VkPolygonMode const                         polygon_mode
+,   VkCullModeFlags const                       cull_mode_flags
+,   VkFrontFace const                           front_face
+) ;
+
+
+void
+fill_pipeline_multisample_state_create_info(
+    VkPipelineMultisampleStateCreateInfo *  pmssci
+,   VkBool32 const                          enable_sampling
+,   VkSampleCountFlagBits const             sampling_count
+,   VkBool32 const                          enable_sampling_in_shader
+,   float const                             sampling_in_shader_count
+) ;
+
+
+void
+fill_pipeline_color_blend_attachment_state(
+    VkPipelineColorBlendAttachmentState *   pcbas
+,   VkBool32 const                          enable_blending
+) ;
+
+
+void
+fill_pipeline_color_blend_state_create_info(
+    VkPipelineColorBlendStateCreateInfo *       pcbsci
+,   VkBool32 const                              logic_op_enable
+,   VkLogicOp const                             logic_op
+,   VkPipelineColorBlendAttachmentState const * attachement
+) ;
+
+
+void
+fill_pipeline_depth_stencil_state_create_info(
+    VkPipelineDepthStencilStateCreateInfo * pdssci
+,   VkBool32 const                          enable_depth_test
+,   VkBool32 const                          enable_depth_write
+,   VkCompareOp const                       compare_op
+) ;
+
+
+void
+fill_graphics_pipeline_create_info(
+    VkGraphicsPipelineCreateInfo *                  gpci
+,   VkPipelineLayout const                          pipeline_layout
+,   VkRenderPass const                              render_pass
+,   VkPipelineShaderStageCreateInfo const *         pipeline_shader_stage_create_infos
+,   uint32_t const                                  pipeline_shader_stage_create_infos_count
+,   VkPipelineVertexInputStateCreateInfo const *    pipeline_vertex_input_state_create_info
+,   VkPipelineInputAssemblyStateCreateInfo const *  pipeline_input_assembly_state_create_info
+,   VkPipelineViewportStateCreateInfo const *       pipeline_viewport_state_create_info
+,   VkPipelineRasterizationStateCreateInfo const *  pipeline_rasterization_state_create_info
+,   VkPipelineMultisampleStateCreateInfo const *    pipeline_multisample_state_create_info
+,   VkPipelineDepthStencilStateCreateInfo const *   pipeline_depth_stencil_state_create_info
+,   VkPipelineColorBlendStateCreateInfo const *     pipeline_color_blend_state_create_info
+,   VkPipelineDynamicStateCreateInfo const *        pipeline_dynamic_state_create_info
 ) ;
 
 
