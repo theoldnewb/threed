@@ -5826,6 +5826,7 @@ create_render_pass(
     static VkAttachmentDescription  attachments[3] = { 0 } ;
     static uint32_t                 attachments_count = 0 ;
 
+
     if(vc->enable_sampling_)
     {
         attachments_count               = 3 ;
@@ -5841,17 +5842,17 @@ create_render_pass(
         attachments[0].finalLayout      = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL ;
 
         attachments[1].flags            = 0 ;
-        attachments[1].format           = vc->swapchain_surface_format_.format ;
+        attachments[1].format           = vc->picked_physical_device_->depth_format_ ;
         attachments[1].samples          = vc->sample_count_ ;
         attachments[1].loadOp           = VK_ATTACHMENT_LOAD_OP_CLEAR ;
         attachments[1].storeOp          = VK_ATTACHMENT_STORE_OP_STORE ;
         attachments[1].stencilLoadOp    = VK_ATTACHMENT_LOAD_OP_DONT_CARE ;
         attachments[1].stencilStoreOp   = VK_ATTACHMENT_STORE_OP_DONT_CARE ;
         attachments[1].initialLayout    = VK_IMAGE_LAYOUT_UNDEFINED ;
-        attachments[1].finalLayout      = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR ;
+        attachments[1].finalLayout      = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL ;
 
         attachments[2].flags            = 0 ;
-        attachments[2].format           = vc->picked_physical_device_->depth_format_ ;
+        attachments[2].format           = vc->swapchain_surface_format_.format ;
         attachments[2].samples          = VK_SAMPLE_COUNT_1_BIT ;
         attachments[2].loadOp           = VK_ATTACHMENT_LOAD_OP_DONT_CARE ;
         attachments[2].storeOp          = VK_ATTACHMENT_STORE_OP_STORE ;
@@ -6435,6 +6436,7 @@ draw_frame(
     ,   VK_NULL_HANDLE
     ,   &image_index
     ) ;
+    vc->image_index_ = image_index ;
 
     check(
         aquire_ok == VK_SUCCESS
@@ -6449,13 +6451,21 @@ draw_frame(
             end_timed_block() ;
             return false ;
         }
+
+        vc->image_index_ = 0 ;
+        vc->current_frame_ = 0 ;
+
+        if(check(record_rob(vc)))
+        {
+            end_timed_block() ;
+            return false ;
+        }
+
         end_timed_block() ;
         return true ;
     }
 
     //update_uniform_buffer(vc, vc->current_frame_) ;
-
-    vc->image_index_ = image_index ;
 
     if(check(update_rob(vc)))
     {
@@ -6665,6 +6675,18 @@ draw_frame(
             end_timed_block() ;
             return false ;
         }
+
+        vc->image_index_ = 0 ;
+        vc->current_frame_ = 0 ;
+
+        if(check(record_rob(vc)))
+        {
+            end_timed_block() ;
+            return false ;
+        }
+
+        end_timed_block() ;
+        return true ;
     }
 
     log_debug("vc->current_frame_=%d, image_index=%d", vc->current_frame_, image_index) ;
@@ -8088,12 +8110,13 @@ create_vulkan()
     vc_->enable_validation_ = VK_TRUE ;
     vc_->enable_sampling_ = VK_FALSE ;
     vc_->enable_sample_shading_ = VK_FALSE ;
+    vc_->sample_count_ = VK_SAMPLE_COUNT_1_BIT ;
+
 
     vc_->frames_in_flight_count_            = 2 ;
     vc_->desired_swapchain_image_count_     = 2 ;
     require(vc_->frames_in_flight_count_ < max_vulkan_frames_in_flight) ;
 
-    vc_->sample_count_ = VK_SAMPLE_COUNT_8_BIT ;
     vc_->min_sample_shading_ = 0.2f ;
 
     vc_->desired_sampler_aniso_ = 1.0f ;

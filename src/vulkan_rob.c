@@ -20,9 +20,9 @@
 #define max_vulkan_pipeline_shader_stage_create_infos   2
 #define max_vulkan_vertex_input_attribute_descriptions  3
 #define max_vulkan_dynamic_states                       2
-#define max_vulkan_descriptor_buffer_infos              4
-#define max_vulkan_descriptor_image_infos               4
-#define max_vulkan_write_descriptor_sets                4
+#define max_vulkan_descriptor_buffer_infos              1
+#define max_vulkan_descriptor_image_infos               1
+#define max_vulkan_write_descriptor_sets                2
 
 
 typedef struct vulkan_rob
@@ -95,6 +95,8 @@ typedef struct vulkan_rob
     VkDynamicState  dynamic_states_[max_vulkan_dynamic_states] ;
     uint32_t        dynamic_states_count_ ;
 
+    VkBool32        enable_prerecording_ ;
+
 } vulkan_rob ;
 
 
@@ -149,24 +151,23 @@ typedef struct uniform_buffer_object
 static uint32_t const uniform_buffer_object_size = sizeof(uniform_buffer_object) ;
 
 
-
 static bool
 record_command_buffer(
     vulkan_context *    vc
 ,   vulkan_rob *        vr
-,   uint32_t const      current_frame
-,   uint32_t const      frame_buffer_index
+,   VkCommandBuffer     command_buffer
+,   VkDescriptorSet     descriptor_set
+,   VkFramebuffer       frame_buffer
 )
 {
+
     require(vc) ;
     require(vr) ;
-    require(current_frame < max_vulkan_frames_in_flight) ;
-    require(frame_buffer_index < max_vulkan_swapchain_images) ;
+    require(command_buffer) ;
+    require(descriptor_set) ;
+    require(frame_buffer) ;
 
     begin_timed_block() ;
-
-    VkCommandBuffer command_buffer = vc->command_buffer_[current_frame] ;
-    VkDescriptorSet desc_set = vr->descriptor_sets_[current_frame] ;
 
     // VkResult vkResetCommandBuffer(
     //     VkCommandBuffer                             commandBuffer,
@@ -238,7 +239,7 @@ record_command_buffer(
     rpbi.sType                      = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO ;
     rpbi.pNext                      = NULL ;
     rpbi.renderPass                 = vc->render_pass_ ;
-    rpbi.framebuffer                = vc->framebuffers_[frame_buffer_index] ;
+    rpbi.framebuffer                = frame_buffer ;
     rpbi.renderArea.offset.x        = 0 ;
     rpbi.renderArea.offset.y        = 0 ;
     rpbi.renderArea.extent.width    = vc->swapchain_extent_.width ;
@@ -331,7 +332,7 @@ record_command_buffer(
     ,   vr->pipeline_layout_
     ,   0
     ,   1
-    ,   &desc_set
+    ,   &descriptor_set
     ,   0
     ,   NULL
     ) ;
@@ -435,16 +436,73 @@ update_rob(
 
 
 bool
+record_rob(
+    vulkan_context *    vc
+)
+{
+    require(vc) ;
+    begin_timed_block() ;
+    vulkan_rob *    vr = &the_vulkan_rob_ ;
+    //require(vr->enable_prerecording_) ;
+
+    if(!vr->enable_prerecording_)
+    {
+        end_timed_block() ;
+        return true ;
+    }
+
+    for(
+        uint32_t i = 0
+    ;   i < vc->frames_in_flight_count_
+    ;   ++i
+    )
+    {
+        require(vc->current_frame_ == vc->image_index_) ;
+
+        if(check(record_command_buffer(
+                    vc
+                ,   vr
+                ,   vc->command_buffer_[i]
+                ,   vr->descriptor_sets_[i]
+                ,   vc->framebuffers_[i]
+                )
+            )
+        )
+        {
+            end_timed_block() ;
+            return false ;
+        }
+    }
+
+    end_timed_block() ;
+    return true ;
+}
+
+
+bool
 draw_rob(
     vulkan_context *    vc
 )
 {
     require(vc) ;
     begin_timed_block() ;
-
     vulkan_rob *    vr = &the_vulkan_rob_ ;
 
-    if(check(record_command_buffer(vc, vr, vc->current_frame_, vc->image_index_)))
+    if(vr->enable_prerecording_)
+    {
+        end_timed_block() ;
+        return true ;
+    }
+
+    if(check(record_command_buffer(
+                vc
+            ,   vr
+            ,   vc->command_buffer_[vc->current_frame_]
+            ,   vr->descriptor_sets_[vc->current_frame_]
+            ,   vc->framebuffers_[vc->image_index_]
+            )
+        )
+    )
     {
         end_timed_block() ;
         return false ;
@@ -453,7 +511,6 @@ draw_rob(
     end_timed_block() ;
     return true ;
 }
-
 
 
 bool
@@ -465,6 +522,9 @@ create_rob(
     begin_timed_block() ;
 
     vulkan_rob *    vr = &the_vulkan_rob_ ;
+
+    vr->enable_prerecording_    = VK_TRUE ;
+    //vr->enable_prerecording_    = VK_FALSE ;
 
     // 1 == means no mip maps
     // 0 == auto mipmap generation
@@ -944,19 +1004,14 @@ create_rob(
     }
     require(vr->graphics_pipeline_) ;
 
-    // for(
-    //     uint32_t i = 0
-    // ;   i < 2
-    // ;   ++i
-    // )
-    // {
-    //     if(check(record_command_buffer(vc, vr, i, i)))
-    //     {
-    //         end_timed_block() ;
-    //         return false ;
-    //     }
-    // }
-
+    if(vr->enable_prerecording_)
+    {
+        if(check(record_rob(vc)))
+        {
+            end_timed_block() ;
+            return false ;
+        }
+    }
 
     end_timed_block() ;
     return true ;

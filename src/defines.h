@@ -8,6 +8,7 @@
 #define get_stack_ptr()     __builtin_return_address(0)
 #endif
 
+
 #ifdef  __APPLE__
 #define def_noop    ((void)0)
 #define require(a)  if(!(a)){__builtin_trap();}

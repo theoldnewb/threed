@@ -22,6 +22,12 @@ update_rob(
 
 
 bool
+record_rob(
+    vulkan_context *    vc
+) ;
+
+
+bool
 draw_rob(
     vulkan_context *    vc
 ) ;
