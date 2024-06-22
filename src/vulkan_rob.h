@@ -16,6 +16,12 @@ create_rob(
 
 
 bool
+destroy_rob(
+    vulkan_context *    vc
+) ;
+
+
+bool
 update_rob(
     vulkan_context *    vc
 ) ;

@@ -1004,6 +1004,12 @@ create_rob(
     }
     require(vr->graphics_pipeline_) ;
 
+    vkDestroyShaderModule(vc->device_, vr->vert_shader_, NULL) ;
+    vr->vert_shader_ = NULL ;
+    vkDestroyShaderModule(vc->device_, vr->frag_shader_, NULL) ;
+    vr->frag_shader_ = NULL ;
+
+
     if(vr->enable_prerecording_)
     {
         if(check(record_rob(vc)))
@@ -1011,6 +1017,146 @@ create_rob(
             end_timed_block() ;
             return false ;
         }
+    }
+
+
+
+
+
+    end_timed_block() ;
+    return true ;
+}
+
+
+
+bool
+destroy_rob(
+    vulkan_context *    vc
+)
+{
+    require(vc) ;
+    begin_timed_block() ;
+
+    vulkan_rob *    vr = &the_vulkan_rob_ ;
+
+    if(vr->texture_sampler_)
+    {
+        // void vkDestroySampler(
+        //     VkDevice                                    device,
+        //     VkSampler                                   sampler,
+        //     const VkAllocationCallbacks*                pAllocator);
+        vkDestroySampler(vc->device_, vr->texture_sampler_, NULL) ;
+        vr->texture_sampler_ = NULL ;
+    }
+
+    if(vr->texture_image_view_)
+    {
+        vkDestroyImageView(vc->device_, vr->texture_image_view_, NULL) ;
+        vr->texture_image_view_ = NULL ;
+    }
+
+    if(vr->texture_image_)
+    {
+        // void vkDestroyImage(
+        // VkDevice                                    device,
+        // VkImage                                     image,
+        // const VkAllocationCallbacks*                pAllocator);
+        vkDestroyImage(vc->device_, vr->texture_image_, NULL) ;
+        vr->texture_image_ = NULL ;
+    }
+
+    if(vr->texture_image_memory_)
+    {
+        vkFreeMemory(vc->device_, vr->texture_image_memory_, NULL) ;
+        vr->texture_image_memory_ = NULL ;
+    }
+
+    for(
+        uint32_t i = 0
+    ;   i < vc->frames_in_flight_count_
+    ;   ++i
+    )
+    {
+        vkDestroyBuffer(vc->device_, vr->uniform_buffers_[i], NULL) ;
+        vr->uniform_buffers_[i] = NULL ;
+        vkFreeMemory(vc->device_, vr->uniform_buffers_memory_[i], NULL) ;
+        vr->uniform_buffers_memory_[i] = NULL ;
+    }
+
+    if(vr->descriptor_pool_)
+    {
+        // void vkDestroyDescriptorPool(
+        //     VkDevice                                    device,
+        //     VkDescriptorPool                            descriptorPool,
+        //     const VkAllocationCallbacks*                pAllocator);
+        vkDestroyDescriptorPool(vc->device_, vr->descriptor_pool_, NULL) ;
+        vr->descriptor_pool_ = NULL ;
+    }
+
+
+    if(vr->descriptor_set_layout_)
+    {
+        // void vkDestroyDescriptorSetLayout(
+        //     VkDevice                                    device,
+        //     VkDescriptorSetLayout                       descriptorSetLayout,
+        //     const VkAllocationCallbacks*                pAllocator);
+        vkDestroyDescriptorSetLayout(vc->device_, vr->descriptor_set_layout_, NULL) ;
+        vr->descriptor_set_layout_ = NULL ;
+    }
+
+
+    if(vr->index_buffer_)
+    {
+        vkDestroyBuffer(vc->device_, vr->index_buffer_, NULL) ;
+        vr->index_buffer_ = NULL ;
+    }
+
+    if(vr->index_buffer_memory_)
+    {
+        vkFreeMemory(vc->device_, vr->index_buffer_memory_, NULL) ;
+        vr->index_buffer_memory_ = NULL ;
+    }
+
+
+    if(vr->vertex_buffer_)
+    {
+        // void vkDestroyBuffer(
+        //     VkDevice                                    device,
+        //     VkBuffer                                    buffer,
+        //     const VkAllocationCallbacks*                pAllocator);
+        vkDestroyBuffer(vc->device_, vr->vertex_buffer_, NULL) ;
+        vr->vertex_buffer_ = NULL ;
+    }
+
+    if(vr->vertex_buffer_memory_)
+    {
+        // void vkFreeMemory(
+        //     VkDevice                                    device,
+        //     VkDeviceMemory                              memory,
+        //     const VkAllocationCallbacks*                pAllocator);
+        //     }
+        vkFreeMemory(vc->device_, vr->vertex_buffer_memory_, NULL) ;
+        vr->vertex_buffer_memory_ = NULL ;
+    }
+
+    if(vr->graphics_pipeline_)
+    {
+        // void vkDestroyPipeline(
+        //     VkDevice                                    device,
+        //     VkPipeline                                  pipeline,
+        //     const VkAllocationCallbacks*                pAllocator);
+        vkDestroyPipeline(vc->device_, vr->graphics_pipeline_, NULL) ;
+        vr->graphics_pipeline_ = NULL ;
+    }
+
+    if(vr->pipeline_layout_)
+    {
+        // void vkDestroyPipelineLayout(
+        //     VkDevice                                    device,
+        //     VkPipelineLayout                            pipelineLayout,
+        //     const VkAllocationCallbacks*                pAllocator);
+        vkDestroyPipelineLayout(vc->device_, vr->pipeline_layout_, NULL) ;
+        vr->pipeline_layout_ = NULL ;
     }
 
     end_timed_block() ;
