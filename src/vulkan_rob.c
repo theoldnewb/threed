@@ -39,7 +39,6 @@ typedef struct vulkan_rob
     VkWriteDescriptorSet            write_descriptor_sets_[max_vulkan_frames_in_flight * max_vulkan_write_descriptor_sets] ;
     uint32_t                        write_descriptor_sets_count_ ;
 
-
     VkDescriptorPoolSize            descriptor_pool_sizes_[max_vulkan_descriptor_pool_size] ;
     uint32_t                        descriptor_pool_sizes_count_ ;
     VkDescriptorPool                descriptor_pool_ ;
@@ -95,8 +94,6 @@ typedef struct vulkan_rob
 
     VkDynamicState  dynamic_states_[max_vulkan_dynamic_states] ;
     uint32_t        dynamic_states_count_ ;
-
-
 
 } vulkan_rob ;
 
@@ -348,9 +345,11 @@ record_command_buffer(
     //     uint32_t                                    firstInstance);
     vkCmdDrawIndexed(command_buffer, indices_count, 1, 0, 0, 0) ;
 
+
     // void vkCmdEndRenderPass(
     //     VkCommandBuffer                             commandBuffer);
     vkCmdEndRenderPass(command_buffer) ;
+
 
     // VkResult vkEndCommandBuffer(
     //     VkCommandBuffer                             commandBuffer);
@@ -435,7 +434,6 @@ update_rob(
 }
 
 
-
 bool
 draw_rob(
     vulkan_context *    vc
@@ -514,13 +512,11 @@ create_rob(
         return false ;
     }
 
-
     fill_pipeline_layout_create_info(
         &vr->pipeline_layout_create_info_
     ,   &vr->descriptor_set_layout_
     ,   1
     ) ;
-
 
     if(check_vulkan(vkCreatePipelineLayout(
                 vc->device_
@@ -554,7 +550,6 @@ create_rob(
     ,   vc->frames_in_flight_count_
     ) ;
 
-
     if(check(create_descriptor_pool(
                 &vr->descriptor_pool_
             ,   vc->device_
@@ -570,7 +565,6 @@ create_rob(
     }
     require(vr->descriptor_pool_) ;
 
-
     if(check(create_descriptor_sets(
                 vr->descriptor_sets_
             ,   vc->device_
@@ -585,7 +579,6 @@ create_rob(
         return false ;
     }
     require(vr->descriptor_sets_) ;
-
 
     if(check(create_uniform_buffers(
                 vr->uniform_buffers_
@@ -657,7 +650,6 @@ create_rob(
     ,   uniform_buffer_object_size
     ) ;
 
-
     add_descriptor_image_info(
         vr->descriptor_image_infos_
     ,   &vr->descriptor_image_infos_count_
@@ -666,7 +658,6 @@ create_rob(
     ,   vr->texture_image_view_
     ,   vr->texture_sampler_
     ) ;
-
 
     add_write_descriptor_buffer_set(
         vr->write_descriptor_sets_
@@ -705,20 +696,6 @@ create_rob(
     ,   vc->device_
     ,   vc->frames_in_flight_count_
     ) ;
-
-
-    bool
-    create_vertex_buffer(
-        VkBuffer *                                  out_buffer
-    ,   VkDeviceMemory *                            out_buffer_memory
-    ,   VkDevice const                              device
-    ,   VkCommandPool const                         command_pool
-    ,   VkQueue const                               graphics_queue
-    ,   VkPhysicalDeviceMemoryProperties const *    pdmp
-    ,   void const *                                vbo_data
-    ,   VkDeviceSize const                          vbo_data_size
-    ) ;
-
 
     if(check(create_vertex_buffer(
                 &vr->vertex_buffer_
@@ -800,13 +777,11 @@ create_rob(
     ,   VK_SHADER_STAGE_FRAGMENT_BIT
     ) ;
 
-
     fill_vertex_input_binding_description(
         &vr->vertex_input_binding_description_
     ,   0
     ,   vertex_size
     ) ;
-
 
     add_vertex_input_attribute_description(
         vr->vertex_input_attribute_descriptions_
@@ -890,13 +865,11 @@ create_rob(
     ,   VK_DYNAMIC_STATE_SCISSOR
     ) ;
 
-
     fill_pipeline_dynamic_state_create_info(
         &vr->pipeline_dynamic_state_create_info_
     ,   vr->dynamic_states_
     ,   vr->dynamic_states_count_
     ) ;
-
 
     fill_pipeline_rasterization_state_create_info(
         &vr->pipeline_rasterization_state_create_info_
@@ -970,7 +943,6 @@ create_rob(
         return false ;
     }
     require(vr->graphics_pipeline_) ;
-
 
     // for(
     //     uint32_t i = 0
