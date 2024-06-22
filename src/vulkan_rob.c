@@ -659,6 +659,7 @@ create_rob(
     if(check(create_texture_image(
                 &vr->texture_image_
             ,   &vr->texture_image_memory_
+            ,   &vr->texture_mip_levels_
             ,   "ass/textures/statue-1275469_1280.jpg"
             ,   vc->device_
             ,   vc->command_pool_

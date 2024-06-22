@@ -131,6 +131,7 @@ typedef struct vulkan_context
     VkSurfaceKHR    surface_ ;
 
     vulkan_physical_device_info *   picked_physical_device_ ;
+    VkPhysicalDeviceFeatures    desired_enabled_device_features_ ;
 
     VkDevice device_ ;
     VkQueue graphics_queue_ ;
@@ -146,18 +147,7 @@ typedef struct vulkan_context
     uint32_t            desired_swapchain_image_count_ ;
     uint32_t            frames_in_flight_count_ ;
 
-    void *              vert_shader_memory_ ;
-    uint64_t            vert_shader_memory_size_ ;
-    VkShaderModule      vert_shader_ ;
-    void *              frag_shader_memory_ ;
-    uint64_t            frag_shader_memory_size_ ;
-    VkShaderModule      frag_shader_ ;
-
-    VkRenderPass            render_pass_ ;
-    VkDescriptorSetLayout   descriptor_set_layout_ ;
-    VkPipelineLayout        pipeline_layout_ ;
-    VkPipeline              graphics_pipeline_ ;
-
+    VkRenderPass    render_pass_ ;
     VkFramebuffer   framebuffers_[max_vulkan_swapchain_images] ;
     VkCommandPool   command_pool_ ;
     VkCommandBuffer command_buffer_[max_vulkan_frames_in_flight] ;
@@ -168,24 +158,6 @@ typedef struct vulkan_context
     uint32_t    current_frame_ ;
     uint32_t    image_index_ ;
     VkBool32    resizing_ ;
-
-    VkBuffer        vertex_buffer_ ;
-    VkDeviceMemory  vertex_buffer_memory_ ;
-    VkBuffer        index_buffer_ ;
-    VkDeviceMemory  index_buffer_memory_ ;
-
-    VkBuffer        uniform_buffers_[max_vulkan_frames_in_flight] ;
-    VkDeviceMemory  uniform_buffers_memory_[max_vulkan_frames_in_flight] ;
-    void *          uniform_buffers_mapped_[max_vulkan_frames_in_flight] ;
-
-    VkDescriptorPool    descriptor_pool_ ;
-    VkDescriptorSet     descriptor_sets_[max_vulkan_frames_in_flight] ;
-
-    uint32_t            texture_mip_levels_ ;
-    VkImage             texture_image_ ;
-    VkDeviceMemory      texture_image_memory_ ;
-    VkImageView         texture_image_view_ ;
-    VkSampler           texture_sampler_ ;
 
     float               desired_sampler_aniso_ ; //maxSamplerAnisotropy
 
@@ -204,7 +176,6 @@ typedef struct vulkan_context
 
 
     fn_rob_func *   draw_rob_ ;
-
 
 } vulkan_context ;
 
@@ -294,16 +265,18 @@ create_uniform_buffers(
 ) ;
 
 
+
 bool
 create_texture_image(
     VkImage *                                   out_image
 ,   VkDeviceMemory *                            out_image_memory
+,   uint32_t *                                  out_mip_levels
 ,   char const * const                          full_name
 ,   VkDevice const                              device
 ,   VkCommandPool const                         command_pool
 ,   VkQueue const                               graphics_queue
 ,   VkPhysicalDeviceMemoryProperties const *    pdmp
-,   uint32_t const                              mip_levels
+,   uint32_t const                              desired_mip_levels
 ) ;
 
 
