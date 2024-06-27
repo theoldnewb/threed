@@ -5375,6 +5375,117 @@ create_sync_objects(
 
 
 static bool
+update_rob(
+    vulkan_context *    vc
+)
+{
+    require(vc) ;
+
+    begin_timed_block() ;
+
+    bool update_okay = true ;
+
+    for(
+        uint32_t i = 0
+    ;   i < vc->render_objects_count_
+    ;   ++i
+    )
+    {
+        vulkan_render_object * vro = &vc->render_objects_[i] ;
+        require(vro->update_func_) ;
+        update_okay &= vro->update_func_(vro->vc_, vro->param_) ;
+    }
+
+    end_timed_block() ;
+    return update_okay ;
+}
+
+
+
+static bool
+draw_rob(
+    vulkan_context *    vc
+)
+{
+    require(vc) ;
+
+    begin_timed_block() ;
+
+    bool draw_okay = true ;
+
+    for(
+        uint32_t i = 0
+    ;   i < vc->render_objects_count_
+    ;   ++i
+    )
+    {
+        vulkan_render_object * vro = &vc->render_objects_[i] ;
+        require(vro->draw_func_) ;
+        draw_okay &= vro->draw_func_(vro->vc_, vro->param_) ;
+    }
+
+    end_timed_block() ;
+    return draw_okay ;
+
+}
+
+
+static bool
+record_rob(
+    vulkan_context *    vc
+)
+{
+    require(vc) ;
+    begin_timed_block() ;
+
+    bool record_okay = true ;
+
+    for(
+        uint32_t i = 0
+    ;   i < vc->render_objects_count_
+    ;   ++i
+    )
+    {
+        vulkan_render_object * vro = &vc->render_objects_[i] ;
+        require(vro->record_func_) ;
+        record_okay &= vro->record_func_(vro->vc_, vro->param_) ;
+    }
+
+    end_timed_block() ;
+    return record_okay ;
+}
+
+
+static bool
+destroy_rob(
+    vulkan_context *    vc
+)
+{
+    require(vc) ;
+    begin_timed_block() ;
+
+    bool destroy_okay = true ;
+
+    for(
+        uint32_t i = 0
+    ;   i < vc->render_objects_count_
+    ;   ++i
+    )
+    {
+        vulkan_render_object * vro = &vc->render_objects_[i] ;
+        require(vro->destroy_func_) ;
+        destroy_okay &= vro->destroy_func_(vro->vc_, vro->param_) ;
+    }
+
+    end_timed_block() ;
+    return destroy_okay ;
+}
+
+
+
+
+
+static bool
 draw_frame(
     vulkan_context *    vc
 )
@@ -6374,6 +6485,41 @@ generate_mipmaps(
 
 
 static bool
+create_render_object(
+    vulkan_context *        vc
+,   vulkan_render_object *  vr
+)
+{
+    require(vc) ;
+    require(vr) ;
+    require(vc->render_objects_count_ < max_vulkan_render_objects) ;
+    begin_timed_block() ;
+
+    vulkan_render_object * vo = &vc->render_objects_[vc->render_objects_count_] ;
+    vo->create_func_    = vr->create_func_ ;
+    vo->draw_func_      = vr->draw_func_ ;
+    vo->update_func_    = vr->update_func_ ;
+    vo->record_func_    = vr->record_func_ ;
+    vo->destroy_func_   = vr->destroy_func_;
+    vo->param_          = vr->param_ ;
+    vo->vc_             = vc ;
+
+    if(check(vo->create_func_(vc, vo->param_)))
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
+
+    ++ vc->render_objects_count_ ;
+
+    end_timed_block() ;
+    return true ;
+}
+
+
+
+static bool
 destroy_vulkan_instance(
     vulkan_context *    vc
 )
@@ -6806,11 +6952,11 @@ create_vulkan()
     // ------------------
 
 
-    if(check(create_rob(vc_)))
-    {
-        end_timed_block() ;
-        return false ;
-    }
+    // if(check(create_rob(vc_)))
+    // {
+    //     end_timed_block() ;
+    //     return false ;
+    // }
 
     end_timed_block() ;
     return true ;
@@ -8692,4 +8838,19 @@ fill_graphics_pipeline_create_info(
     gpci->basePipelineHandle     = VK_NULL_HANDLE ;
     gpci->basePipelineIndex      = -1 ;
     end_timed_block() ;
+}
+
+
+int
+create_vulkan_render_object(
+    vulkan_render_object *  vr
+)
+{
+    require(vr) ;
+    begin_timed_block() ;
+
+    check(create_render_object(vc_, vr)) ;
+
+    end_timed_block() ;
+    return true ;
 }

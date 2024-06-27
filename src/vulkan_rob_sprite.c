@@ -152,92 +152,6 @@ static uint32_t const uniform_buffer_object_size = sizeof(uniform_buffer_object)
 
 
 static bool
-record_command_buffer_impl(
-    vulkan_context *    vc
-,   vulkan_rob *        vr
-,   VkCommandBuffer     command_buffer
-,   VkDescriptorSet     descriptor_set
-,   VkFramebuffer       frame_buffer
-)
-{
-    require(vc) ;
-    require(vr) ;
-    require(command_buffer) ;
-    require(descriptor_set) ;
-    require(frame_buffer) ;
-
-    begin_timed_block() ;
-
-    // void vkCmdBindPipeline(
-    //     VkCommandBuffer                             commandBuffer,
-    //     VkPipelineBindPoint                         pipelineBindPoint,
-    //     VkPipeline                                  pipeline);
-    vkCmdBindPipeline(
-        command_buffer
-    ,   VK_PIPELINE_BIND_POINT_GRAPHICS
-    ,   vr->graphics_pipeline_
-    ) ;
-
-
-    VkBuffer vertex_buffers[] = { vr->vertex_buffer_} ;
-    VkDeviceSize offsets[] = { 0 } ;
-
-    // void vkCmdBindVertexBuffers(
-    //     VkCommandBuffer                             commandBuffer,
-    //     uint32_t                                    firstBinding,
-    //     uint32_t                                    bindingCount,
-    //     const VkBuffer*                             pBuffers,
-    //     const VkDeviceSize*                         pOffsets);
-    vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, offsets) ;
-
-
-    // void vkCmdBindIndexBuffer(
-    //     VkCommandBuffer                             commandBuffer,
-    //     VkBuffer                                    buffer,
-    //     VkDeviceSize                                offset,
-    //     VkIndexType                                 indexType);
-    vkCmdBindIndexBuffer(
-        command_buffer
-    ,   vr->index_buffer_
-    ,   0
-    ,   VK_INDEX_TYPE_UINT16
-    ) ;
-
-    // void vkCmdBindDescriptorSets(
-    //     VkCommandBuffer                             commandBuffer,
-    //     VkPipelineBindPoint                         pipelineBindPoint,
-    //     VkPipelineLayout                            layout,
-    //     uint32_t                                    firstSet,
-    //     uint32_t                                    descriptorSetCount,
-    //     const VkDescriptorSet*                      pDescriptorSets,
-    //     uint32_t                                    dynamicOffsetCount,
-    //     const uint32_t*                             pDynamicOffsets);
-    vkCmdBindDescriptorSets(
-        command_buffer
-    ,   VK_PIPELINE_BIND_POINT_GRAPHICS
-    ,   vr->pipeline_layout_
-    ,   0
-    ,   1
-    ,   &descriptor_set
-    ,   0
-    ,   NULL
-    ) ;
-
-    // void vkCmdDrawIndexed(
-    //     VkCommandBuffer                             commandBuffer,
-    //     uint32_t                                    indexCount,
-    //     uint32_t                                    instanceCount,
-    //     uint32_t                                    firstIndex,
-    //     int32_t                                     vertexOffset,
-    //     uint32_t                                    firstInstance);
-    vkCmdDrawIndexed(command_buffer, indices_count, 1, 0, 0, 0) ;
-
-    end_timed_block() ;
-    return true ;
-}
-
-
-static bool
 record_command_buffer(
     vulkan_context *    vc
 ,   vulkan_rob *        vr
@@ -246,6 +160,7 @@ record_command_buffer(
 ,   VkFramebuffer       frame_buffer
 )
 {
+
     require(vc) ;
     require(vr) ;
     require(command_buffer) ;
@@ -367,7 +282,69 @@ record_command_buffer(
     vkCmdSetScissor(command_buffer, 0, 1, &scissor) ;
 
 
-    record_command_buffer_impl(vc, vr, command_buffer, descriptor_set, frame_buffer) ;
+    // void vkCmdBindPipeline(
+    //     VkCommandBuffer                             commandBuffer,
+    //     VkPipelineBindPoint                         pipelineBindPoint,
+    //     VkPipeline                                  pipeline);
+    vkCmdBindPipeline(
+        command_buffer
+    ,   VK_PIPELINE_BIND_POINT_GRAPHICS
+    ,   vr->graphics_pipeline_
+    ) ;
+
+
+    VkBuffer vertex_buffers[] = { vr->vertex_buffer_} ;
+    VkDeviceSize offsets[] = { 0 } ;
+
+    // void vkCmdBindVertexBuffers(
+    //     VkCommandBuffer                             commandBuffer,
+    //     uint32_t                                    firstBinding,
+    //     uint32_t                                    bindingCount,
+    //     const VkBuffer*                             pBuffers,
+    //     const VkDeviceSize*                         pOffsets);
+    vkCmdBindVertexBuffers(command_buffer, 0, 1, vertex_buffers, offsets) ;
+
+
+    // void vkCmdBindIndexBuffer(
+    //     VkCommandBuffer                             commandBuffer,
+    //     VkBuffer                                    buffer,
+    //     VkDeviceSize                                offset,
+    //     VkIndexType                                 indexType);
+    vkCmdBindIndexBuffer(
+        command_buffer
+    ,   vr->index_buffer_
+    ,   0
+    ,   VK_INDEX_TYPE_UINT16
+    ) ;
+
+    // void vkCmdBindDescriptorSets(
+    //     VkCommandBuffer                             commandBuffer,
+    //     VkPipelineBindPoint                         pipelineBindPoint,
+    //     VkPipelineLayout                            layout,
+    //     uint32_t                                    firstSet,
+    //     uint32_t                                    descriptorSetCount,
+    //     const VkDescriptorSet*                      pDescriptorSets,
+    //     uint32_t                                    dynamicOffsetCount,
+    //     const uint32_t*                             pDynamicOffsets);
+    vkCmdBindDescriptorSets(
+        command_buffer
+    ,   VK_PIPELINE_BIND_POINT_GRAPHICS
+    ,   vr->pipeline_layout_
+    ,   0
+    ,   1
+    ,   &descriptor_set
+    ,   0
+    ,   NULL
+    ) ;
+
+    // void vkCmdDrawIndexed(
+    //     VkCommandBuffer                             commandBuffer,
+    //     uint32_t                                    indexCount,
+    //     uint32_t                                    instanceCount,
+    //     uint32_t                                    firstIndex,
+    //     int32_t                                     vertexOffset,
+    //     uint32_t                                    firstInstance);
+    vkCmdDrawIndexed(command_buffer, indices_count, 1, 0, 0, 0) ;
 
 
     // void vkCmdEndRenderPass(
@@ -1195,11 +1172,12 @@ create_rob(
 
 
 void
-make_rob(
+make_rob_sprite(
     vulkan_render_object *  out_rob
 )
 {
     require(out_rob) ;
+    begin_timed_block() ;
 
     out_rob->create_func_   = create_rob ;
     out_rob->draw_func_     = draw_rob ;
@@ -1208,5 +1186,7 @@ make_rob(
     out_rob->destroy_func_  = destroy_rob ;
     out_rob->param_         = &the_vulkan_rob_ ;
     out_rob->vc_            = NULL ;
+
+    end_timed_block() ;
 }
 

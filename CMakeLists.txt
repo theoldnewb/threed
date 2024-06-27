@@ -61,10 +61,14 @@ set(PROJECT_SOURCES
     src/log.h
     src/debug.c
     src/debug.h
-    src/vulkan_rob.c
-    src/vulkan_rob.h
     src/vulkan.c
     src/vulkan.h
+    src/vulkan_rob.c
+    src/vulkan_rob.h
+#   src/vulkan_rob_sprite.c
+#   src/vulkan_rob_sprite.h
+    src/gfx.c
+    src/gfx.h
     src/math.c
     src/math.h
     src/stb.c

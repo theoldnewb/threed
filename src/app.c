@@ -3,8 +3,7 @@
 #include "defines.h"
 #include "log.h"
 #include "debug.h"
-#include "vulkan.h"
-
+#include "gfx.h"
 
 #include <SDL3/SDL_log.h>
 #include <SDL3/SDL_version.h>
@@ -22,7 +21,7 @@
 
 #include <vulkan/vulkan.h>
 
-#include <sys/stat.h>
+//#include <sys/stat.h>
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -203,7 +202,7 @@ update_app()
         return true ;
     }
 
-    if(check(draw_vulkan()))
+    if(check(draw_gfx()))
     {
         return false ;
     }
@@ -230,7 +229,7 @@ resize_app(
     app_->window_width_ = new_width ;
     app_->window_height_ = new_height ;
 
-    resize_vulkan() ;
+    resize_gfx() ;
 }
 
 
@@ -467,16 +466,7 @@ main_app(
 
     begin_timed_block() ;
 
-    void * p = NULL ;
-
-    if(check(p = malloc(23)))
-    {
-        end_timed_block() ;
-        destroy_app() ;
-        return 1 ;
-    }
-
-    if(check(create_vulkan()))
+    if(check(create_gfx()))
     {
         end_timed_block() ;
         destroy_app() ;
@@ -495,7 +485,7 @@ main_app(
         return 1 ;
     }
 
-    destroy_vulkan() ;
+    destroy_gfx() ;
 
     end_timed_block() ;
 

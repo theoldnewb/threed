@@ -2,6 +2,7 @@
 
 
 #include <vulkan/vulkan.h>
+#include "types.h"
 
 
 #define max_vulkan_desired_extensions           8
@@ -16,17 +17,24 @@
 #define max_vulkan_desired_format_properties    8
 #define max_vulkan_swapchain_images             4
 #define max_vulkan_frames_in_flight             4
+#define max_vulkan_render_objects               1
 
 
 typedef struct vulkan_context vulkan_context ;
 
-
-
 typedef bool (fn_rob_func)(vulkan_context * vc, void * p) ;
 
+typedef struct vulkan_render_object
+{
+    fn_rob_func *       create_func_ ;
+    fn_rob_func *       draw_func_ ;
+    fn_rob_func *       update_func_ ;
+    fn_rob_func *       record_func_ ;
+    fn_rob_func *       destroy_func_ ;
+    void *              param_ ;
+    vulkan_context *    vc_ ;
 
-
-
+} vulkan_render_object ;
 
 
 typedef struct vulkan_desired_format_properties
@@ -174,8 +182,8 @@ typedef struct vulkan_context
     VkDeviceMemory  color_image_memory_ ;
     VkImageView     color_image_view_ ;
 
-
-    fn_rob_func *   draw_rob_ ;
+    vulkan_render_object    render_objects_[max_vulkan_render_objects] ;
+    uint32_t                render_objects_count_ ;
 
 } vulkan_context ;
 
@@ -193,6 +201,12 @@ draw_vulkan() ;
 
 void
 resize_vulkan() ;
+
+
+int
+create_vulkan_render_object(
+    vulkan_render_object *  vr
+) ;
 
 
 void
