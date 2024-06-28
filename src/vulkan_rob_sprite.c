@@ -945,7 +945,7 @@ create_rob(
 
     fill_pipeline_color_blend_state_create_info(
         &vr->pipeline_color_blend_state_create_info_
-    ,   VK_TRUE
+    ,   VK_FALSE
     ,   VK_LOGIC_OP_COPY
     ,   &vr->pipeline_color_blend_attachment_state_
     ) ;
