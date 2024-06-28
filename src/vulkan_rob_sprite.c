@@ -95,8 +95,6 @@ typedef struct vulkan_rob
     VkDynamicState  dynamic_states_[max_vulkan_dynamic_states] ;
     uint32_t        dynamic_states_count_ ;
 
-    VkBool32        enable_prerecording_ ;
-
 } vulkan_rob ;
 
 
@@ -157,130 +155,14 @@ record_command_buffer(
 ,   vulkan_rob *        vr
 ,   VkCommandBuffer     command_buffer
 ,   VkDescriptorSet     descriptor_set
-,   VkFramebuffer       frame_buffer
 )
 {
-
     require(vc) ;
     require(vr) ;
     require(command_buffer) ;
     require(descriptor_set) ;
-    require(frame_buffer) ;
 
     begin_timed_block() ;
-
-    // VkResult vkResetCommandBuffer(
-    //     VkCommandBuffer                             commandBuffer,
-    //     VkCommandBufferResetFlags                   flags);
-    if(check_vulkan(vkResetCommandBuffer(
-                command_buffer
-            ,   0
-            )
-        )
-    )
-    {
-        end_timed_block() ;
-        return false ;
-    }
-
-
-    // typedef struct VkCommandBufferBeginInfo {
-    //     VkStructureType                          sType;
-    //     const void*                              pNext;
-    //     VkCommandBufferUsageFlags                flags;
-    //     const VkCommandBufferInheritanceInfo*    pInheritanceInfo;
-    // } VkCommandBufferBeginInfo;
-    static VkCommandBufferBeginInfo cbbi = { 0 } ;
-    cbbi.sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO ;
-    cbbi.pNext              = NULL ;
-    cbbi.flags              = 0 ;
-    cbbi.pInheritanceInfo   = NULL ;
-
-    // VkResult vkBeginCommandBuffer(
-    //     VkCommandBuffer                             commandBuffer,
-    //     const VkCommandBufferBeginInfo*             pBeginInfo);
-    if(check_vulkan(vkBeginCommandBuffer(command_buffer, &cbbi)))
-    {
-        end_timed_block() ;
-        return false ;
-    }
-
-    // typedef struct VkRenderPassBeginInfo {
-    //     VkStructureType        sType;
-    //     const void*            pNext;
-    //     VkRenderPass           renderPass;
-    //     VkFramebuffer          framebuffer;
-    //     VkRect2D               renderArea;
-    //     uint32_t               clearValueCount;
-    //     const VkClearValue*    pClearValues;
-    // } VkRenderPassBeginInfo;
-    // typedef union VkClearValue {
-    //     VkClearColorValue           color;
-    //     VkClearDepthStencilValue    depthStencil;
-    // } VkClearValue;
-    // typedef union VkClearColorValue {
-    //     float       float32[4];
-    //     int32_t     int32[4];
-    //     uint32_t    uint32[4];
-    // } VkClearColorValue;
-    // typedef struct VkClearDepthStencilValue {
-    //     float       depth;
-    //     uint32_t    stencil;
-    // } VkClearDepthStencilValue;
-    static VkClearValue    cv[2] = { 0 } ;
-    cv[0].color.float32[0]      = 0.0f ;
-    cv[0].color.float32[1]      = 0.0f ;
-    cv[0].color.float32[2]      = 0.0f ;
-    cv[0].color.float32[3]      = 1.0f ;
-    cv[1].depthStencil.depth    = 1.0f ;
-    cv[1].depthStencil.stencil  = 0 ;
-
-    static VkRenderPassBeginInfo rpbi = { 0 } ;
-    rpbi.sType                      = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO ;
-    rpbi.pNext                      = NULL ;
-    rpbi.renderPass                 = vc->render_pass_ ;
-    rpbi.framebuffer                = frame_buffer ;
-    rpbi.renderArea.offset.x        = 0 ;
-    rpbi.renderArea.offset.y        = 0 ;
-    rpbi.renderArea.extent.width    = vc->swapchain_extent_.width ;
-    rpbi.renderArea.extent.height   = vc->swapchain_extent_.height ;
-    rpbi.clearValueCount            = array_count(cv) ;
-    rpbi.pClearValues               = cv ;
-
-    // void vkCmdBeginRenderPass(
-    //     VkCommandBuffer                             commandBuffer,
-    //     const VkRenderPassBeginInfo*                pRenderPassBegin,
-    //     VkSubpassContents                           contents);
-    vkCmdBeginRenderPass(command_buffer, &rpbi, VK_SUBPASS_CONTENTS_INLINE) ;
-
-    static VkViewport viewport = { 0 } ;
-    viewport.x          = 0.0f ;
-    viewport.y          = 0.0f ;
-    viewport.width      = (float) vc->swapchain_extent_.width ;
-    viewport.height     = (float) vc->swapchain_extent_.height ;
-    viewport.minDepth   = 0.0f ;
-    viewport.maxDepth   = 1.0f ;
-
-    // void vkCmdSetViewport(
-    //     VkCommandBuffer                             commandBuffer,
-    //     uint32_t                                    firstViewport,
-    //     uint32_t                                    viewportCount,
-    //     const VkViewport*                           pViewports);
-    vkCmdSetViewport(command_buffer, 0, 1, &viewport) ;
-
-    static VkRect2D scissor = { 0 } ;
-    scissor.offset.x        = 0 ;
-    scissor.offset.y        = 0 ;
-    scissor.extent.width    = vc->swapchain_extent_.width ;
-    scissor.extent.height   = vc->swapchain_extent_.height ;
-
-    // void vkCmdSetScissor(
-    //     VkCommandBuffer                             commandBuffer,
-    //     uint32_t                                    firstScissor,
-    //     uint32_t                                    scissorCount,
-    //     const VkRect2D*                             pScissors);
-    vkCmdSetScissor(command_buffer, 0, 1, &scissor) ;
-
 
     // void vkCmdBindPipeline(
     //     VkCommandBuffer                             commandBuffer,
@@ -346,31 +228,16 @@ record_command_buffer(
     //     uint32_t                                    firstInstance);
     vkCmdDrawIndexed(command_buffer, indices_count, 1, 0, 0, 0) ;
 
-
-    // void vkCmdEndRenderPass(
-    //     VkCommandBuffer                             commandBuffer);
-    vkCmdEndRenderPass(command_buffer) ;
-
-
-    // VkResult vkEndCommandBuffer(
-    //     VkCommandBuffer                             commandBuffer);
-    if(check_vulkan(vkEndCommandBuffer(command_buffer)))
-    {
-        end_timed_block() ;
-        return false ;
-    }
-
     end_timed_block() ;
     return true ;
-
 }
 
 
 static void
 update_uniform_buffer(
     vulkan_context *    vc
-,   uint32_t const      current_frame
 ,   vulkan_rob *        vr
+,   uint32_t const      current_frame
 )
 {
     require(vc) ;
@@ -389,7 +256,7 @@ update_uniform_buffer(
         previous_time = current_time ;
     }
 
-    uint64_t const delta_time = (current_time - previous_time) / 10 ;
+    uint64_t const delta_time = (current_time - previous_time) / 3 ;
     double const fractional_seconds = (double) delta_time * get_performance_frequency_inverse() ;
     //log_debug("%f", fractional_seconds) ;
 
@@ -400,7 +267,7 @@ update_uniform_buffer(
     // glm_mat4_identity(ubo.proj) ;
 
     float angle = fractional_seconds ;
-    vec3 axis = {1.0f, 0.5f, 1.0f} ;
+    vec3 axis = {1.0f, 0.3f, 1.0f} ;
     glm_rotate_make(ubo.model, angle, axis) ;
 
     vec3 eye    = { 0.0f, 1.0f, 1.0f } ;
@@ -422,6 +289,7 @@ static bool
 update_rob(
     vulkan_context *    vc
 ,   void *              param
+,   uint32_t const      current_frame
 )
 {
     require(vc) ;
@@ -430,7 +298,7 @@ update_rob(
     vulkan_rob *    vr = &the_vulkan_rob_ ;
     require(vr == param) ;
 
-    update_uniform_buffer(vc, vc->current_frame_, vr) ;
+    update_uniform_buffer(vc, vr, current_frame) ;
 
     end_timed_block() ;
     return true ;
@@ -441,6 +309,7 @@ static bool
 record_rob(
     vulkan_context *    vc
 ,   void *              param
+,   uint32_t const      current_frame
 )
 {
     require(vc) ;
@@ -448,35 +317,19 @@ record_rob(
     vulkan_rob *    vr = &the_vulkan_rob_ ;
     require(vr == param) ;
 
-    //require(vr->enable_prerecording_) ;
+    require(current_frame < vc->frames_in_flight_count_) ;
 
-    if(!vr->enable_prerecording_)
-    {
-        end_timed_block() ;
-        return true ;
-    }
-
-    for(
-        uint32_t i = 0
-    ;   i < vc->frames_in_flight_count_
-    ;   ++i
-    )
-    {
-        require(vc->current_frame_ == vc->image_index_) ;
-
-        if(check(record_command_buffer(
-                    vc
-                ,   vr
-                ,   vc->command_buffer_[i]
-                ,   vr->descriptor_sets_[i]
-                ,   vc->framebuffers_[i]
-                )
+    if(check(record_command_buffer(
+                vc
+            ,   vr
+            ,   vc->command_buffer_[current_frame]
+            ,   vr->descriptor_sets_[current_frame]
             )
         )
-        {
-            end_timed_block() ;
-            return false ;
-        }
+    )
+    {
+        end_timed_block() ;
+        return false ;
     }
 
     end_timed_block() ;
@@ -488,14 +341,16 @@ static bool
 draw_rob(
     vulkan_context *    vc
 ,   void *              param
+,   uint32_t const      current_frame
 )
 {
     require(vc) ;
     begin_timed_block() ;
     vulkan_rob *    vr = &the_vulkan_rob_ ;
     require(vr == param) ;
+    require(current_frame < vc->frames_in_flight_count_) ;
 
-    if(vr->enable_prerecording_)
+    if(vc->enable_pre_record_command_buffers_)
     {
         end_timed_block() ;
         return true ;
@@ -504,9 +359,8 @@ draw_rob(
     if(check(record_command_buffer(
                 vc
             ,   vr
-            ,   vc->command_buffer_[vc->current_frame_]
-            ,   vr->descriptor_sets_[vc->current_frame_]
-            ,   vc->framebuffers_[vc->image_index_]
+            ,   vc->command_buffer_[current_frame]
+            ,   vr->descriptor_sets_[current_frame]
             )
         )
     )
@@ -668,9 +522,6 @@ create_rob(
 
     vulkan_rob *    vr = &the_vulkan_rob_ ;
     require(vr == param) ;
-
-    vr->enable_prerecording_    = VK_TRUE ;
-    //vr->enable_prerecording_    = VK_FALSE ;
 
     // 1 == means no mip maps
     // 0 == auto mipmap generation
@@ -1156,16 +1007,6 @@ create_rob(
     vkDestroyShaderModule(vc->device_, vr->frag_shader_, NULL) ;
     vr->frag_shader_ = NULL ;
 
-
-    if(vr->enable_prerecording_)
-    {
-        if(check(record_rob(vc, param)))
-        {
-            end_timed_block() ;
-            return false ;
-        }
-    }
-
     end_timed_block() ;
     return true ;
 }
@@ -1177,7 +1018,6 @@ make_rob_sprite(
 )
 {
     require(out_rob) ;
-    begin_timed_block() ;
 
     out_rob->create_func_   = create_rob ;
     out_rob->draw_func_     = draw_rob ;
@@ -1186,7 +1026,5 @@ make_rob_sprite(
     out_rob->destroy_func_  = destroy_rob ;
     out_rob->param_         = &the_vulkan_rob_ ;
     out_rob->vc_            = NULL ;
-
-    end_timed_block() ;
 }
 

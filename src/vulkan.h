@@ -17,22 +17,23 @@
 #define max_vulkan_desired_format_properties    8
 #define max_vulkan_swapchain_images             4
 #define max_vulkan_frames_in_flight             4
-#define max_vulkan_render_objects               1
+#define max_vulkan_render_objects               2
 
 
 typedef struct vulkan_context vulkan_context ;
 
 typedef bool (fn_rob_func)(vulkan_context * vc, void * p) ;
+typedef bool (fn_rob_update_func)(vulkan_context * vc, void * p, uint32_t const current_frame) ;
 
 typedef struct vulkan_render_object
 {
-    fn_rob_func *       create_func_ ;
-    fn_rob_func *       draw_func_ ;
-    fn_rob_func *       update_func_ ;
-    fn_rob_func *       record_func_ ;
-    fn_rob_func *       destroy_func_ ;
-    void *              param_ ;
-    vulkan_context *    vc_ ;
+    fn_rob_func *           create_func_ ;
+    fn_rob_update_func *    draw_func_ ;
+    fn_rob_update_func *    update_func_ ;
+    fn_rob_update_func *    record_func_ ;
+    fn_rob_func *           destroy_func_ ;
+    void *                  param_ ;
+    vulkan_context *        vc_ ;
 
 } vulkan_render_object ;
 
@@ -185,6 +186,8 @@ typedef struct vulkan_context
     vulkan_render_object    render_objects_[max_vulkan_render_objects] ;
     uint32_t                render_objects_count_ ;
 
+    VkBool32    enable_pre_record_command_buffers_ ;
+
 } vulkan_context ;
 
 
@@ -207,6 +210,10 @@ int
 create_vulkan_render_object(
     vulkan_render_object *  vr
 ) ;
+
+
+int
+pre_record_command_buffers() ;
 
 
 void

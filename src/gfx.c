@@ -20,11 +20,11 @@ create_render_objects()
         create_vulkan_render_object(&vr) ;
     }
 
-    // {
-    //     vulkan_render_object vr ;
-    //     make_rob_sprite(&vr) ;
-    //     create_vulkan_render_object(&vr) ;
-    // }
+    {
+        vulkan_render_object vr ;
+        make_rob_sprite(&vr) ;
+        create_vulkan_render_object(&vr) ;
+    }
 
     end_timed_block() ;
     return true ;
@@ -40,7 +40,6 @@ destroy_render_objects()
 }
 
 
-
 int
 create_gfx()
 {
@@ -53,6 +52,12 @@ create_gfx()
     }
 
     if(check(create_render_objects()))
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
+    if(check(pre_record_command_buffers()))
     {
         end_timed_block() ;
         return false ;

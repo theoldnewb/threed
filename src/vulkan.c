@@ -3994,8 +3994,8 @@ choose_swapchain_present_mode(
         bool const mode_ok =
             //present_modes[i] == VK_PRESENT_MODE_MAILBOX_KHR ;
             //present_modes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR ;
-            //present_modes[i] == VK_PRESENT_MODE_FIFO_RELAXED_KHR ;
-            present_modes[i] == VK_PRESENT_MODE_FIFO_KHR ;
+            present_modes[i] == VK_PRESENT_MODE_FIFO_RELAXED_KHR ;
+            //present_modes[i] == VK_PRESENT_MODE_FIFO_KHR ;
 
         if(mode_ok)
         {
@@ -4169,7 +4169,6 @@ create_swapchain(
         return false ;
     }
     require(out_swapchain) ;
-    *out_image_count = desired_image_count ;
 
     uint32_t image_count = 0 ;
     // VkResult vkGetSwapchainImagesKHR(
@@ -4189,8 +4188,7 @@ create_swapchain(
         end_timed_block() ;
         return false ;
     }
-
-    require(image_count == *out_image_count) ;
+    *out_image_count = image_count ;
 
     if(check_vulkan(vkGetSwapchainImagesKHR(
                 device
@@ -5374,6 +5372,169 @@ create_sync_objects(
 }
 
 
+
+static bool
+begin_record_command_buffer(
+    vulkan_context *    vc
+,   VkCommandBuffer     command_buffer
+,   VkFramebuffer       frame_buffer
+)
+{
+    require(vc) ;
+    require(command_buffer) ;
+    require(frame_buffer) ;
+
+    begin_timed_block() ;
+
+    // VkResult vkResetCommandBuffer(
+    //     VkCommandBuffer                             commandBuffer,
+    //     VkCommandBufferResetFlags                   flags);
+    if(check_vulkan(vkResetCommandBuffer(
+                command_buffer
+            ,   0
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
+
+    // typedef struct VkCommandBufferBeginInfo {
+    //     VkStructureType                          sType;
+    //     const void*                              pNext;
+    //     VkCommandBufferUsageFlags                flags;
+    //     const VkCommandBufferInheritanceInfo*    pInheritanceInfo;
+    // } VkCommandBufferBeginInfo;
+    static VkCommandBufferBeginInfo cbbi = { 0 } ;
+    cbbi.sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO ;
+    cbbi.pNext              = NULL ;
+    cbbi.flags              = 0 ;
+    cbbi.pInheritanceInfo   = NULL ;
+
+    // VkResult vkBeginCommandBuffer(
+    //     VkCommandBuffer                             commandBuffer,
+    //     const VkCommandBufferBeginInfo*             pBeginInfo);
+    if(check_vulkan(vkBeginCommandBuffer(command_buffer, &cbbi)))
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
+    // typedef struct VkRenderPassBeginInfo {
+    //     VkStructureType        sType;
+    //     const void*            pNext;
+    //     VkRenderPass           renderPass;
+    //     VkFramebuffer          framebuffer;
+    //     VkRect2D               renderArea;
+    //     uint32_t               clearValueCount;
+    //     const VkClearValue*    pClearValues;
+    // } VkRenderPassBeginInfo;
+    // typedef union VkClearValue {
+    //     VkClearColorValue           color;
+    //     VkClearDepthStencilValue    depthStencil;
+    // } VkClearValue;
+    // typedef union VkClearColorValue {
+    //     float       float32[4];
+    //     int32_t     int32[4];
+    //     uint32_t    uint32[4];
+    // } VkClearColorValue;
+    // typedef struct VkClearDepthStencilValue {
+    //     float       depth;
+    //     uint32_t    stencil;
+    // } VkClearDepthStencilValue;
+    static VkClearValue    cv[2] = { 0 } ;
+    cv[0].color.float32[0]      = 0.0f ;
+    cv[0].color.float32[1]      = 0.0f ;
+    cv[0].color.float32[2]      = 0.0f ;
+    cv[0].color.float32[3]      = 1.0f ;
+    cv[1].depthStencil.depth    = 1.0f ;
+    cv[1].depthStencil.stencil  = 0 ;
+
+    static VkRenderPassBeginInfo rpbi = { 0 } ;
+    rpbi.sType                      = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO ;
+    rpbi.pNext                      = NULL ;
+    rpbi.renderPass                 = vc->render_pass_ ;
+    rpbi.framebuffer                = frame_buffer ;
+    rpbi.renderArea.offset.x        = 0 ;
+    rpbi.renderArea.offset.y        = 0 ;
+    rpbi.renderArea.extent.width    = vc->swapchain_extent_.width ;
+    rpbi.renderArea.extent.height   = vc->swapchain_extent_.height ;
+    rpbi.clearValueCount            = array_count(cv) ;
+    rpbi.pClearValues               = cv ;
+
+    // void vkCmdBeginRenderPass(
+    //     VkCommandBuffer                             commandBuffer,
+    //     const VkRenderPassBeginInfo*                pRenderPassBegin,
+    //     VkSubpassContents                           contents);
+    vkCmdBeginRenderPass(command_buffer, &rpbi, VK_SUBPASS_CONTENTS_INLINE) ;
+
+    static VkViewport viewport = { 0 } ;
+    viewport.x          = 0.0f ;
+    viewport.y          = 0.0f ;
+    viewport.width      = (float) vc->swapchain_extent_.width ;
+    viewport.height     = (float) vc->swapchain_extent_.height ;
+    viewport.minDepth   = 0.0f ;
+    viewport.maxDepth   = 1.0f ;
+
+    // void vkCmdSetViewport(
+    //     VkCommandBuffer                             commandBuffer,
+    //     uint32_t                                    firstViewport,
+    //     uint32_t                                    viewportCount,
+    //     const VkViewport*                           pViewports);
+    vkCmdSetViewport(command_buffer, 0, 1, &viewport) ;
+
+    static VkRect2D scissor = { 0 } ;
+    scissor.offset.x        = 0 ;
+    scissor.offset.y        = 0 ;
+    scissor.extent.width    = vc->swapchain_extent_.width ;
+    scissor.extent.height   = vc->swapchain_extent_.height ;
+
+    // void vkCmdSetScissor(
+    //     VkCommandBuffer                             commandBuffer,
+    //     uint32_t                                    firstScissor,
+    //     uint32_t                                    scissorCount,
+    //     const VkRect2D*                             pScissors);
+    vkCmdSetScissor(command_buffer, 0, 1, &scissor) ;
+
+    end_timed_block() ;
+    return true ;
+}
+
+
+static bool
+end_record_command_buffer(
+    vulkan_context *    vc
+,   VkCommandBuffer     command_buffer
+)
+{
+    require(vc) ;
+    require(command_buffer) ;
+
+    begin_timed_block() ;
+
+
+    // void vkCmdEndRenderPass(
+    //     VkCommandBuffer                             commandBuffer);
+    vkCmdEndRenderPass(command_buffer) ;
+
+
+    // VkResult vkEndCommandBuffer(
+    //     VkCommandBuffer                             commandBuffer);
+    if(check_vulkan(vkEndCommandBuffer(command_buffer)))
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
+    end_timed_block() ;
+    return true ;
+}
+
+
+
+
 static bool
 update_rob(
     vulkan_context *    vc
@@ -5393,13 +5554,12 @@ update_rob(
     {
         vulkan_render_object * vro = &vc->render_objects_[i] ;
         require(vro->update_func_) ;
-        update_okay &= vro->update_func_(vro->vc_, vro->param_) ;
+        update_okay &= vro->update_func_(vro->vc_, vro->param_, vc->current_frame_) ;
     }
 
     end_timed_block() ;
     return update_okay ;
 }
-
 
 
 static bool
@@ -5411,6 +5571,24 @@ draw_rob(
 
     begin_timed_block() ;
 
+    if(vc->enable_pre_record_command_buffers_)
+    {
+        end_timed_block() ;
+        return true ;
+    }
+
+    if(check(begin_record_command_buffer(
+                vc
+            ,   vc->command_buffer_[vc->current_frame_]
+            ,   vc->framebuffers_[vc->image_index_]
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
+    }
+
     bool draw_okay = true ;
 
     for(
@@ -5421,7 +5599,18 @@ draw_rob(
     {
         vulkan_render_object * vro = &vc->render_objects_[i] ;
         require(vro->draw_func_) ;
-        draw_okay &= vro->draw_func_(vro->vc_, vro->param_) ;
+        draw_okay &= vro->draw_func_(vro->vc_, vro->param_, vc->current_frame_) ;
+    }
+
+    if(check(end_record_command_buffer(
+                vc
+            ,   vc->command_buffer_[vc->current_frame_]
+            )
+        )
+    )
+    {
+        end_timed_block() ;
+        return false ;
     }
 
     end_timed_block() ;
@@ -5438,17 +5627,53 @@ record_rob(
     require(vc) ;
     begin_timed_block() ;
 
+    if(!vc->enable_pre_record_command_buffers_)
+    {
+        end_timed_block() ;
+        return true ;
+    }
+
     bool record_okay = true ;
 
     for(
         uint32_t i = 0
-    ;   i < vc->render_objects_count_
+    ;   i < vc->frames_in_flight_count_
     ;   ++i
     )
     {
-        vulkan_render_object * vro = &vc->render_objects_[i] ;
-        require(vro->record_func_) ;
-        record_okay &= vro->record_func_(vro->vc_, vro->param_) ;
+        if(check(begin_record_command_buffer(
+                    vc
+                ,   vc->command_buffer_[i]
+                ,   vc->framebuffers_[i]
+                )
+            )
+        )
+        {
+            end_timed_block() ;
+            return false ;
+        }
+
+        for(
+            uint32_t rob = 0
+        ;   rob < vc->render_objects_count_
+        ;   ++rob
+        )
+        {
+            vulkan_render_object * vro = &vc->render_objects_[rob] ;
+            require(vro->record_func_) ;
+            record_okay &= vro->record_func_(vro->vc_, vro->param_, i) ;
+        }
+
+        if(check(end_record_command_buffer(
+                    vc
+                ,   vc->command_buffer_[i]
+                )
+            )
+        )
+        {
+            end_timed_block() ;
+            return false ;
+        }
     }
 
     end_timed_block() ;
@@ -5591,33 +5816,6 @@ draw_frame(
         end_timed_block() ;
         return false ;
     }
-
-    // // VkResult vkResetCommandBuffer(
-    // //     VkCommandBuffer                             commandBuffer,
-    // //     VkCommandBufferResetFlags                   flags);
-    // if(check_vulkan(vkResetCommandBuffer(
-    //             vc->command_buffer_[vc->current_frame_]
-    //         ,   0
-    //         )
-    //     )
-    // )
-    // {
-    //     end_timed_block() ;
-    //     return false ;
-    // }
-
-    // if(check(record_command_buffer(
-    //             vc
-    //         ,   vc->command_buffer_[vc->current_frame_]
-    //         ,   image_index
-    //         )
-    //     )
-    // )
-    // {
-    //     end_timed_block() ;
-    //     return false ;
-    // }
-
 
     VkSemaphore wait_semaphores[] = {
         vc->image_available_semaphore_[vc->current_frame_]
@@ -6632,11 +6830,12 @@ create_vulkan()
 {
     begin_timed_block() ;
 
+    vc_->enable_pre_record_command_buffers_ = VK_FALSE ;
+    //vc_->enable_pre_record_command_buffers_ = VK_TRUE ;
     vc_->enable_validation_ = VK_TRUE ;
     vc_->enable_sampling_ = VK_FALSE ;
     vc_->enable_sample_shading_ = VK_FALSE ;
     vc_->sample_count_ = VK_SAMPLE_COUNT_1_BIT ;
-
 
     vc_->frames_in_flight_count_            = 2 ;
     vc_->desired_swapchain_image_count_     = 2 ;
@@ -8850,6 +9049,22 @@ create_vulkan_render_object(
     begin_timed_block() ;
 
     check(create_render_object(vc_, vr)) ;
+
+    end_timed_block() ;
+    return true ;
+}
+
+
+int
+pre_record_command_buffers()
+{
+    begin_timed_block() ;
+
+    if(check(record_rob(vc_)))
+    {
+        end_timed_block() ;
+        return false ;
+    }
 
     end_timed_block() ;
     return true ;
