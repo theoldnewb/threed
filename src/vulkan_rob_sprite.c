@@ -104,23 +104,19 @@ static vulkan_rob   the_vulkan_rob_ = { 0 } ;
 //////////////////////////////////////7
 
 typedef struct vertex {
-    vec3 pos ;
-    vec3 color ;
+    vec2 pos ;
     vec2 uv ;
+    vec3 color ;
 } vertex ;
 
 static uint32_t const vertex_size = sizeof(vertex) ;
 
 static vertex const vertices[] =
 {
-    { {-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f} }
-,   { { 0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 1.0f}, {1.0f, 0.0f} }
-,   { { 0.5f,  0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f} }
-,   { {-0.5f,  0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f} }
-,   { {-0.5f, -0.5f,  0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f} }
-,   { { 0.5f, -0.5f,  0.5f}, {0.0f, 1.0f, 1.0f}, {1.0f, 0.0f} }
-,   { { 0.5f,  0.5f,  0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f} }
-,   { {-0.5f,  0.5f,  0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f} }
+    { {-0.5f, -0.5f}, {0.0f, 0.0f}, {1.0f, 0.0f, 0.0f} }
+,   { { 0.5f, -0.5f}, {1.0f, 0.0f}, {0.0f, 1.0f, 1.0f} }
+,   { { 0.5f,  0.5f}, {1.0f, 1.0f}, {0.0f, 0.0f, 1.0f} }
+,   { {-0.5f,  0.5f}, {0.0f, 1.0f}, {1.0f, 1.0f, 1.0f} }
 
 } ;
 static uint32_t const vertices_size = sizeof(vertices) ;
@@ -131,8 +127,6 @@ static uint16_t const indices[] =
 {
     0, 1, 2
 ,   2, 3, 0
-,   4, 5, 6
-,   6, 7, 4
 } ;
 static uint32_t const   indices_size = sizeof(indices) ;
 static uint32_t const   indices_count = array_count(indices) ;
@@ -657,7 +651,7 @@ create_rob(
                 &vr->texture_image_
             ,   &vr->texture_image_memory_
             ,   &vr->texture_mip_levels_
-            ,   "ass/textures/statue-1275469_1280.jpg"
+            ,   "ass/textures/goldish_sphere.png"
             ,   vc->device_
             ,   vc->command_pool_
             ,   vc->graphics_queue_
@@ -796,7 +790,7 @@ create_rob(
     if(check(load_shader_file(
                 &vr->vert_shader_
             ,   vc->device_
-            ,   "ass/shaders/shader.vert.spv"
+            ,   "ass/shaders/sprite_shader.vert.spv"
             )
         )
     )
@@ -809,7 +803,7 @@ create_rob(
     if(check(load_shader_file(
                 &vr->frag_shader_
             ,   vc->device_
-            ,   "ass/shaders/shader.frag.spv"
+            ,   "ass/shaders/sprite_shader.frag.spv"
             )
         )
     )
@@ -847,7 +841,7 @@ create_rob(
     ,   max_vulkan_vertex_input_attribute_descriptions
     ,   0
     ,   0
-    ,   VK_FORMAT_R32G32B32_SFLOAT
+    ,   VK_FORMAT_R32G32_SFLOAT
     ,   offsetof(vertex, pos)
     ) ;
 
@@ -857,8 +851,8 @@ create_rob(
     ,   max_vulkan_vertex_input_attribute_descriptions
     ,   1
     ,   0
-    ,   VK_FORMAT_R32G32B32_SFLOAT
-    ,   offsetof(vertex, color)
+    ,   VK_FORMAT_R32G32_SFLOAT
+    ,   offsetof(vertex, uv)
     ) ;
 
     add_vertex_input_attribute_description(
@@ -867,8 +861,8 @@ create_rob(
     ,   max_vulkan_vertex_input_attribute_descriptions
     ,   2
     ,   0
-    ,   VK_FORMAT_R32G32_SFLOAT
-    ,   offsetof(vertex, uv)
+    ,   VK_FORMAT_R32G32B32_SFLOAT
+    ,   offsetof(vertex, color)
     ) ;
 
     fill_pipeline_vertex_input_state_create_info(
@@ -946,7 +940,7 @@ create_rob(
 
     fill_pipeline_color_blend_attachment_state(
         &vr->pipeline_color_blend_attachment_state_
-    ,   VK_FALSE
+    ,   VK_TRUE
     ) ;
 
     fill_pipeline_color_blend_state_create_info(

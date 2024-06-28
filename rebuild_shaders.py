@@ -25,6 +25,9 @@ def main():
 
     run_glslc(src_dir / "shader.vert", dst_dir / "shader.vert.spv" )
     run_glslc(src_dir / "shader.frag", dst_dir / "shader.frag.spv" )
+    run_glslc(src_dir / "sprite_shader.vert", dst_dir / "sprite_shader.vert.spv" )
+    run_glslc(src_dir / "sprite_shader.frag", dst_dir / "sprite_shader.frag.spv" )
+
 
 
 if __name__ == "__main__":
