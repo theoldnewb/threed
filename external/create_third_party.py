@@ -45,12 +45,19 @@ def just_copy_dir(tpl_name):
     shutil.copytree(build_dir, tpl_dir)
 
 
+def create_python_venv(name):
+    build_dir = os.path.join(SCRIPT_PATH, TPL_DIR, name)
+    print("build_dir=%s" % build_dir)
+    subprocess.run(['python', '-m', 'venv', build_dir])
+
+
 def main():
     print("Hello, World!")
     print("SCRIPT_PATH=%s" % SCRIPT_PATH)
     #build_and_install("SDL")
     #build_and_install("cglm")
-    just_copy_dir("stb")
+    #just_copy_dir("stb")
+    create_python_venv("python")
 
 if __name__ == "__main__":
     main()
