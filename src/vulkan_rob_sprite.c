@@ -106,18 +106,42 @@ static vulkan_rob   the_vulkan_rob_ = { 0 } ;
 typedef struct vertex {
     vec2 pos ;
     vec2 uv ;
-    vec3 color ;
 } vertex ;
 
 static uint32_t const vertex_size = sizeof(vertex) ;
 
+
+static float const spw = 128.0f ;
+static float const sph = 128.0f ;
+static float const half_spw = spw / 2.0f ;
+static float const half_sph = sph / 2.0f ;
+static float const p0x = 0.0f ;
+static float const p0y = 0.0f ;
+static float const p1x = spw ;
+static float const p1y = 0.0f ;
+static float const p2x = spw ;
+static float const p2y = sph ;
+static float const p3x = 0.0f ;
+static float const p3y = sph ;
+
+static float const ttw = 1.0f ;
+static float const tth = 1.0f ;
+static float const t0u = 0.0f ;
+static float const t0v = 0.0f ;
+static float const t1u = ttw ;
+static float const t1v = 0.0f ;
+static float const t2u = ttw ;
+static float const t2v = tth ;
+static float const t3u = 0.0f ;
+static float const t3v = tth ;
+
+
 static vertex const vertices[] =
 {
-    { {-0.5f, -0.5f}, {0.0f, 0.0f}, {1.0f, 0.0f, 0.0f} }
-,   { { 0.5f, -0.5f}, {1.0f, 0.0f}, {0.0f, 1.0f, 1.0f} }
-,   { { 0.5f,  0.5f}, {1.0f, 1.0f}, {0.0f, 0.0f, 1.0f} }
-,   { {-0.5f,  0.5f}, {0.0f, 1.0f}, {1.0f, 1.0f, 1.0f} }
-
+    { {p0x, p0y}, {t0u, t0v} }
+,   { {p1x, p1y}, {t1u, t1v} }
+,   { {p2x, p2y}, {t2u, t2v} }
+,   { {p3x, p3y}, {t3u, t3v} }
 } ;
 static uint32_t const vertices_size = sizeof(vertices) ;
 //static uint32_t const vertices_count = array_count(vertices) ;
@@ -132,15 +156,78 @@ static uint32_t const   indices_size = sizeof(indices) ;
 static uint32_t const   indices_count = array_count(indices) ;
 
 
+#define max_ubo_instance_count  32
+
+
 typedef struct uniform_buffer_object
 {
-    mat4 model ;
-    mat4 view ;
-    mat4 proj ;
+    vec2 offset_ ;
+    vec2 scale_ ;
+    vec4 pos_[max_ubo_instance_count] ;
 } uniform_buffer_object ;
 
 
 static uint32_t const uniform_buffer_object_size = sizeof(uniform_buffer_object) ;
+
+
+static uniform_buffer_object ubos[max_vulkan_frames_in_flight] = { 0 } ;
+
+
+
+static void
+update_uniform_buffer(
+    vulkan_context *    vc
+,   vulkan_rob *        vr
+,   uint32_t const      current_frame
+)
+{
+    require(vc) ;
+    require(current_frame < max_vulkan_frames_in_flight) ;
+    require(current_frame < vc->frames_in_flight_count_) ;
+    require(vr) ;
+
+    static bool once = true ;
+    static uint64_t previous_time = 0 ;
+
+    uint64_t const current_time = get_app_time() ;
+
+    if(once)
+    {
+        once = false ;
+        previous_time = current_time ;
+    }
+
+    uint64_t const delta_time = (current_time - previous_time) ;
+    double const fractional_seconds = (double) delta_time * get_performance_frequency_inverse() ;
+
+    float const ox = app_->half_window_width_float_ - half_spw ;
+    float const oy = app_->half_window_height_float_ - half_sph ;
+    float const oxr = 6.0f * half_spw * sinf(fractional_seconds * 0.5f) ;
+    float const oyr = 4.0f * half_sph * sinf(fractional_seconds * 0.5f) ;
+
+    uniform_buffer_object * ubo = &ubos[current_frame] ;
+
+    ubo->offset_[0] = app_->half_window_width_float_ ;
+    ubo->offset_[1] = app_->half_window_height_float_ ;
+    ubo->scale_[0]  = app_->inverse_half_window_width_float_ ;
+    ubo->scale_[1]  = app_->inverse_half_window_height_float_ ;
+
+    float angle = fractional_seconds ;
+    float angle_inc = 2.0f * M_PI / max_ubo_instance_count ;
+
+    for(
+        uint32_t i = 0
+    ;   i < max_ubo_instance_count
+    ;   ++i
+    )
+    {
+        ubo->pos_[i][0]    = ox + oxr * sinf(angle) ;
+        ubo->pos_[i][1]    = oy + oyr * cosf(angle) ;
+        angle += angle_inc ;
+    }
+
+    SDL_memcpy(vr->uniform_buffers_mapped_[current_frame], ubo, uniform_buffer_object_size) ;
+}
 
 
 static bool
@@ -220,63 +307,13 @@ record_command_buffer(
     //     uint32_t                                    firstIndex,
     //     int32_t                                     vertexOffset,
     //     uint32_t                                    firstInstance);
-    vkCmdDrawIndexed(command_buffer, indices_count, 1, 0, 0, 0) ;
+    vkCmdDrawIndexed(command_buffer, indices_count, max_ubo_instance_count, 0, 0, 0) ;
 
     end_timed_block() ;
     return true ;
 }
 
 
-static void
-update_uniform_buffer(
-    vulkan_context *    vc
-,   vulkan_rob *        vr
-,   uint32_t const      current_frame
-)
-{
-    require(vc) ;
-    require(current_frame < max_vulkan_frames_in_flight) ;
-    require(current_frame < vc->frames_in_flight_count_) ;
-    require(vr) ;
-
-    static bool once = true ;
-    static uint64_t previous_time = 0 ;
-
-    uint64_t const current_time = get_app_time() ;
-
-    if(once)
-    {
-        once = false ;
-        previous_time = current_time ;
-    }
-
-    uint64_t const delta_time = (current_time - previous_time) / 3 ;
-    double const fractional_seconds = (double) delta_time * get_performance_frequency_inverse() ;
-    //log_debug("%f", fractional_seconds) ;
-
-    uniform_buffer_object ubo = { 0 } ;
-
-    // glm_mat4_identity(ubo.model) ;
-    // glm_mat4_identity(ubo.view) ;
-    // glm_mat4_identity(ubo.proj) ;
-
-    float angle = fractional_seconds ;
-    vec3 axis = {1.0f, 0.3f, 1.0f} ;
-    glm_rotate_make(ubo.model, angle, axis) ;
-
-    vec3 eye    = { 0.0f, 1.0f, 1.0f } ;
-    vec3 center = { 0.0f, 0.0f, 0.0f } ;
-    vec3 up     = { 0.0f, 0.0f, 1.0f } ;
-    glm_lookat(eye, center, up, ubo.view) ;
-
-    float fovy = glm_rad(45.0f) ;
-    float aspect_ratio = (float)vc->swapchain_extent_.width / (float)vc->swapchain_extent_.height ;
-    float near = 0.1f ;
-    float far = 10.f ;
-    glm_perspective(fovy, aspect_ratio, near, far, ubo.proj) ;
-
-    SDL_memcpy(vr->uniform_buffers_mapped_[current_frame], &ubo, sizeof(ubo)) ;
-}
 
 
 static bool
@@ -855,15 +892,15 @@ create_rob(
     ,   offsetof(vertex, uv)
     ) ;
 
-    add_vertex_input_attribute_description(
-        vr->vertex_input_attribute_descriptions_
-    ,   &vr->vertex_input_attribute_descriptions_count_
-    ,   max_vulkan_vertex_input_attribute_descriptions
-    ,   2
-    ,   0
-    ,   VK_FORMAT_R32G32B32_SFLOAT
-    ,   offsetof(vertex, color)
-    ) ;
+    // add_vertex_input_attribute_description(
+    //     vr->vertex_input_attribute_descriptions_
+    // ,   &vr->vertex_input_attribute_descriptions_count_
+    // ,   max_vulkan_vertex_input_attribute_descriptions
+    // ,   2
+    // ,   0
+    // ,   VK_FORMAT_R32G32B32_SFLOAT
+    // ,   offsetof(vertex, color)
+    // ) ;
 
     fill_pipeline_vertex_input_state_create_info(
         &vr->pipeline_vertex_input_state_create_info_
@@ -940,7 +977,7 @@ create_rob(
 
     fill_pipeline_color_blend_attachment_state(
         &vr->pipeline_color_blend_attachment_state_
-    ,   VK_TRUE
+    ,   VK_FALSE
     ) ;
 
     fill_pipeline_color_blend_state_create_info(

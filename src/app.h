@@ -16,6 +16,12 @@ typedef struct app
     SDL_Window *    window_ ;
     int             window_width_ ;
     int             window_height_ ;
+    float           window_width_float_ ;
+    float           window_height_float_ ;
+    float           half_window_width_float_ ;
+    float           half_window_height_float_ ;
+    float           inverse_half_window_width_float_ ;
+    float           inverse_half_window_height_float_ ;
 
     bool            created_ ;
     bool            running_ ;

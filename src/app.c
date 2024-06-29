@@ -114,6 +114,18 @@ get_performance_frequency_inverse()
 }
 
 
+static void
+recalc_size()
+{
+    app_->window_width_float_               = (float) app_->window_width_ ;
+    app_->window_height_float_              = (float) app_->window_height_ ;
+    app_->half_window_width_float_          = app_->window_width_float_ / 2.0f ;
+    app_->half_window_height_float_         = app_->window_height_float_ / 2.0f ;
+    app_->inverse_half_window_width_float_  = 1.0f / app_->half_window_width_float_ ;
+    app_->inverse_half_window_height_float_ = 1.0f / app_->half_window_height_float_ ;
+}
+
+
 bool
 create_app()
 {
@@ -163,6 +175,8 @@ create_app()
     {
         return false ;
     }
+
+    recalc_size() ;
 
     app_->created_ = true ;
     return true ;
@@ -229,6 +243,7 @@ resize_app(
     app_->window_width_ = new_width ;
     app_->window_height_ = new_height ;
 
+    recalc_size() ;
     resize_gfx() ;
 }
 
@@ -253,6 +268,7 @@ handle_window_event(
         break ;
     case SDL_EVENT_WINDOW_RESIZED:
         log_debug("Resized: [%d,%d]", we->data1, we->data2) ;
+        resize_app(we->data1, we->data2) ;
         break ;
     case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
         break ;
