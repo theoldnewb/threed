@@ -20,6 +20,25 @@ class PackRect:
         self.packed_w_  = 0
         self.packed_h_  = 0
         self.packed_b_  = 0
+        self.bin_w_     = 0
+        self.bin_h_     = 0
+        self.ax_        = 0
+        self.ay_        = 0
+        self.bx_        = 0
+        self.by_        = 0
+        self.cx_        = 0
+        self.cy_        = 0
+        self.dx_        = 0
+        self.dy_        = 0
+
+        self.au_        = 0
+        self.av_        = 0
+        self.bu_        = 0
+        self.bv_        = 0
+        self.cu_        = 0
+        self.cv_        = 0
+        self.du_        = 0
+        self.dv_        = 0
 
 
     def is_valid(self):
@@ -39,7 +58,6 @@ class PackRect:
     def set_index(self, index=0):
         self.index_ = index
 
-
     def set_border(self, left=0, top=0, right=0, bottom=0):
         assert(left >= 0)
         assert(top >= 0)
@@ -56,6 +74,10 @@ class PackRect:
         self.packed_w_  = pw
         self.packed_h_  = ph
         self.packed_b_  = pb
+
+    def set_bin_size(self, w, h):
+        self.bin_w_ = w
+        self.bin_h_ = h
 
     def get_border_width(self):
         assert(self.is_valid())
@@ -78,6 +100,41 @@ class PackRect:
     def dump(self):
         print("index=%3d name=%s img_size=%s crop_rect=%s crop_size=%s pack_size%s" %
         (self.index_, self.file_name_, str(self.get_image_size()), str(self.crop_rect_), str(self.crop_size_), str(self.get_pack_size())))
+
+
+    def calc_pos_uv(self):
+        x = self.packed_l_ + self.border_l_
+        y = self.packed_t_ + self.border_t_
+        w = self.crop_size_[0]
+        h = self.crop_size_[1]
+
+        # a-----b
+        # |     |
+        # |     |
+        # c-----d
+
+        self.ax_ = x
+        self.ax_ = y
+        self.bx_ = x + w
+        self.bx_ = y
+        self.cx_ = x
+        self.cy_ = y + h
+        self.dx_ = x + w
+        self.dy_ = y + h
+
+        def norm(t, n, m):
+            return t * n / m
+
+        tex_range = 1.0
+
+        self.au_ = norm(self.ax_, tex_range, self.bin_w_)
+        self.av_ = norm(self.ay_, tex_range, self.bin_h_)
+        self.bu_ = norm(self.bx_, tex_range, self.bin_w_)
+        self.bv_ = norm(self.by_, tex_range, self.bin_h_)
+        self.cu_ = norm(self.cx_, tex_range, self.bin_w_)
+        self.cv_ = norm(self.cy_, tex_range, self.bin_h_)
+        self.du_ = norm(self.dx_, tex_range, self.bin_w_)
+        self.dv_ = norm(self.dy_, tex_range, self.bin_h_)
 
 
 
@@ -194,6 +251,8 @@ def test_pack_rects(rects):
     for r in all_rects_sorted:
         b, x, y, w, h, i = r
         rects[i].set_packed(x, y, w, h, b)
+        rects[i].set_bin_size(bin_w, bin_h)
+        rects[i].calc_pos_uv()
         #print(r)
 
     dst_img = Image.new("RGBA", bin_size)
@@ -206,6 +265,12 @@ def test_pack_rects(rects):
         copy_pack_rect(dst_img, r)
     dst_img.save("test.png", "PNG")
 
+    for r in rects:
+        print("%d" % r.index_)
+        print("%f, %f, %f, %f" % (r.ax_, r.ay_, r.au_, r.av_) )
+        print("%f, %f, %f, %f" % (r.bx_, r.by_, r.bu_, r.bv_) )
+        print("%f, %f, %f, %f" % (r.cx_, r.cy_, r.cu_, r.cv_) )
+        print("%f, %f, %f, %f" % (r.dx_, r.dy_, r.du_, r.dv_) )
 
 
 
