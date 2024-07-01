@@ -111,15 +111,15 @@ class PackRect:
         # a-----b
         # |     |
         # |     |
-        # c-----d
+        # d-----c
 
         self.ax_ = x
-        self.ax_ = y
+        self.ay_ = y
         self.bx_ = x + w
-        self.bx_ = y
-        self.cx_ = x
+        self.by_ = y
+        self.cx_ = x + w
         self.cy_ = y + h
-        self.dx_ = x + w
+        self.dx_ = x
         self.dy_ = y + h
 
         def norm(t, n, m):
