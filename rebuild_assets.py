@@ -1,22 +1,14 @@
 #!tpl/python/bin/python
 
-
-#!/usr/bin/env python3
-
 import os
-import shutil
-import subprocess
-import pathlib
-import argparse
-from PIL import Image
 
-SCRIPT_PATH=pathlib.Path(__file__).parent
-#PYTHON_BIN="tpl/python/bin/python"
+from pymod import make_texture_atlas
 
 def main():
-    #pybin = os.path.join(SCRIPT_PATH, PYTHON_BIN)
-    print("SCRIPT_PATH=%s" % SCRIPT_PATH)
-    #print("pybin=%s" % pybin)
+    root_path = os.path.dirname(os.path.realpath(__file__))
+    src_path = os.path.join(root_path, "dat")
+    dst_path = os.path.join(root_path, "ass")
+    make_texture_atlas.run(src_path, dst_path)
 
 
 if __name__ == "__main__":
