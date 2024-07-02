@@ -136,6 +136,60 @@ class PackRect:
         self.du_ = norm(self.dx_, tex_range, self.bin_w_)
         self.dv_ = norm(self.dy_, tex_range, self.bin_h_)
 
+        self.ax_ = 0
+        self.ay_ = 0
+        self.bx_ = w
+        self.by_ = 0
+        self.cx_ = w
+        self.cy_ = h
+        self.dx_ = 0
+        self.dy_ = h
+
+    def calc_pos_uv_animation(self, min_max_crop_rect):
+        x = self.packed_l_ + self.border_l_
+        y = self.packed_t_ + self.border_t_
+        w = self.crop_size_[0]
+        h = self.crop_size_[1]
+
+        # a-----b
+        # |     |
+        # |     |
+        # d-----c
+
+        self.ax_ = x
+        self.ay_ = y
+        self.bx_ = x + w
+        self.by_ = y
+        self.cx_ = x + w
+        self.cy_ = y + h
+        self.dx_ = x
+        self.dy_ = y + h
+
+        def norm(t, n, m):
+            return t * n / m
+
+        tex_range = 1.0
+
+        self.au_ = norm(self.ax_, tex_range, self.bin_w_)
+        self.av_ = norm(self.ay_, tex_range, self.bin_h_)
+        self.bu_ = norm(self.bx_, tex_range, self.bin_w_)
+        self.bv_ = norm(self.by_, tex_range, self.bin_h_)
+        self.cu_ = norm(self.cx_, tex_range, self.bin_w_)
+        self.cv_ = norm(self.cy_, tex_range, self.bin_h_)
+        self.du_ = norm(self.dx_, tex_range, self.bin_w_)
+        self.dv_ = norm(self.dy_, tex_range, self.bin_h_)
+
+        px = self.crop_rect_[0] - min_max_crop_rect[0]
+        py = self.crop_rect_[1] - min_max_crop_rect[1]
+
+        self.ax_ = px
+        self.ay_ = py
+        self.bx_ = px + w
+        self.by_ = py
+        self.cx_ = px + w
+        self.cy_ = py + h
+        self.dx_ = px
+        self.dy_ = py + h
 
 
 def hello_packrect():
@@ -185,6 +239,29 @@ def calc_crop_size(crop_rect):
     assert(1 + crop_rect[2] - crop_rect[0] >= 0)
     assert(1 + crop_rect[3] - crop_rect[1] >= 0)
     return (1 + crop_rect[2] - crop_rect[0], 1 + crop_rect[3] - crop_rect[1])
+
+
+def find_min_max_crop_rect(crop_rects):
+    assert(len(crop_rects) > 0)
+    min_x = crop_rects[0][0]
+    min_y = crop_rects[0][1]
+    max_x = crop_rects[0][2]
+    max_y = crop_rects[0][3]
+    for r in crop_rects:
+        min_x = min(min_x, r[0])
+        min_y = min(min_y, r[1])
+        max_x = max(max_x, r[2])
+        max_y = max(max_y, r[3])
+    assert(min_x >= 0)
+    assert(min_x <= max_x)
+    assert(max_x >= 0)
+    assert(max_x >= min_x)
+    assert(min_y >= 0)
+    assert(min_y <= max_y)
+    assert(max_y >= 0)
+    assert(max_y >= min_y)
+    return (min_x, min_y, max_x, max_y)
+
 
 
 def create_image(file_name):
@@ -241,18 +318,25 @@ def test_pack_rects(rects):
     bin_h = 1024
     bin_size = (bin_w, bin_h)
 
+
+    all_crop_rects = list()
     for r in rects:
         w, h = r.get_pack_size()
         sizes.append( (w, h, r.index_) )
+        all_crop_rects.append(r.crop_rect_)
+
+    min_max_crop_rect = find_min_max_crop_rect(all_crop_rects)
 
     all_rects = binpack.do_pack(sizes, bin_size)
 
     all_rects_sorted = sorted(all_rects, key=lambda tup: tup[5])
+
     for r in all_rects_sorted:
         b, x, y, w, h, i = r
         rects[i].set_packed(x, y, w, h, b)
         rects[i].set_bin_size(bin_w, bin_h)
-        rects[i].calc_pos_uv()
+        #rects[i].calc_pos_uv()
+        rects[i].calc_pos_uv_animation(min_max_crop_rect)
         #print(r)
 
     dst_img = Image.new("RGBA", bin_size)
@@ -265,13 +349,15 @@ def test_pack_rects(rects):
         copy_pack_rect(dst_img, r)
     dst_img.save("test.png", "PNG")
 
-    for r in rects:
-        print("%d" % r.index_)
-        print("%f, %f, %f, %f" % (r.ax_, r.ay_, r.au_, r.av_) )
-        print("%f, %f, %f, %f" % (r.bx_, r.by_, r.bu_, r.bv_) )
-        print("%f, %f, %f, %f" % (r.cx_, r.cy_, r.cu_, r.cv_) )
-        print("%f, %f, %f, %f" % (r.dx_, r.dy_, r.du_, r.dv_) )
 
+    for r in rects:
+        #print("%d" % r.index_)
+        print(", {")
+        print("    { %f, %f, %f, %f }" % (r.ax_, r.ay_, r.au_, r.av_) )
+        print("  , { %f, %f, %f, %f }" % (r.bx_, r.by_, r.bu_, r.bv_) )
+        print("  , { %f, %f, %f, %f }" % (r.cx_, r.cy_, r.cu_, r.cv_) )
+        print("  , { %f, %f, %f, %f }" % (r.dx_, r.dy_, r.du_, r.dv_) )
+        print("  }")
 
 
 def create_pack_rects(src_dir, dst_dir):
