@@ -315,7 +315,7 @@ def test_pack_rects(rects):
     sizes = list()
 
     bin_w = 2048
-    bin_h = 1024
+    bin_h = 2048
     bin_size = (bin_w, bin_h)
 
 
@@ -333,6 +333,7 @@ def test_pack_rects(rects):
 
     for r in all_rects_sorted:
         b, x, y, w, h, i = r
+        assert(b == 0)
         rects[i].set_packed(x, y, w, h, b)
         rects[i].set_bin_size(bin_w, bin_h)
         #rects[i].calc_pos_uv()
