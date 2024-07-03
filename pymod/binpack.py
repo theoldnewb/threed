@@ -14,9 +14,9 @@ from rectpack import SORT_RATIO
 from rectpack import SORT_NONE
 
 
-def do_pack(sizes, bin_size):
+def do_pack(sizes, bin_size, allow_rotation):
 
-    packer = newPacker(mode=PackingMode.Offline, bin_algo=PackingBin.Global, pack_algo=MaxRectsBssf, rotation=False)
+    packer = newPacker(mode=PackingMode.Offline, bin_algo=PackingBin.Global, pack_algo=MaxRectsBssf, rotation=allow_rotation)
     packer.add_bin(bin_size[0], bin_size[1], count=float("inf"))
 
     for size in sizes:

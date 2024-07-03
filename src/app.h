@@ -22,6 +22,7 @@ typedef struct app
     float           half_window_height_float_ ;
     float           inverse_half_window_width_float_ ;
     float           inverse_half_window_height_float_ ;
+    int             cnt_ ;
 
     bool            created_ ;
     bool            running_ ;

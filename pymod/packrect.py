@@ -3,6 +3,7 @@ import os
 from PIL import Image
 from pymod import io
 from pymod import binpack
+from pymod import math
 
 
 class PackRect:
@@ -20,6 +21,7 @@ class PackRect:
         self.packed_w_  = 0
         self.packed_h_  = 0
         self.packed_b_  = 0
+        self.rotated_   = False
         self.bin_w_     = 0
         self.bin_h_     = 0
         self.ax_        = 0
@@ -74,6 +76,10 @@ class PackRect:
         self.packed_w_  = pw
         self.packed_h_  = ph
         self.packed_b_  = pb
+        self.rotated_   = False
+        w, h = self.get_pack_size()
+        if int(w) != int(h):
+            self.rotated_ = int(w) == int(self.packed_h_) and int(h) == int(self.packed_w_)
 
     def set_bin_size(self, w, h):
         self.bin_w_ = w
@@ -98,98 +104,105 @@ class PackRect:
         return (w, h)
 
     def dump(self):
-        print("index=%3d name=%s img_size=%s crop_rect=%s crop_size=%s pack_size%s" %
-        (self.index_, self.file_name_, str(self.get_image_size()), str(self.crop_rect_), str(self.crop_size_), str(self.get_pack_size())))
+        print("index=%3d name=%s bin=%d, rotated=%s, img_size=%s crop_rect=%s crop_size=%s pack_size%s" %
+        (self.index_, self.file_name_, self.packed_b_, str(self.rotated_), str(self.get_image_size()), str(self.crop_rect_), str(self.crop_size_), str(self.get_pack_size())))
 
 
-    def calc_pos_uv(self):
-        x = self.packed_l_ + self.border_l_
-        y = self.packed_t_ + self.border_t_
-        w = self.crop_size_[0]
-        h = self.crop_size_[1]
+    def calc_pos_uv(self, min_max_crop_rect=None):
+        if self.rotated_:
+            x = self.packed_l_ + self.border_t_
+            y = self.packed_t_ + self.border_l_
+            w = self.crop_size_[1]
+            h = self.crop_size_[0]
+            l = 0
+            t = 0
+            if min_max_crop_rect is not None:
+                l = self.crop_rect_[0] - min_max_crop_rect[0]
+                t = self.crop_rect_[1] - min_max_crop_rect[1]
 
-        # a-----b
-        # |     |
-        # |     |
-        # d-----c
+            # a-----------b
+            # |           |
+            # |           |
+            # d-----------c
 
-        self.ax_ = x
-        self.ay_ = y
-        self.bx_ = x + w
-        self.by_ = y
-        self.cx_ = x + w
-        self.cy_ = y + h
-        self.dx_ = x
-        self.dy_ = y + h
+            # b-----c
+            # |     |
+            # |     |
+            # |     |
+            # |     |
+            # |     |
+            # a-----d
 
-        def norm(t, n, m):
-            return t * n / m
+            self.ax_ = l
+            self.ay_ = t
+            self.bx_ = l + w
+            self.by_ = t
+            self.cx_ = l + w
+            self.cy_ = t + h
+            self.dx_ = l
+            self.dy_ = t + h
 
-        tex_range = 1.0
+            tax = x
+            tay = y
+            tbx = x + w
+            tby = y
+            tcx = x + w
+            tcy = y + h
+            tdx = x
+            tdy = y + h
+            tex_range = 1.0
 
-        self.au_ = norm(self.ax_, tex_range, self.bin_w_)
-        self.av_ = norm(self.ay_, tex_range, self.bin_h_)
-        self.bu_ = norm(self.bx_, tex_range, self.bin_w_)
-        self.bv_ = norm(self.by_, tex_range, self.bin_h_)
-        self.cu_ = norm(self.cx_, tex_range, self.bin_w_)
-        self.cv_ = norm(self.cy_, tex_range, self.bin_h_)
-        self.du_ = norm(self.dx_, tex_range, self.bin_w_)
-        self.dv_ = norm(self.dy_, tex_range, self.bin_h_)
+            self.au_ = math.normalize(tax, tex_range, self.bin_w_)
+            self.av_ = math.normalize(tay, tex_range, self.bin_h_)
+            self.bu_ = math.normalize(tbx, tex_range, self.bin_w_)
+            self.bv_ = math.normalize(tby, tex_range, self.bin_h_)
+            self.cu_ = math.normalize(tcx, tex_range, self.bin_w_)
+            self.cv_ = math.normalize(tcy, tex_range, self.bin_h_)
+            self.du_ = math.normalize(tdx, tex_range, self.bin_w_)
+            self.dv_ = math.normalize(tdy, tex_range, self.bin_h_)
 
-        self.ax_ = 0
-        self.ay_ = 0
-        self.bx_ = w
-        self.by_ = 0
-        self.cx_ = w
-        self.cy_ = h
-        self.dx_ = 0
-        self.dy_ = h
+        else:
+            x = self.packed_l_ + self.border_l_
+            y = self.packed_t_ + self.border_t_
+            w = self.crop_size_[0]
+            h = self.crop_size_[1]
+            l = 0
+            t = 0
+            if min_max_crop_rect is not None:
+                l = self.crop_rect_[0] - min_max_crop_rect[0]
+                t = self.crop_rect_[1] - min_max_crop_rect[1]
 
-    def calc_pos_uv_animation(self, min_max_crop_rect):
-        x = self.packed_l_ + self.border_l_
-        y = self.packed_t_ + self.border_t_
-        w = self.crop_size_[0]
-        h = self.crop_size_[1]
+            # a-----b
+            # |     |
+            # |     |
+            # d-----c
+            self.ax_ = l
+            self.ay_ = t
+            self.bx_ = l + w
+            self.by_ = t
+            self.cx_ = l + w
+            self.cy_ = t + h
+            self.dx_ = l
+            self.dy_ = t + h
 
-        # a-----b
-        # |     |
-        # |     |
-        # d-----c
+            tax = x
+            tay = y
+            tbx = x + w
+            tby = y
+            tcx = x + w
+            tcy = y + h
+            tdx = x
+            tdy = y + h
+            tex_range = 1.0
 
-        self.ax_ = x
-        self.ay_ = y
-        self.bx_ = x + w
-        self.by_ = y
-        self.cx_ = x + w
-        self.cy_ = y + h
-        self.dx_ = x
-        self.dy_ = y + h
-
-        def norm(t, n, m):
-            return t * n / m
-
-        tex_range = 1.0
-
-        self.au_ = norm(self.ax_, tex_range, self.bin_w_)
-        self.av_ = norm(self.ay_, tex_range, self.bin_h_)
-        self.bu_ = norm(self.bx_, tex_range, self.bin_w_)
-        self.bv_ = norm(self.by_, tex_range, self.bin_h_)
-        self.cu_ = norm(self.cx_, tex_range, self.bin_w_)
-        self.cv_ = norm(self.cy_, tex_range, self.bin_h_)
-        self.du_ = norm(self.dx_, tex_range, self.bin_w_)
-        self.dv_ = norm(self.dy_, tex_range, self.bin_h_)
-
-        px = self.crop_rect_[0] - min_max_crop_rect[0]
-        py = self.crop_rect_[1] - min_max_crop_rect[1]
-
-        self.ax_ = px
-        self.ay_ = py
-        self.bx_ = px + w
-        self.by_ = py
-        self.cx_ = px + w
-        self.cy_ = py + h
-        self.dx_ = px
-        self.dy_ = py + h
+            self.au_ = math.normalize(tax, tex_range, self.bin_w_)
+            self.av_ = math.normalize(tay, tex_range, self.bin_h_)
+            self.bu_ = math.normalize(tbx, tex_range, self.bin_w_)
+            self.bv_ = math.normalize(tby, tex_range, self.bin_h_)
+            self.cu_ = math.normalize(tcx, tex_range, self.bin_w_)
+            self.cv_ = math.normalize(tcy, tex_range, self.bin_h_)
+            self.du_ = math.normalize(tdx, tex_range, self.bin_w_)
+            self.dv_ = math.normalize(tdy, tex_range, self.bin_h_)
 
 
 def hello_packrect():
@@ -274,7 +287,7 @@ def create_pack_rect(file_name):
     #print("file_name=%s" % file_name)
     assert(os.path.isfile(file_name))
     pr = PackRect(file_name)
-    pr.set_border(1, 1, 0, 0)
+    pr.set_border(1, 1, 1, 1)
     return pr
 
 
@@ -295,20 +308,37 @@ def copy_pack_rect(img, pr):
     w = l + pr.packed_w_
     h = t + pr.packed_h_
     #print("l=%d, t=%d, w=%d, h=%d" % (l, t, w, h))
+    col = 0x00000000
     for y in range(t, h):
         for x in range(l, w):
-            img.putpixel((x, y), 0x00ff00ff)
+            #if pr.rotated_:
+            #    col = 0xFF0000FF
+            #else:
+            #    col = 0xFF00FF00
+            img.putpixel((x, y), col)
 
+    count = 0
     w = pr.crop_size_[0]
     h = pr.crop_size_[1]
     for y in range(0, h):
         src_y = y + pr.crop_rect_[1]
-        dst_y = y + pr.packed_t_ + pr.border_t_
         for x in range(0, w):
             src_x = x + pr.crop_rect_[0]
-            dst_x = x + pr.packed_l_ + pr.border_l_
+            if pr.rotated_:
+                dst_x = y + pr.packed_l_ + pr.border_t_
+                dst_y = x + pr.packed_t_ + pr.border_l_
+            else:
+                dst_x = x + pr.packed_l_ + pr.border_l_
+                dst_y = y + pr.packed_t_ + pr.border_t_
+
             rgba = pr.image_.getpixel((src_x, src_y))
+
+            #if count == 2:
             img.putpixel((dst_x, dst_y), rgba)
+            #    count = 0
+            #count = count + 1
+
+
 
 
 def test_pack_rects(rects):
@@ -318,7 +348,6 @@ def test_pack_rects(rects):
     bin_h = 2048
     bin_size = (bin_w, bin_h)
 
-
     all_crop_rects = list()
     for r in rects:
         w, h = r.get_pack_size()
@@ -327,7 +356,7 @@ def test_pack_rects(rects):
 
     min_max_crop_rect = find_min_max_crop_rect(all_crop_rects)
 
-    all_rects = binpack.do_pack(sizes, bin_size)
+    all_rects = binpack.do_pack(sizes, bin_size, True)
 
     all_rects_sorted = sorted(all_rects, key=lambda tup: tup[5])
 
@@ -336,8 +365,7 @@ def test_pack_rects(rects):
         assert(b == 0)
         rects[i].set_packed(x, y, w, h, b)
         rects[i].set_bin_size(bin_w, bin_h)
-        #rects[i].calc_pos_uv()
-        rects[i].calc_pos_uv_animation(min_max_crop_rect)
+        rects[i].calc_pos_uv(min_max_crop_rect)
         #print(r)
 
     dst_img = Image.new("RGBA", bin_size)
@@ -347,18 +375,41 @@ def test_pack_rects(rects):
         #x = r.packed_l_ + r.border_l_
         #y = r.packed_t_ + r.border_t_
         #dst_img.paste(r.crop_img_, (x, y))
+        r.dump()
         copy_pack_rect(dst_img, r)
+
     dst_img.save("test.png", "PNG")
 
+    w = io.AssetWriter(8)
+    w.u32(0x00000001)
+    w.u32(len(rects))
+    w.u32(0)
+    w.u32(0)
 
     for r in rects:
-        #print("%d" % r.index_)
-        print(", {")
-        print("    { %f, %f, %f, %f }" % (r.ax_, r.ay_, r.au_, r.av_) )
-        print("  , { %f, %f, %f, %f }" % (r.bx_, r.by_, r.bu_, r.bv_) )
-        print("  , { %f, %f, %f, %f }" % (r.cx_, r.cy_, r.cu_, r.cv_) )
-        print("  , { %f, %f, %f, %f }" % (r.dx_, r.dy_, r.du_, r.dv_) )
-        print("  }")
+        w.f32(r.ax_)
+        w.f32(r.ay_)
+        w.f32(r.au_)
+        w.f32(r.av_)
+
+        w.f32(r.bx_)
+        w.f32(r.by_)
+        w.f32(r.bu_)
+        w.f32(r.bv_)
+
+        w.f32(r.cx_)
+        w.f32(r.cy_)
+        w.f32(r.cu_)
+        w.f32(r.cv_)
+
+        w.f32(r.dx_)
+        w.f32(r.dy_)
+        w.f32(r.du_)
+        w.f32(r.dv_)
+
+    w.save_as("test.sprf")
+
+
 
 
 def create_pack_rects(src_dir, dst_dir):
@@ -371,9 +422,6 @@ def create_pack_rects(src_dir, dst_dir):
         pr = create_pack_rect(file_name)
         pr.set_index(index)
         pack_rects.append(pr)
-
-    for pr in pack_rects:
-        pr.dump()
 
     test_pack_rects(pack_rects)
 

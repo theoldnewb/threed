@@ -399,7 +399,31 @@ handle_keyboard_event(
     default:
         break ;
     }
+
+    switch(ke->type)
+    {
+    case SDL_EVENT_KEY_UP:
+        switch(ke->keysym.sym)
+        {
+        case SDLK_LEFT:
+            --app_->cnt_ ;
+            break ;
+        case SDLK_RIGHT:
+            ++app_->cnt_ ;
+            break ;
+
+        default:
+            break ;
+        }
+        break ;
+
+    default:
+        break ;
+    }
+
+
 }
+
 
 
 void
