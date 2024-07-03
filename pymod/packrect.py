@@ -109,100 +109,61 @@ class PackRect:
 
 
     def calc_pos_uv(self, min_max_crop_rect=None):
+        px = 0
+        py = 0
+        pw = self.crop_size_[0]
+        ph = self.crop_size_[1]
+        if min_max_crop_rect is not None:
+            px = self.crop_rect_[0] - min_max_crop_rect[0]
+            py = self.crop_rect_[1] - min_max_crop_rect[1]
+
+        self.ax_ = px
+        self.ay_ = py
+        self.bx_ = px + pw
+        self.by_ = py
+        self.cx_ = px + pw
+        self.cy_ = py + ph
+        self.dx_ = px
+        self.dy_ = py + ph
+
+        tu = self.packed_l_ + self.border_l_
+        tv = self.packed_t_ + self.border_t_
+        tw = self.crop_size_[0]
+        th = self.crop_size_[1]
+
+        tax = tu
+        tay = tv
+        tbx = tu + tw
+        tby = tv
+        tcx = tu + tw
+        tcy = tv + th
+        tdx = tu
+        tdy = tv + th
+
         if self.rotated_:
-            x = self.packed_l_ + self.border_t_
-            y = self.packed_t_ + self.border_l_
-            w = self.crop_size_[1]
-            h = self.crop_size_[0]
-            l = 0
-            t = 0
-            if min_max_crop_rect is not None:
-                l = self.crop_rect_[0] - min_max_crop_rect[0]
-                t = self.crop_rect_[1] - min_max_crop_rect[1]
+            tu = self.packed_l_ + self.border_t_
+            tv = self.packed_t_ + self.border_l_
+            tw = self.crop_size_[1]
+            th = self.crop_size_[0]
+            tax = tu + tw
+            tay = tv
+            tbx = tu + tw
+            tby = tv + th
+            tcx = tu
+            tcy = tv + th
+            tdx = tu
+            tdy = tv
 
-            # a-----------b
-            # |           |
-            # |           |
-            # d-----------c
 
-            # b-----c
-            # |     |
-            # |     |
-            # |     |
-            # |     |
-            # |     |
-            # a-----d
-
-            self.ax_ = l
-            self.ay_ = t
-            self.bx_ = l + w
-            self.by_ = t
-            self.cx_ = l + w
-            self.cy_ = t + h
-            self.dx_ = l
-            self.dy_ = t + h
-
-            tax = x
-            tay = y
-            tbx = x + w
-            tby = y
-            tcx = x + w
-            tcy = y + h
-            tdx = x
-            tdy = y + h
-            tex_range = 1.0
-
-            self.au_ = math.normalize(tax, tex_range, self.bin_w_)
-            self.av_ = math.normalize(tay, tex_range, self.bin_h_)
-            self.bu_ = math.normalize(tbx, tex_range, self.bin_w_)
-            self.bv_ = math.normalize(tby, tex_range, self.bin_h_)
-            self.cu_ = math.normalize(tcx, tex_range, self.bin_w_)
-            self.cv_ = math.normalize(tcy, tex_range, self.bin_h_)
-            self.du_ = math.normalize(tdx, tex_range, self.bin_w_)
-            self.dv_ = math.normalize(tdy, tex_range, self.bin_h_)
-
-        else:
-            x = self.packed_l_ + self.border_l_
-            y = self.packed_t_ + self.border_t_
-            w = self.crop_size_[0]
-            h = self.crop_size_[1]
-            l = 0
-            t = 0
-            if min_max_crop_rect is not None:
-                l = self.crop_rect_[0] - min_max_crop_rect[0]
-                t = self.crop_rect_[1] - min_max_crop_rect[1]
-
-            # a-----b
-            # |     |
-            # |     |
-            # d-----c
-            self.ax_ = l
-            self.ay_ = t
-            self.bx_ = l + w
-            self.by_ = t
-            self.cx_ = l + w
-            self.cy_ = t + h
-            self.dx_ = l
-            self.dy_ = t + h
-
-            tax = x
-            tay = y
-            tbx = x + w
-            tby = y
-            tcx = x + w
-            tcy = y + h
-            tdx = x
-            tdy = y + h
-            tex_range = 1.0
-
-            self.au_ = math.normalize(tax, tex_range, self.bin_w_)
-            self.av_ = math.normalize(tay, tex_range, self.bin_h_)
-            self.bu_ = math.normalize(tbx, tex_range, self.bin_w_)
-            self.bv_ = math.normalize(tby, tex_range, self.bin_h_)
-            self.cu_ = math.normalize(tcx, tex_range, self.bin_w_)
-            self.cv_ = math.normalize(tcy, tex_range, self.bin_h_)
-            self.du_ = math.normalize(tdx, tex_range, self.bin_w_)
-            self.dv_ = math.normalize(tdy, tex_range, self.bin_h_)
+        tex_range = 1.0
+        self.au_ = math.normalize(tax, tex_range, self.bin_w_)
+        self.av_ = math.normalize(tay, tex_range, self.bin_h_)
+        self.bu_ = math.normalize(tbx, tex_range, self.bin_w_)
+        self.bv_ = math.normalize(tby, tex_range, self.bin_h_)
+        self.cu_ = math.normalize(tcx, tex_range, self.bin_w_)
+        self.cv_ = math.normalize(tcy, tex_range, self.bin_h_)
+        self.du_ = math.normalize(tdx, tex_range, self.bin_w_)
+        self.dv_ = math.normalize(tdy, tex_range, self.bin_h_)
 
 
 def hello_packrect():
@@ -308,16 +269,22 @@ def copy_pack_rect(img, pr):
     w = l + pr.packed_w_
     h = t + pr.packed_h_
     #print("l=%d, t=%d, w=%d, h=%d" % (l, t, w, h))
+    #col = 0xffff00ff
     col = 0x00000000
     for y in range(t, h):
         for x in range(l, w):
-            #if pr.rotated_:
-            #    col = 0xFF0000FF
-            #else:
-            #    col = 0xFF00FF00
             img.putpixel((x, y), col)
 
-    count = 0
+    show_rotated = False
+    if show_rotated:
+        for y in range(t, h):
+            for x in range(l, w):
+                if pr.rotated_:
+                    col = 0xFF0000FF
+                else:
+                    col = 0xFF00FF00
+                img.putpixel((x, y), col)
+
     w = pr.crop_size_[0]
     h = pr.crop_size_[1]
     for y in range(0, h):
@@ -325,27 +292,25 @@ def copy_pack_rect(img, pr):
         for x in range(0, w):
             src_x = x + pr.crop_rect_[0]
             if pr.rotated_:
-                dst_x = y + pr.packed_l_ + pr.border_t_
-                dst_y = x + pr.packed_t_ + pr.border_l_
+                dst_x = pr.packed_l_ + pr.border_t_ + h - 1 - y
+                dst_y = pr.packed_t_ + pr.border_l_ + x
             else:
                 dst_x = x + pr.packed_l_ + pr.border_l_
                 dst_y = y + pr.packed_t_ + pr.border_t_
 
             rgba = pr.image_.getpixel((src_x, src_y))
-
-            #if count == 2:
             img.putpixel((dst_x, dst_y), rgba)
-            #    count = 0
-            #count = count + 1
-
-
 
 
 def test_pack_rects(rects):
     sizes = list()
 
+    #bin_w = 64
+    #bin_h = 128
+    #bin_w = 2048
+    #bin_h = 2048
     bin_w = 2048
-    bin_h = 2048
+    bin_h = 1024
     bin_size = (bin_w, bin_h)
 
     all_crop_rects = list()
@@ -370,7 +335,7 @@ def test_pack_rects(rects):
 
     dst_img = Image.new("RGBA", bin_size)
     #dst_img.paste(0xffff00ff, (0, 0, bin_w, bin_h))
-    fill_image(dst_img, 0x00000000)
+    fill_image(dst_img, 0xffff00ff)
     for r in rects:
         #x = r.packed_l_ + r.border_l_
         #y = r.packed_t_ + r.border_t_

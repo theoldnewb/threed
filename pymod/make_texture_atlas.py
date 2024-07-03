@@ -19,5 +19,7 @@ def run(raw_input_dir, asset_output_dir):
     def dst(d):
         return os.path.join(asset_output_dir, d)
 
-    make_texture_atlas(src("suzanne/frames"), dst("suzanne"))
+    make_texture_atlas(src("suzanne/frames_gold"), dst("suzanne"))
+    #make_texture_atlas(src("suzanne/frames"), dst("suzanne"))
+    #make_texture_atlas(src("slab/frames"), dst("suzanne"))
 

@@ -1,7 +1,7 @@
 #version 450
 
 
-const int max_instance = 1 ;
+const int max_instance = 32 ;
 
 layout(binding = 0) uniform UniformBufferObject {
     vec4 pos_[max_instance][4] ;

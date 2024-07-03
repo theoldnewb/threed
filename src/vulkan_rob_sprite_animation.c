@@ -224,7 +224,7 @@ static uint32_t const   indices_size = sizeof(indices) ;
 static uint32_t const   indices_count = array_count(indices) ;
 
 
-#define max_ubo_instance_count  1
+#define max_ubo_instance_count  32
 
 static uint32_t animation_frame_counters[max_ubo_instance_count] = { 0 } ;
 
@@ -261,7 +261,7 @@ update_uniform_buffer(
     require(current_frame < max_vulkan_frames_in_flight) ;
     require(current_frame < vc->frames_in_flight_count_) ;
     require(vr) ;
-    require(120 == sprf_->frame_count_) ;
+    //require(120 == sprf_->frame_count_) ;
 
     static bool once = true ;
     static uint64_t previous_time = 0 ;
@@ -285,7 +285,7 @@ update_uniform_buffer(
         }
     }
 
-    uint64_t const delta_time = (current_time - previous_time) / 2 ;
+    uint64_t const delta_time = (current_time - previous_time) / 4 ;
     double const fractional_seconds = (double) delta_time * get_performance_frequency_inverse() ;
 
     float const ox = app_->half_window_width_float_ - half_spw ;
@@ -303,15 +303,24 @@ update_uniform_buffer(
     float angle = fractional_seconds ;
     float angle_inc = 2.0f * M_PI / max_ubo_instance_count ;
 
+    static int count = 0 ;
+    int count_inc = 0 ;
+    if(count++ == 1)
+    {
+        count = 0 ;
+        count_inc = 1 ;
+    }
+
     for(
         uint32_t i = 0
     ;   i < max_ubo_instance_count
     ;   ++i
     )
     {
-        //uint32_t fc = animation_frame_counters[i] % sprf_->frame_count_ ;
-        uint32_t fc = app_->cnt_ % sprf_->frame_count_ ;
-        //++animation_frame_counters[i] ;
+        uint32_t fc = animation_frame_counters[i] % sprf_->frame_count_ ;
+        //uint32_t fc = app_->cnt_ % sprf_->frame_count_ ;
+        animation_frame_counters[i] += count_inc ;
+
 
         float const px = ox + oxr * sinf(angle) ;
         float const py = oy + oyr * cosf(angle) ;
@@ -320,8 +329,8 @@ update_uniform_buffer(
         //ubo->pos_[i][1]    = oy + oyr * cosf(angle) ;
         SDL_memcpy(&ubo->pos_[i], &sprf_->frames_[fc], sizeof(sprite_frame)) ;
 
-        ubo->ori_[i][0] = 0 ;
-        ubo->ori_[i][1] = 0 ;
+        ubo->ori_[i][0] = px ;
+        ubo->ori_[i][1] = py ;
         ubo->ori_[i][2] = 0 ;
         ubo->ori_[i][3] = 0 ;
 
