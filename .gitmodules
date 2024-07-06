@@ -7,3 +7,6 @@
 [submodule "external/stb"]
 	path = external/stb
 	url = https://github.com/nothings/stb.git
+[submodule "external/threed_data"]
+	path = external/threed_data
+	url = https://github.com/theoldnewb/threed_data.git

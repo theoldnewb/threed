@@ -265,7 +265,7 @@ update_uniform_buffer(
 
     static bool once = true ;
     static uint64_t previous_time = 0 ;
-
+    uint32_t const fcc = sprf_->frame_count_ ;
     uint64_t const current_time = get_app_time() ;
 
     if(once)
@@ -280,7 +280,7 @@ update_uniform_buffer(
         ;   ++i
         )
         {
-            animation_frame_counters[i] = sf % sprf_->frame_count_ ;
+            animation_frame_counters[i] = sf % fcc ;
             sf += 6 ;
         }
     }
@@ -317,7 +317,7 @@ update_uniform_buffer(
     ;   ++i
     )
     {
-        uint32_t fc = animation_frame_counters[i] % sprf_->frame_count_ ;
+        uint32_t fc = animation_frame_counters[i] % fcc ;
         //uint32_t fc = app_->cnt_ % sprf_->frame_count_ ;
         animation_frame_counters[i] += count_inc ;
 
@@ -803,7 +803,7 @@ create_rob(
                 &vr->texture_image_
             ,   &vr->texture_image_memory_
             ,   &vr->texture_mip_levels_
-            ,   "test.png"
+            ,   "ass/sprites/cube_suzanne/cube_suzanne.png"
             ,   vc->device_
             ,   vc->command_pool_
             ,   vc->graphics_queue_
@@ -1154,7 +1154,7 @@ create_rob(
     vr->frag_shader_ = NULL ;
 
 
-    check(load_file((void **)&sprf_, &sprf_size_, "test.sprf" )) ;
+    check(load_file((void **)&sprf_, &sprf_size_, "ass/sprites/cube_suzanne/cube_suzanne.sprf" )) ;
     require(sprf_) ;
     require(sprf_size_) ;
     require(0 == (((uintptr_t)sprf_)&15)) ;

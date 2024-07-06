@@ -9,39 +9,40 @@ from pymod import math
 class PackRect:
     def __init__(self, file_name):
         self.init_from_file(file_name)
-        self.init_      = True
-        self.border_l_  = 0
-        self.border_t_  = 0
-        self.border_b_  = 0
-        self.border_r_  = 0
-        self.border_w_  = 0
-        self.index_     = 0
-        self.packed_l_  = 0
-        self.packed_t_  = 0
-        self.packed_w_  = 0
-        self.packed_h_  = 0
-        self.packed_b_  = 0
-        self.rotated_   = False
-        self.bin_w_     = 0
-        self.bin_h_     = 0
-        self.ax_        = 0
-        self.ay_        = 0
-        self.bx_        = 0
-        self.by_        = 0
-        self.cx_        = 0
-        self.cy_        = 0
-        self.dx_        = 0
-        self.dy_        = 0
-
-        self.au_        = 0
-        self.av_        = 0
-        self.bu_        = 0
-        self.bv_        = 0
-        self.cu_        = 0
-        self.cv_        = 0
-        self.du_        = 0
-        self.dv_        = 0
-
+        self.init_              = True
+        self.border_l_          = 0
+        self.border_t_          = 0
+        self.border_b_          = 0
+        self.border_r_          = 0
+        self.border_w_          = 0
+        self.packed_l_          = 0
+        self.packed_t_          = 0
+        self.packed_w_          = 0
+        self.packed_h_          = 0
+        self.packed_bin_index_  = 0
+        self.packed_bin_w_      = 0
+        self.packed_bin_h_      = 0
+        self.rotated_           = False
+        self.ax_                = 0
+        self.ay_                = 0
+        self.bx_                = 0
+        self.by_                = 0
+        self.cx_                = 0
+        self.cy_                = 0
+        self.dx_                = 0
+        self.dy_                = 0
+        self.au_                = 0
+        self.av_                = 0
+        self.bu_                = 0
+        self.bv_                = 0
+        self.cu_                = 0
+        self.cv_                = 0
+        self.du_                = 0
+        self.dv_                = 0
+        self.local_index_       = 0
+        self.group_index_       = 0
+        self.unique_index       = 0
+        self.min_max_crop_rect_ = None
 
     def is_valid(self):
         return self.image_ is not None
@@ -57,8 +58,10 @@ class PackRect:
         assert(self.is_valid())
         return self.image_.size
 
-    def set_index(self, index=0):
-        self.index_ = index
+    def set_index(self, local_index, group_index):
+        self.local_index_   = local_index
+        self.group_index_   = group_index
+        self.unique_index_  = str(self.group_index_) + "_" + str(self.local_index_)
 
     def set_border(self, left=0, top=0, right=0, bottom=0):
         assert(left >= 0)
@@ -70,20 +73,21 @@ class PackRect:
         self.border_r_ = right
         self.border_b_ = bottom
 
-    def set_packed(self, pl, pt, pw, ph, pb):
-        self.packed_l_  = pl
-        self.packed_t_  = pt
-        self.packed_w_  = pw
-        self.packed_h_  = ph
-        self.packed_b_  = pb
-        self.rotated_   = False
+    def set_packed(self, pl, pt, pw, ph, pb, pbw, pbh):
+        self.packed_l_          = pl
+        self.packed_t_          = pt
+        self.packed_w_          = pw
+        self.packed_h_          = ph
+        self.packed_bin_index_  = pb
+        self.packed_bin_w_      = pbw
+        self.packed_bin_h_      = pbh
+        self.rotated_           = False
         w, h = self.get_pack_size()
         if int(w) != int(h):
             self.rotated_ = int(w) == int(self.packed_h_) and int(h) == int(self.packed_w_)
 
-    def set_bin_size(self, w, h):
-        self.bin_w_ = w
-        self.bin_h_ = h
+    def set_min_max_crop_rect(self, min_max_crop_rect):
+        self.min_max_crop_rect_ = min_max_crop_rect
 
     def get_border_width(self):
         assert(self.is_valid())
@@ -104,18 +108,18 @@ class PackRect:
         return (w, h)
 
     def dump(self):
-        print("index=%3d name=%s bin=%d, rotated=%s, img_size=%s crop_rect=%s crop_size=%s pack_size%s" %
-        (self.index_, self.file_name_, self.packed_b_, str(self.rotated_), str(self.get_image_size()), str(self.crop_rect_), str(self.crop_size_), str(self.get_pack_size())))
+        print("index=%s name=%s bin=%d, rotated=%s, img_size=%s crop_rect=%s crop_size=%s pack_size%s" %
+        (self.unique_index_, self.file_name_, self.packed_bin_index_, str(self.rotated_), str(self.get_image_size()), str(self.crop_rect_), str(self.crop_size_), str(self.get_pack_size())))
 
 
-    def calc_pos_uv(self, min_max_crop_rect=None):
+    def calc_pos_uv(self):
         px = 0
         py = 0
         pw = self.crop_size_[0]
         ph = self.crop_size_[1]
-        if min_max_crop_rect is not None:
-            px = self.crop_rect_[0] - min_max_crop_rect[0]
-            py = self.crop_rect_[1] - min_max_crop_rect[1]
+        if self.min_max_crop_rect_ is not None:
+            px = self.crop_rect_[0] - self.min_max_crop_rect_[0]
+            py = self.crop_rect_[1] - self.min_max_crop_rect_[1]
 
         self.ax_ = px
         self.ay_ = py
@@ -156,14 +160,14 @@ class PackRect:
 
 
         tex_range = 1.0
-        self.au_ = math.normalize(tax, tex_range, self.bin_w_)
-        self.av_ = math.normalize(tay, tex_range, self.bin_h_)
-        self.bu_ = math.normalize(tbx, tex_range, self.bin_w_)
-        self.bv_ = math.normalize(tby, tex_range, self.bin_h_)
-        self.cu_ = math.normalize(tcx, tex_range, self.bin_w_)
-        self.cv_ = math.normalize(tcy, tex_range, self.bin_h_)
-        self.du_ = math.normalize(tdx, tex_range, self.bin_w_)
-        self.dv_ = math.normalize(tdy, tex_range, self.bin_h_)
+        self.au_ = math.normalize(tax, tex_range, self.packed_bin_w_)
+        self.av_ = math.normalize(tay, tex_range, self.packed_bin_h_)
+        self.bu_ = math.normalize(tbx, tex_range, self.packed_bin_w_)
+        self.bv_ = math.normalize(tby, tex_range, self.packed_bin_h_)
+        self.cu_ = math.normalize(tcx, tex_range, self.packed_bin_w_)
+        self.cv_ = math.normalize(tcy, tex_range, self.packed_bin_h_)
+        self.du_ = math.normalize(tdx, tex_range, self.packed_bin_w_)
+        self.dv_ = math.normalize(tdy, tex_range, self.packed_bin_h_)
 
 
 def hello_packrect():
@@ -244,13 +248,13 @@ def create_image(file_name):
     return img
 
 
-def create_pack_rect(file_name):
+def create_pack_rect(file_name, local_index, group_index):
     #print("file_name=%s" % file_name)
     assert(os.path.isfile(file_name))
     pr = PackRect(file_name)
+    pr.set_index(local_index, group_index)
     pr.set_border(1, 1, 1, 1)
     return pr
-
 
 
 def fill_image(img, rgba):
@@ -302,56 +306,70 @@ def copy_pack_rect(img, pr):
             img.putpixel((dst_x, dst_y), rgba)
 
 
-def test_pack_rects(rects):
+
+def test_pack_rects(pack_rects, dst_dir, create_animation):
+    base_name = os.path.basename(dst_dir)
+    print("base_name=%s" % base_name)
+
+    atlas_name = os.path.join(dst_dir, base_name + ".png")
+    sprf_name = os.path.join(dst_dir, base_name + ".sprf")
+
     sizes = list()
+    all_prs = dict()
+    for prs in pack_rects:
+        if create_animation:
+            all_crop_rects = list()
+            for pr in prs:
+                all_crop_rects.append(pr.crop_rect_)
+            min_max_crop_rect = find_min_max_crop_rect(all_crop_rects)
+            for pr in prs:
+                pr.set_min_max_crop_rect(min_max_crop_rect)
+        else:
+            for pr in prs:
+                pr.set_min_max_crop_rect(None)
 
-    #bin_w = 64
-    #bin_h = 128
-    #bin_w = 2048
-    #bin_h = 2048
-    bin_w = 2048
-    bin_h = 1024
-    bin_size = (bin_w, bin_h)
+        for pr in prs:
+            w, h = pr.get_pack_size()
+            sizes.append( (w, h, pr.unique_index_) )
+            assert(pr.unique_index_ not in all_prs)
+            all_prs[pr.unique_index_] = pr
 
-    all_crop_rects = list()
-    for r in rects:
-        w, h = r.get_pack_size()
-        sizes.append( (w, h, r.index_) )
-        all_crop_rects.append(r.crop_rect_)
 
-    min_max_crop_rect = find_min_max_crop_rect(all_crop_rects)
+    allow_rotation  = False
+    auto_bin_size   = True
+    allow_shrinking = True
+    bin_size        = (4096, 4096)
+    bins, bs        = binpack.do_pack(sizes, allow_rotation, auto_bin_size, allow_shrinking, bin_size)
 
-    all_rects = binpack.do_pack(sizes, bin_size, True)
+    assert(len(bins) == 1)
+    for bidx in bins:
+        for r in bins[bidx]:
+            x, y, w, h, i, b = r
+            assert(b == 0)
+            all_prs[i].set_packed(x, y, w, h, b, bs[0], bs[1])
+            all_prs[i].calc_pos_uv()
+            print(r)
 
-    all_rects_sorted = sorted(all_rects, key=lambda tup: tup[5])
 
-    for r in all_rects_sorted:
-        b, x, y, w, h, i = r
-        assert(b == 0)
-        rects[i].set_packed(x, y, w, h, b)
-        rects[i].set_bin_size(bin_w, bin_h)
-        rects[i].calc_pos_uv(min_max_crop_rect)
-        #print(r)
-
-    dst_img = Image.new("RGBA", bin_size)
+    dst_img = Image.new("RGBA", bs)
     #dst_img.paste(0xffff00ff, (0, 0, bin_w, bin_h))
     fill_image(dst_img, 0xffff00ff)
-    for r in rects:
+    for k, r in all_prs.items():
         #x = r.packed_l_ + r.border_l_
         #y = r.packed_t_ + r.border_t_
         #dst_img.paste(r.crop_img_, (x, y))
         r.dump()
         copy_pack_rect(dst_img, r)
 
-    dst_img.save("test.png", "PNG")
+    dst_img.save(atlas_name, "PNG")
 
     w = io.AssetWriter(8)
     w.u32(0x00000001)
-    w.u32(len(rects))
+    w.u32(len(all_prs))
     w.u32(0)
     w.u32(0)
 
-    for r in rects:
+    for k, r in all_prs.items():
         w.f32(r.ax_)
         w.f32(r.ay_)
         w.f32(r.au_)
@@ -372,26 +390,35 @@ def test_pack_rects(rects):
         w.f32(r.du_)
         w.f32(r.dv_)
 
-    w.save_as("test.sprf")
+    w.save_as(sprf_name)
 
 
 
-
-def create_pack_rects(src_dir, dst_dir):
-    print("src_dir=%s, dst_dir=%s" % (src_dir, dst_dir))
-    assert(os.path.isdir(src_dir))
+def create_pack_rects(dst_dir, src_dirs, create_animation):
+    print("src_dirs=%s, dst_dir=%s" % (src_dirs, dst_dir))
+    for src_dir in src_dirs:
+        assert(os.path.isdir(src_dir))
+    if not os.path.isdir(dst_dir):
+        os.makedirs(dst_dir)
     assert(os.path.isdir(dst_dir))
-    files = io.get_sorted_absolute_files_in_dir(src_dir)
+
     pack_rects = list()
-    for index, file_name in enumerate(files):
-        pr = create_pack_rect(file_name)
-        pr.set_index(index)
-        pack_rects.append(pr)
+    for group_index, src_dir in enumerate(src_dirs):
+        files = io.get_sorted_absolute_files_in_dir(src_dir)
+        prs = list()
+        for local_index, file_name in enumerate(files):
+            pr = create_pack_rect(file_name, local_index, group_index)
+            prs.append(pr)
+        pack_rects.append(prs)
 
-    test_pack_rects(pack_rects)
-
-    return pack_rects
+    test_pack_rects(pack_rects, dst_dir, create_animation)
 
 
+def create_animation(dst_dir, src_dirs):
+    create_pack_rects(dst_dir, src_dirs, True)
+
+
+def create_image_collection(dst_dir, src_dirs):
+    create_pack_rects(dst_dir, src_dirs, False)
 
 

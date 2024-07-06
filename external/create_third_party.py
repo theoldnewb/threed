@@ -6,6 +6,7 @@ import subprocess
 
 BUILD_DIR_NAME="build"
 TPL_DIR="../tpl"
+PRJ_DIR="../"
 BUILD_CONFIG="Release"
 SCRIPT_PATH=os.path.dirname(os.path.realpath(__file__))
 
@@ -51,13 +52,21 @@ def create_python_venv(name):
     subprocess.run(['python', '-m', 'venv', build_dir])
 
 
+def copy_threed_data(src_name, dst_name):
+    src_dir = os.path.join(SCRIPT_PATH, src_name)
+    dst_dir = os.path.join(SCRIPT_PATH, PRJ_DIR, dst_name)
+    print("src=%s dst =%s" % (src_dir, dst_dir))
+    shutil.copytree(src_dir, dst_dir)
+
+
 def main():
     print("Hello, World!")
     print("SCRIPT_PATH=%s" % SCRIPT_PATH)
     #build_and_install("SDL")
     #build_and_install("cglm")
     #just_copy_dir("stb")
-    create_python_venv("python")
+    #create_python_venv("python")
+    copy_threed_data("threed_data/dat", "dat")
 
 if __name__ == "__main__":
     main()

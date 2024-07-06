@@ -3,32 +3,45 @@
 import os
 import shutil
 import subprocess
-import pathlib
 
-SCRIPT_PATH=pathlib.Path(__file__).parent
+SCRIPT_PATH=os.path.dirname(os.path.realpath(__file__))
 
 
 def run_glslc(src, dst):
+    print("Generate shader %s -> %s" % (src, dst))
     subprocess.run(['glslc', src, '-o', dst])
 
 
 def main():
     print("Hello, World!")
     print("SCRIPT_PATH=%s" % SCRIPT_PATH)
-    dst_dir = SCRIPT_PATH / "ass/shaders"
-    src_dir = SCRIPT_PATH / "src/shaders"
+    src_dir = os.path.join(SCRIPT_PATH, "src/shaders")
+    dst_dir = os.path.join(SCRIPT_PATH, "ass/shaders")
     print("dst_dir=%s, src_dir=%s" % (dst_dir, src_dir))
+    if not os.path.isdir(dst_dir):
+        os.makedirs(dst_dir)
+    assert(os.path.isdir(dst_dir))
 
     #src_file = src_dir / "shader.vert"
     #dst_file = dst_dir / "shader.vert"
     #print("dst_file=%s, src_file=%s" % (dst_file, src_file))
 
-    run_glslc(src_dir / "shader.vert", dst_dir / "shader.vert.spv" )
-    run_glslc(src_dir / "shader.frag", dst_dir / "shader.frag.spv" )
-    run_glslc(src_dir / "sprite_shader.vert", dst_dir / "sprite_shader.vert.spv" )
-    run_glslc(src_dir / "sprite_shader.frag", dst_dir / "sprite_shader.frag.spv" )
-    run_glslc(src_dir / "sprite_animation_shader.vert", dst_dir / "sprite_animation_shader.vert.spv" )
-    run_glslc(src_dir / "sprite_animation_shader.frag", dst_dir / "sprite_animation_shader.frag.spv" )
+    def src(s):
+        return os.path.join(src_dir, s)
+
+    def dst(d):
+        return os.path.join(dst_dir, d)
+
+    def run(s):
+        run_glslc(src(s), dst(s + ".spv"))
+
+
+    run("shader.vert")
+    run("shader.frag")
+    run("sprite_shader.vert")
+    run("sprite_shader.frag")
+    run("sprite_animation_shader.vert")
+    run("sprite_animation_shader.frag")
 
 
 

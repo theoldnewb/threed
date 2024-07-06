@@ -1,25 +1,51 @@
 
 import os
 
+
 from pymod import packrect
-
-
-def make_texture_atlas(src_dir, dst_dir):
-    packrect.create_pack_rects(src_dir, dst_dir)
 
 
 def run(raw_input_dir, asset_output_dir):
     print("raw_input_dir=%s, asset_output_dir=%s" % (raw_input_dir, asset_output_dir))
     assert(os.path.isdir(raw_input_dir))
     assert(os.path.isdir(asset_output_dir))
+    src_dir = os.path.join(raw_input_dir, "gfx")
+    print("src_dir=%s" % src_dir)
+    assert(os.path.isdir(src_dir))
+    dst_dir = os.path.join(asset_output_dir, "sprites")
+    if not os.path.isdir(dst_dir):
+        os.makedirs(dst_dir)
+    assert(os.path.isdir(dst_dir))
 
     def src(s):
-        return os.path.join(raw_input_dir, s)
+        return os.path.join(src_dir, s)
 
     def dst(d):
-        return os.path.join(asset_output_dir, d)
+        return os.path.join(dst_dir, d)
 
-    make_texture_atlas(src("suzanne/frames_gold"), dst("suzanne"))
+
+    packrect.create_animation(
+        dst("cube"), [
+            src("testing/cube/frames")
+        ]
+    )
+
+    packrect.create_animation(
+        dst("suzanne"), [
+            src("testing/suzanne/frames")
+        ]
+    )
+
+    packrect.create_image_collection(
+        dst("patset"), [
+            src("testing/patset/frames")
+        ]
+    )
+
+
+    #make_texture_atlas(src("suzanne/frames_gold"), dst("suzanne"))
     #make_texture_atlas(src("suzanne/frames"), dst("suzanne"))
     #make_texture_atlas(src("slab/frames"), dst("suzanne"))
+
+
 
