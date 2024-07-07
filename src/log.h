@@ -39,6 +39,7 @@ destroy_log_file() ;
 #define log_debug_ptr(a)    log_debug("%s=%p", #a, a)
 #define log_debug_u64(a)    log_debug("%s=%" SDL_PRIu64 , #a, a)
 #define log_debug_u32(a)    log_debug("%s=%u (%x)", #a, a, a)
+#define log_debug_u16(a)    log_debug("%s=%u (%x)", #a, (unsigned)a, (unsigned)a)
 #define log_debug_s32(a)    log_debug("%s=%d", #a, a)
 #define log_debug_f32(a)    log_debug("%s=%f", #a, a)
 #define log_debug_f32_4(a)  log_debug("%s={ %f, %f, %f, %f }", #a, a[0], a[1], a[2], a[3])
@@ -48,6 +49,7 @@ destroy_log_file() ;
 #define log_debug_ptr(a)    def_noop
 #define log_debug_u64(a)    def_noop
 #define log_debug_u32(a)    def_noop
+#define log_debug_u16(a)    def_noop
 #define log_debug_s32(a)    def_noop
 #define log_debug_f32(a)    def_noop
 #define log_debug_f32_4(a)  def_noop

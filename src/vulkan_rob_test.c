@@ -5,6 +5,7 @@
 #include "debug.h"
 #include "check.h"
 #include "log.h"
+#include "asset_sprite.h"
 
 #include <cglm/vec2.h>
 #include <cglm/vec3.h>
@@ -1015,6 +1016,9 @@ create_rob(
     vr->vert_shader_ = NULL ;
     vkDestroyShaderModule(vc->device_, vr->frag_shader_, NULL) ;
     vr->frag_shader_ = NULL ;
+
+
+    sprite_2d * p = load_asset_sprite("ass/sprites/test_cube_suzanne/test_cube_suzanne.sprf") ;
 
     end_timed_block() ;
     return true ;

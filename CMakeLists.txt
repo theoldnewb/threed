@@ -71,6 +71,10 @@ set(PROJECT_SOURCES
     src/vulkan_rob_sprite.h
     src/vulkan_rob_sprite_animation.c
     src/vulkan_rob_sprite_animation.h
+    src/asset_dump.c
+    src/asset_dump.h
+    src/asset_sprite.c
+    src/asset_sprite.h
     src/gfx.c
     src/gfx.h
     src/math.c

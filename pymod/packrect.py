@@ -1,9 +1,12 @@
 import os
 
+from collections import defaultdict
 from PIL import Image
 from pymod import io
 from pymod import binpack
 from pymod import math
+from pymod import misc
+from pymod import asset_sprite
 
 
 class PackRect:
@@ -52,7 +55,7 @@ class PackRect:
         self.image_     = create_image(self.file_name_)
         self.crop_rect_ = find_crop_rect(self.image_)
         self.crop_size_ = calc_crop_size(self.crop_rect_)
-        self.crop_img_  = self.image_.crop(self.crop_rect_)
+        #self.crop_img_  = self.image_.crop(self.crop_rect_)
 
     def get_image_size(self):
         assert(self.is_valid())
@@ -307,7 +310,7 @@ def copy_pack_rect(img, pr):
 
 
 
-def test_pack_rects(pack_rects, dst_dir, create_animation):
+def pack_pack_rects(pack_rects, dst_dir, create_animation):
     base_name = os.path.basename(dst_dir)
     print("base_name=%s" % base_name)
 
@@ -341,6 +344,7 @@ def test_pack_rects(pack_rects, dst_dir, create_animation):
     bin_size        = (4096, 4096)
     bins, bs        = binpack.do_pack(sizes, allow_rotation, auto_bin_size, allow_shrinking, bin_size)
 
+    groups = defaultdict(list)
     assert(len(bins) == 1)
     for bidx in bins:
         for r in bins[bidx]:
@@ -348,50 +352,63 @@ def test_pack_rects(pack_rects, dst_dir, create_animation):
             assert(b == 0)
             all_prs[i].set_packed(x, y, w, h, b, bs[0], bs[1])
             all_prs[i].calc_pos_uv()
+            groups[all_prs[i].group_index_].append(all_prs[i])
             print(r)
-
 
     dst_img = Image.new("RGBA", bs)
     #dst_img.paste(0xffff00ff, (0, 0, bin_w, bin_h))
-    fill_image(dst_img, 0xffff00ff)
+    fill_image(dst_img, 0x00ff00ff)
     for k, r in all_prs.items():
+        #print("k=%s" % str(k))
         #x = r.packed_l_ + r.border_l_
         #y = r.packed_t_ + r.border_t_
         #dst_img.paste(r.crop_img_, (x, y))
-        r.dump()
+        #r.dump()
         copy_pack_rect(dst_img, r)
-
     dst_img.save(atlas_name, "PNG")
 
+    ass = asset_sprite.AssetSprite()
+    for k, v in groups.items():
+        print("k=%s, len(v)=%d" % (str(k), len(v)))
+        asv = asset_sprite.AssetSprite2DVertices()
+        asi = asset_sprite.AssetSprite2DInfos()
+        for x in v:
+            asv.append(misc.make_asset_rect_2d_vertices(x))
+            asi.append(misc.make_asset_rect_2d_info(x))
+        ass.append_vertices(asv)
+        ass.append_infos(asi)
+
     w = io.AssetWriter(8)
-    w.u32(0x00000001)
-    w.u32(len(all_prs))
-    w.u32(0)
-    w.u32(0)
-
-    for k, r in all_prs.items():
-        w.f32(r.ax_)
-        w.f32(r.ay_)
-        w.f32(r.au_)
-        w.f32(r.av_)
-
-        w.f32(r.bx_)
-        w.f32(r.by_)
-        w.f32(r.bu_)
-        w.f32(r.bv_)
-
-        w.f32(r.cx_)
-        w.f32(r.cy_)
-        w.f32(r.cu_)
-        w.f32(r.cv_)
-
-        w.f32(r.dx_)
-        w.f32(r.dy_)
-        w.f32(r.du_)
-        w.f32(r.dv_)
-
+    ass.write(w)
     w.save_as(sprf_name)
 
+    # w.u32(0x00000001)
+    # w.u32(len(all_prs))
+    # w.u32(0)
+    # w.u32(0)
+
+    # for k, r in all_prs.items():
+    #     w.f32(r.ax_)
+    #     w.f32(r.ay_)
+    #     w.f32(r.au_)
+    #     w.f32(r.av_)
+
+    #     w.f32(r.bx_)
+    #     w.f32(r.by_)
+    #     w.f32(r.bu_)
+    #     w.f32(r.bv_)
+
+    #     w.f32(r.cx_)
+    #     w.f32(r.cy_)
+    #     w.f32(r.cu_)
+    #     w.f32(r.cv_)
+
+    #     w.f32(r.dx_)
+    #     w.f32(r.dy_)
+    #     w.f32(r.du_)
+    #     w.f32(r.dv_)
+
+    w.save_as(sprf_name)
 
 
 def create_pack_rects(dst_dir, src_dirs, create_animation):
@@ -411,7 +428,7 @@ def create_pack_rects(dst_dir, src_dirs, create_animation):
             prs.append(pr)
         pack_rects.append(prs)
 
-    test_pack_rects(pack_rects, dst_dir, create_animation)
+    pack_pack_rects(pack_rects, dst_dir, create_animation)
 
 
 def create_animation(dst_dir, src_dirs):

@@ -42,6 +42,13 @@ def run(raw_input_dir, asset_output_dir):
         ]
     )
 
+    packrect.create_animation(
+        dst("test_cube_suzanne"), [
+            src("testing/cube/frames")
+        ,   src("testing/suzanne/frames")
+        ]
+    )
+
 
     #make_texture_atlas(src("suzanne/frames_gold"), dst("suzanne"))
     #make_texture_atlas(src("suzanne/frames"), dst("suzanne"))
