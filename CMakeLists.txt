@@ -65,6 +65,8 @@ set(PROJECT_SOURCES
     src/vulkan.h
     src/vulkan_rob.c
     src/vulkan_rob.h
+    src/vulkan_rob_test.c
+    src/vulkan_rob_test.h
     src/vulkan_rob_sprite.c
     src/vulkan_rob_sprite.h
     src/vulkan_rob_sprite_animation.c

@@ -38,6 +38,8 @@ def main():
 
     run("shader.vert")
     run("shader.frag")
+    run("shader_test.vert")
+    run("shader_test.frag")
     run("sprite_shader.vert")
     run("sprite_shader.frag")
     run("sprite_animation_shader.vert")

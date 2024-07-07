@@ -41,6 +41,7 @@ destroy_log_file() ;
 #define log_debug_u32(a)    log_debug("%s=%u (%x)", #a, a, a)
 #define log_debug_s32(a)    log_debug("%s=%d", #a, a)
 #define log_debug_f32(a)    log_debug("%s=%f", #a, a)
+#define log_debug_f32_4(a)  log_debug("%s={ %f, %f, %f, %f }", #a, a[0], a[1], a[2], a[3])
 #else
 #define log_debug(fmt, ...) def_noop
 #define log_debug_str(a)    def_noop
@@ -49,6 +50,7 @@ destroy_log_file() ;
 #define log_debug_u32(a)    def_noop
 #define log_debug_s32(a)    def_noop
 #define log_debug_f32(a)    def_noop
+#define log_debug_f32_4(a)  def_noop
 #endif
 
 

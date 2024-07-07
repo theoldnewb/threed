@@ -5,6 +5,7 @@
 #include "vulkan.h"
 
 #include "vulkan_rob.h"
+#include "vulkan_rob_test.h"
 #include "vulkan_rob_sprite.h"
 #include "vulkan_rob_sprite_animation.h"
 
@@ -17,9 +18,15 @@ create_render_objects()
 
     {
         vulkan_render_object vr ;
-        make_rob(&vr) ;
+        make_rob_test(&vr) ;
         create_vulkan_render_object(&vr) ;
     }
+
+    // {
+    //      vulkan_render_object vr ;
+    //      make_rob(&vr) ;
+    //      create_vulkan_render_object(&vr) ;
+    // }
 
     // {
     //     vulkan_render_object vr ;
@@ -27,11 +34,11 @@ create_render_objects()
     //     create_vulkan_render_object(&vr) ;
     // }
 
-    {
-        vulkan_render_object vr ;
-        make_rob_sprite_animation(&vr) ;
-        create_vulkan_render_object(&vr) ;
-    }
+    // {
+    //     vulkan_render_object vr ;
+    //     make_rob_sprite_animation(&vr) ;
+    //     create_vulkan_render_object(&vr) ;
+    // }
 
     end_timed_block() ;
     return true ;
