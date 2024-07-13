@@ -4,7 +4,6 @@
 #include "log.h"
 
 
-
 static void
 dump_rect_2d_vertices(
     rect_2d_vertices const * p
@@ -77,84 +76,6 @@ dump_rect_2d_group(
 }
 
 
-
-// static void
-// dump_sprite_2d_vertices(
-//     sprite_2d_vertices const * p
-// )
-// {
-//     require(p) ;
-
-//     log_debug_u16(p->vertices_count_) ;
-//     log_debug_u16(p->pad1_) ;
-//     log_debug_u16(p->pad2_) ;
-//     log_debug_u16(p->pad3_) ;
-
-//     log_debug_u16(p->pad4_) ;
-//     log_debug_u16(p->pad5_) ;
-//     log_debug_u16(p->pad6_) ;
-//     log_debug_u16(p->pad7_) ;
-
-//     for(
-//         uint16_t i = 0
-//     ;   i < p->vertices_count_
-//     ;   ++i
-//     )
-//     {
-//         log_debug_u16(i) ;
-//         dump_rect_2d_vertices(&p->vertices_[i]) ;
-//     }
-// }
-
-// static void
-// dump_sprite_2d_infos(
-//     sprite_2d_infos const * p
-// )
-// {
-//     require(p) ;
-
-//     log_debug_u16(p->infos_count_) ;
-//     log_debug_u16(p->pad1_) ;
-//     log_debug_u16(p->pad2_) ;
-//     log_debug_u16(p->pad3_) ;
-
-//     for(
-//         uint16_t i = 0
-//     ;   i < p->infos_count_
-//     ;   ++i
-//     )
-//     {
-//         log_debug_u16(i) ;
-//         dump_rect_2d_info(&p->infos_[i]) ;
-//     }
-// }
-
-
-// static void
-// dump_sprite_2d_groups(
-//     sprite_2d_groups const * p
-// )
-// {
-//     require(p) ;
-
-//     log_debug_u16(p->groups_count_) ;
-//     log_debug_u16(p->pad1_) ;
-//     log_debug_u16(p->pad2_) ;
-//     log_debug_u16(p->pad3_) ;
-
-//     for(
-//         uint16_t i = 0
-//     ;   i < p->groups_count_
-//     ;   ++i
-//     )
-//     {
-//         log_debug_u16(i) ;
-//         dump_sprite_2d_group_info(&p->groups_[i]) ;
-//     }
-
-
-// }
-
 void
 dump_sprite_2d(
     sprite_2d const * p
@@ -204,11 +125,6 @@ dump_sprite_2d(
         log_debug_u16(i) ;
         dump_rect_2d_info(&ri[i]) ;
     }
-
-
-    //dump_sprite_2d_groups(sg) ;
-    //dump_sprite_2d_vertices(sv) ;
-    //dump_sprite_2d_infos(si) ;
 
 }
 

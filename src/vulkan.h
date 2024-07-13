@@ -15,7 +15,7 @@
 #define max_vulkan_surface_formats              8
 #define max_vulkan_present_modes                8
 #define max_vulkan_desired_format_properties    8
-#define max_vulkan_swapchain_images             4
+#define max_vulkan_swapchain_images             8
 #define max_vulkan_frames_in_flight             4
 #define max_vulkan_render_objects               2
 

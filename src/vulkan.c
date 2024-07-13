@@ -3994,8 +3994,8 @@ choose_swapchain_present_mode(
         bool const mode_ok =
             //present_modes[i] == VK_PRESENT_MODE_MAILBOX_KHR ;
             //present_modes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR ;
-            present_modes[i] == VK_PRESENT_MODE_FIFO_RELAXED_KHR ;
-            //present_modes[i] == VK_PRESENT_MODE_FIFO_KHR ;
+            //present_modes[i] == VK_PRESENT_MODE_FIFO_RELAXED_KHR ;
+            present_modes[i] == VK_PRESENT_MODE_FIFO_KHR ;
 
         if(mode_ok)
         {

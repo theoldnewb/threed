@@ -99,9 +99,9 @@ typedef struct vulkan_rob
 } vulkan_rob ;
 
 
+
 static vulkan_rob       the_vulkan_rob_ = { 0 } ;
 static sprite_2d_ptr    the_sprite_asset_ptr_ = { 0 } ;
-static sprite_2d *      the_sprite_ = NULL ;
 
 
 //////////////////////////////////////7
@@ -114,65 +114,9 @@ typedef struct vertex {
 static uint32_t const vertex_size = sizeof(vertex) ;
 
 
-// 1433.000000, 586.000000, 0.699707, 0.572266
-// 1655.000000, 586.000000, 0.808105, 0.572266
-// 1655.000000, 726.000000, 0.808105, 0.708984
-// 1433.000000, 726.000000, 0.699707, 0.708984
 
 
-static float const spw = 256.0f ;
-static float const sph = 256.0f ;
-static float const half_spw = spw / 2.0f ;
-static float const half_sph = sph / 2.0f ;
-
-// static float const p0x = 1.0f ;
-// static float const p0y = 1.0f ;
-// static float const p1x = 183.0f ;
-// static float const p1y = 1.0f ;
-// static float const p2x = 183.0f ;
-// static float const p2y = 155.0f ;
-// static float const p3x = 1.0f ;
-// static float const p3y = 155.0f ;
-
-static float const p0x = 0.0f ;
-static float const p0y = 0.0f ;
-static float const p1x = 0.0f ;
-static float const p1y = 0.0f ;
-static float const p2x = 0.0f ;
-static float const p2y = 0.0f ;
-static float const p3x = 0.0f ;
-static float const p3y = 0.0f ;
-
-
-static float const ttw = 1.0f ;
-static float const tth = 1.0f ;
-
-// static float const t0u = 0.000488f ;
-// static float const t0v = 0.000977f ;
-// static float const t1u = 0.089355f ;
-// static float const t1v = 0.000977f ;
-// static float const t2u = 0.089355f ;
-// static float const t2v = 0.151367f ;
-// static float const t3u = 0.000488f ;
-// static float const t3v = 0.151367f ;
-
-static float const t0u = 0.0f ;
-static float const t0v = 0.0f ;
-static float const t1u = 0.0f ;
-static float const t1v = 0.0f ;
-static float const t2u = 0.0f ;
-static float const t2v = 0.0f ;
-static float const t3u = 0.0f ;
-static float const t3v = 0.0f ;
-
-
-static vertex const vertices[] =
-{
-    { {p0x, p0y}, {t0u, t0v} }
-,   { {p1x, p1y}, {t1u, t1v} }
-,   { {p2x, p2y}, {t2u, t2v} }
-,   { {p3x, p3y}, {t3u, t3v} }
-} ;
+static vertex const vertices[4] = { 0 } ;
 static uint32_t const vertices_size = sizeof(vertices) ;
 //static uint32_t const vertices_count = array_count(vertices) ;
 
@@ -205,6 +149,12 @@ static uint32_t const uniform_buffer_object_size = sizeof(uniform_buffer_object)
 static uniform_buffer_object ubos[max_vulkan_frames_in_flight] = { 0 } ;
 
 
+static float const spw = 256.0f ;
+static float const sph = 256.0f ;
+static float const half_spw = spw / 2.0f ;
+static float const half_sph = sph / 2.0f ;
+
+
 typedef struct sprite
 {
     float       px_ ;
@@ -214,7 +164,8 @@ typedef struct sprite
 } sprite ;
 
 
-static sprite sprites_[max_vulkan_frames_in_flight][max_ubo_instance_count] = { 0 } ;
+//static sprite sprites_[max_vulkan_frames_in_flight][max_ubo_instance_count] = { 0 } ;
+static sprite sprites_[max_ubo_instance_count] = { 0 } ;
 
 
 static rect_2d_vertices *
@@ -224,27 +175,32 @@ get_rect_2d_vertices(
 {
     require(s) ;
     sprite_2d_ptr * p = &the_sprite_asset_ptr_ ;
-    require(s->group_index_ < p->this_->groups_count_ ) ;
-    require(s->anim_phase_ < p->groups_[s->group_index_].frame_count_) ;
-    uint16_t const vi = p->groups_[s->group_index_].frame_start_ + s->anim_phase_ ;
+    uint16_t const fc = p->groups_[s->group_index_].frame_count_ ;
+    uint16_t const fs = p->groups_[s->group_index_].frame_start_ ;
+
+    //require(s->group_index_ < p->this_->groups_count_ ) ;
+    //require(s->anim_phase_ < p->groups_[s->group_index_].frame_count_) ;
+
+    uint16_t const vi = fs + ((s->anim_phase_ / 2) % fc) ;
     require(vi < p->this_->vertices_count_) ;
     return &p->vertices_[vi] ;
 }
 
-static rect_2d_vertices *
-get_rect_2d_vertices_2(
-    uint16_t const idx
-)
-{
-    //require(s) ;
-    sprite_2d_ptr * p = &the_sprite_asset_ptr_ ;
-    //require(s->group_index_ < p->groups_->groups_count_ ) ;
-    //require(s->anim_phase_ < p->groups_->groups_[s->group_index_].frame_count_) ;
-    //uint16_t const vi = p->groups_[s->group_index_].frame_start_ + s->anim_phase_ ;
-    uint16_t const vi = idx % p->this_->vertices_count_ ;
-    require(vi < p->this_->vertices_count_) ;
-    return &p->vertices_[vi] ;
-}
+
+// static rect_2d_vertices *
+// get_rect_2d_vertices_2(
+//     uint16_t const idx
+// )
+// {
+//     //require(s) ;
+//     sprite_2d_ptr * p = &the_sprite_asset_ptr_ ;
+//     //require(s->group_index_ < p->groups_->groups_count_ ) ;
+//     //require(s->anim_phase_ < p->groups_->groups_[s->group_index_].frame_count_) ;
+//     //uint16_t const vi = p->groups_[s->group_index_].frame_start_ + s->anim_phase_ ;
+//     uint16_t const vi = idx % p->this_->vertices_count_ ;
+//     require(vi < p->this_->vertices_count_) ;
+//     return &p->vertices_[vi] ;
+// }
 
 
 
@@ -255,14 +211,14 @@ init_sprites()
     float angle_inc = 2.0f * M_PI / max_ubo_instance_count ;
     float ox  = app_->half_window_width_float_ - half_spw ;
     float oy  = app_->half_window_height_float_ - half_sph ;
-    float oxr = app_->half_window_width_float_ ;
-    float oyr = app_->half_window_height_float_ ;
+    float oxr = app_->half_window_width_float_ - half_spw ;
+    float oyr = app_->half_window_height_float_ - half_sph ;
 
-    for(
-        uint32_t fif = 0
-    ;   fif < max_vulkan_frames_in_flight
-    ;   ++fif
-    )
+    // for(
+    //     uint32_t fif = 0
+    // ;   fif < max_vulkan_frames_in_flight
+    // ;   ++fif
+    // )
     {
         for(
             uint32_t i = 0
@@ -270,7 +226,8 @@ init_sprites()
         ;   ++i
         )
         {
-            sprite * spr = &sprites_[fif][i] ;
+            //sprite * spr = &sprites_[fif][i] ;
+            sprite * spr = &sprites_[i] ;
             spr->group_index_ = i % 2 ;
             spr->anim_phase_ = (i*2) % 60 ;
             spr->px_ = ox + oxr * sinf(angle) ;
@@ -283,16 +240,18 @@ init_sprites()
 
 static void
 init_sprites_2(
-    uint32_t const fif
+    uint32_t const  current_frame
+,   float const     delta_time
 )
 {
-    require(fif < max_vulkan_frames_in_flight) ;
-    float angle = 0.0f ;
+    require(current_frame < max_vulkan_frames_in_flight) ;
+
+    float angle = delta_time ;
     float angle_inc = 2.0f * M_PI / max_ubo_instance_count ;
     float ox  = app_->half_window_width_float_ - half_spw ;
     float oy  = app_->half_window_height_float_ - half_sph ;
-    float oxr = app_->half_window_width_float_ ;
-    float oyr = app_->half_window_height_float_ ;
+    float oxr = app_->half_window_width_float_ - half_spw ;
+    float oyr = app_->half_window_height_float_ - half_sph ;
 
     for(
         uint32_t i = 0
@@ -300,18 +259,19 @@ init_sprites_2(
     ;   ++i
     )
     {
-        sprite * spr = &sprites_[fif][i] ;
-        //spr->group_index_ = i % 2 ;
+        //sprite * spr = &sprites_[current_frame][i] ;
+        sprite * spr = &sprites_[i] ;
         ++spr->anim_phase_ ;
-        if(spr->anim_phase_ < 60)
+        if(spr->group_index_ == 0)
         {
+            spr->px_ = ox + oxr * sinf(angle) * cosf(angle*0.1f) ;
+            spr->py_ = oy + oyr * cosf(angle) ;
         }
         else
         {
-            spr->anim_phase_ = 0 ;
+            spr->px_ = ox + oxr * sinf(-angle) * cosf(-angle*0.3f);
+            spr->py_ = oy + oyr * cosf(-angle) ;
         }
-        spr->px_ = ox + oxr * sinf(angle) ;
-        spr->py_ = oy + oyr * cosf(angle) ;
         angle += angle_inc ;
     }
 }
@@ -330,24 +290,24 @@ update_uniform_buffer(
     require(vr) ;
 
 
-    // static bool once = true ;
-    // static uint64_t previous_time = 0 ;
-    // uint64_t const current_time = get_app_time() ;
+    static bool once = true ;
+    static uint64_t previous_time = 0 ;
+    uint64_t const current_time = get_app_time() ;
 
-    // if(once)
-    // {
-    //     once = false ;
-    //     previous_time = current_time ;
-    // }
+    if(once)
+    {
+        once = false ;
+        previous_time = current_time ;
+    }
 
-    // uint64_t const delta_time = (current_time - previous_time) / 4 ;
-    // double const fractional_seconds = (double) delta_time * get_performance_frequency_inverse() ;
+    uint64_t const delta_time = (current_time - previous_time) / 2 ;
+    double const fractional_seconds = (double) delta_time * get_performance_frequency_inverse() ;
 
     // float const ox = app_->half_window_width_float_ - half_spw ;
     // float const oy = app_->half_window_height_float_ - half_sph ;
     // float const oxr = 6.0f * half_spw * sinf(fractional_seconds * 0.5f) ;
     // float const oyr = 4.0f * half_sph * sinf(fractional_seconds * 0.5f) ;
-    //init_sprites_2(current_frame) ;
+    init_sprites_2(current_frame, fractional_seconds) ;
 
     uniform_buffer_object * ubo = &ubos[current_frame] ;
 
@@ -362,8 +322,9 @@ update_uniform_buffer(
     ;   ++i
     )
     {
-        sprite * spr = &sprites_[current_frame][i] ;
-        SDL_memcpy(&ubo->pos_[i], get_rect_2d_vertices_2(app_->cnt_), sizeof(rect_2d_vertices)) ;
+        //sprite * spr = &sprites_[current_frame][i] ;
+        sprite * spr = &sprites_[i] ;
+        SDL_memcpy(&ubo->pos_[i], get_rect_2d_vertices(spr), sizeof(rect_2d_vertices)) ;
         ubo->ori_[i][0] = spr->px_ ;
         ubo->ori_[i][1] = spr->py_ ;
         ubo->ori_[i][2] = 0 ;
@@ -398,7 +359,6 @@ record_command_buffer(
     ,   VK_PIPELINE_BIND_POINT_GRAPHICS
     ,   vr->graphics_pipeline_
     ) ;
-
 
     VkBuffer vertex_buffers[] = { vr->vertex_buffer_} ;
     VkDeviceSize offsets[] = { 0 } ;
@@ -456,8 +416,6 @@ record_command_buffer(
     end_timed_block() ;
     return true ;
 }
-
-
 
 
 static bool
@@ -1183,7 +1141,6 @@ create_rob(
     vr->frag_shader_ = NULL ;
 
     the_sprite_asset_ptr_ = load_asset_sprite("ass/sprites/test_cube_suzanne/test_cube_suzanne.sprf") ;
-    the_sprite_ = the_sprite_asset_ptr_.this_ ;
     init_sprites() ;
 
     end_timed_block() ;
