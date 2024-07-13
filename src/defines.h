@@ -31,5 +31,5 @@
 #define array_count(a)  (sizeof(a)/sizeof(a[0]))
 
 
-#define asset_ref(a, b, c)  ((struct a *)(((char *) b) + c))
+#define asset_ref(a, b, c)  ((a *)(((char *) b) + c))
 //#define asset_off(a, b, c)  ((struct a *)(((u8 *) b) + b->offsets_[c]))

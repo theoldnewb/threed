@@ -4,6 +4,8 @@
 #include "debug.h"
 #include "check.h"
 #include "log.h"
+#include "asset_sprite.h"
+
 
 #include <cglm/vec2.h>
 #include <cglm/vec3.h>
@@ -97,7 +99,9 @@ typedef struct vulkan_rob
 } vulkan_rob ;
 
 
-static vulkan_rob   the_vulkan_rob_ = { 0 } ;
+static vulkan_rob       the_vulkan_rob_ = { 0 } ;
+static sprite_2d_ptr    the_sprite_asset_ptr_ = { 0 } ;
+static sprite_2d *      the_sprite_ = NULL ;
 
 
 //////////////////////////////////////7
@@ -108,48 +112,6 @@ typedef struct vertex {
 } vertex ;
 
 static uint32_t const vertex_size = sizeof(vertex) ;
-
-typedef struct sprite_frame
-{
-    float p0x_ ;
-    float p0y_ ;
-    float t0u_ ;
-    float t0v_ ;
-    float p1x_ ;
-    float p1y_ ;
-    float t1u_ ;
-    float t1v_ ;
-    float p2x_ ;
-    float p2y_ ;
-    float t2u_ ;
-    float t2v_ ;
-    float p3x_ ;
-    float p3y_ ;
-    float t3u_ ;
-    float t3v_ ;
-} sprite_frame ;
-
-
-typedef struct sprite_frame_info
-{
-    uint32_t        tid_ ;
-    uint32_t        frame_count_ ;
-    uint32_t        pad0_ ;
-    uint32_t        pad1_ ;
-    sprite_frame    frames_[] ;
-} sprite_frame_info ;
-
-
-// typedef struct sprite_animation
-// {
-//     uint32_t            tid_ ;
-//     uint32_t            frame_info_count_ ;
-//     uint32_t            pad0_ ;
-//     uint32_t            pad1_ ;
-//     sprite_frame_info   frame_info_[] ;
-// } ;
-
-
 
 
 // 1433.000000, 586.000000, 0.699707, 0.572266
@@ -226,11 +188,6 @@ static uint32_t const   indices_count = array_count(indices) ;
 
 #define max_ubo_instance_count  32
 
-static uint32_t animation_frame_counters[max_ubo_instance_count] = { 0 } ;
-
-static uint64_t             sprf_size_  = 0 ;
-static sprite_frame_info *  sprf_       = NULL ;
-
 
 typedef struct uniform_buffer_object
 {
@@ -245,9 +202,119 @@ typedef struct uniform_buffer_object
 
 static uint32_t const uniform_buffer_object_size = sizeof(uniform_buffer_object) ;
 
-
 static uniform_buffer_object ubos[max_vulkan_frames_in_flight] = { 0 } ;
 
+
+typedef struct sprite
+{
+    float       px_ ;
+    float       py_ ;
+    uint16_t    group_index_ ;
+    uint16_t    anim_phase_ ;
+} sprite ;
+
+
+static sprite sprites_[max_vulkan_frames_in_flight][max_ubo_instance_count] = { 0 } ;
+
+
+static rect_2d_vertices *
+get_rect_2d_vertices(
+    sprite const * s
+)
+{
+    require(s) ;
+    sprite_2d_ptr * p = &the_sprite_asset_ptr_ ;
+    require(s->group_index_ < p->this_->groups_count_ ) ;
+    require(s->anim_phase_ < p->groups_[s->group_index_].frame_count_) ;
+    uint16_t const vi = p->groups_[s->group_index_].frame_start_ + s->anim_phase_ ;
+    require(vi < p->this_->vertices_count_) ;
+    return &p->vertices_[vi] ;
+}
+
+static rect_2d_vertices *
+get_rect_2d_vertices_2(
+    uint16_t const idx
+)
+{
+    //require(s) ;
+    sprite_2d_ptr * p = &the_sprite_asset_ptr_ ;
+    //require(s->group_index_ < p->groups_->groups_count_ ) ;
+    //require(s->anim_phase_ < p->groups_->groups_[s->group_index_].frame_count_) ;
+    //uint16_t const vi = p->groups_[s->group_index_].frame_start_ + s->anim_phase_ ;
+    uint16_t const vi = idx % p->this_->vertices_count_ ;
+    require(vi < p->this_->vertices_count_) ;
+    return &p->vertices_[vi] ;
+}
+
+
+
+static void
+init_sprites()
+{
+    float angle = 0.0f ;
+    float angle_inc = 2.0f * M_PI / max_ubo_instance_count ;
+    float ox  = app_->half_window_width_float_ - half_spw ;
+    float oy  = app_->half_window_height_float_ - half_sph ;
+    float oxr = app_->half_window_width_float_ ;
+    float oyr = app_->half_window_height_float_ ;
+
+    for(
+        uint32_t fif = 0
+    ;   fif < max_vulkan_frames_in_flight
+    ;   ++fif
+    )
+    {
+        for(
+            uint32_t i = 0
+        ;   i < max_ubo_instance_count
+        ;   ++i
+        )
+        {
+            sprite * spr = &sprites_[fif][i] ;
+            spr->group_index_ = i % 2 ;
+            spr->anim_phase_ = (i*2) % 60 ;
+            spr->px_ = ox + oxr * sinf(angle) ;
+            spr->py_ = oy + oyr * cosf(angle) ;
+            angle += angle_inc ;
+        }
+    }
+}
+
+
+static void
+init_sprites_2(
+    uint32_t const fif
+)
+{
+    require(fif < max_vulkan_frames_in_flight) ;
+    float angle = 0.0f ;
+    float angle_inc = 2.0f * M_PI / max_ubo_instance_count ;
+    float ox  = app_->half_window_width_float_ - half_spw ;
+    float oy  = app_->half_window_height_float_ - half_sph ;
+    float oxr = app_->half_window_width_float_ ;
+    float oyr = app_->half_window_height_float_ ;
+
+    for(
+        uint32_t i = 0
+    ;   i < max_ubo_instance_count
+    ;   ++i
+    )
+    {
+        sprite * spr = &sprites_[fif][i] ;
+        //spr->group_index_ = i % 2 ;
+        ++spr->anim_phase_ ;
+        if(spr->anim_phase_ < 60)
+        {
+        }
+        else
+        {
+            spr->anim_phase_ = 0 ;
+        }
+        spr->px_ = ox + oxr * sinf(angle) ;
+        spr->py_ = oy + oyr * cosf(angle) ;
+        angle += angle_inc ;
+    }
+}
 
 
 static void
@@ -261,37 +328,26 @@ update_uniform_buffer(
     require(current_frame < max_vulkan_frames_in_flight) ;
     require(current_frame < vc->frames_in_flight_count_) ;
     require(vr) ;
-    //require(120 == sprf_->frame_count_) ;
 
-    static bool once = true ;
-    static uint64_t previous_time = 0 ;
-    uint32_t const fcc = sprf_->frame_count_ ;
-    uint64_t const current_time = get_app_time() ;
 
-    if(once)
-    {
-        once = false ;
-        previous_time = current_time ;
+    // static bool once = true ;
+    // static uint64_t previous_time = 0 ;
+    // uint64_t const current_time = get_app_time() ;
 
-        uint32_t sf = 0 ;
-        for(
-            uint32_t i = 0
-        ;   i < max_ubo_instance_count
-        ;   ++i
-        )
-        {
-            animation_frame_counters[i] = sf % fcc ;
-            sf += 6 ;
-        }
-    }
+    // if(once)
+    // {
+    //     once = false ;
+    //     previous_time = current_time ;
+    // }
 
-    uint64_t const delta_time = (current_time - previous_time) / 4 ;
-    double const fractional_seconds = (double) delta_time * get_performance_frequency_inverse() ;
+    // uint64_t const delta_time = (current_time - previous_time) / 4 ;
+    // double const fractional_seconds = (double) delta_time * get_performance_frequency_inverse() ;
 
-    float const ox = app_->half_window_width_float_ - half_spw ;
-    float const oy = app_->half_window_height_float_ - half_sph ;
-    float const oxr = 6.0f * half_spw * sinf(fractional_seconds * 0.5f) ;
-    float const oyr = 4.0f * half_sph * sinf(fractional_seconds * 0.5f) ;
+    // float const ox = app_->half_window_width_float_ - half_spw ;
+    // float const oy = app_->half_window_height_float_ - half_sph ;
+    // float const oxr = 6.0f * half_spw * sinf(fractional_seconds * 0.5f) ;
+    // float const oyr = 4.0f * half_sph * sinf(fractional_seconds * 0.5f) ;
+    //init_sprites_2(current_frame) ;
 
     uniform_buffer_object * ubo = &ubos[current_frame] ;
 
@@ -300,45 +356,18 @@ update_uniform_buffer(
     ubo->scale_[0]  = app_->inverse_half_window_width_float_ ;
     ubo->scale_[1]  = app_->inverse_half_window_height_float_ ;
 
-    float angle = fractional_seconds ;
-    float angle_inc = 2.0f * M_PI / max_ubo_instance_count ;
-
-    static int count = 0 ;
-    int count_inc = 0 ;
-    if(count++ == 1)
-    {
-        count = 0 ;
-        count_inc = 1 ;
-    }
-
     for(
         uint32_t i = 0
     ;   i < max_ubo_instance_count
     ;   ++i
     )
     {
-        uint32_t fc = animation_frame_counters[i] % fcc ;
-        //uint32_t fc = app_->cnt_ % sprf_->frame_count_ ;
-        animation_frame_counters[i] += count_inc ;
-
-
-        float const px = ox + oxr * sinf(angle) ;
-        float const py = oy + oyr * cosf(angle) ;
-
-        //ubo->pos_[i][0]    = ox + oxr * sinf(angle) ;
-        //ubo->pos_[i][1]    = oy + oyr * cosf(angle) ;
-        SDL_memcpy(&ubo->pos_[i], &sprf_->frames_[fc], sizeof(sprite_frame)) ;
-
-        ubo->ori_[i][0] = px ;
-        ubo->ori_[i][1] = py ;
+        sprite * spr = &sprites_[current_frame][i] ;
+        SDL_memcpy(&ubo->pos_[i], get_rect_2d_vertices_2(app_->cnt_), sizeof(rect_2d_vertices)) ;
+        ubo->ori_[i][0] = spr->px_ ;
+        ubo->ori_[i][1] = spr->py_ ;
         ubo->ori_[i][2] = 0 ;
         ubo->ori_[i][3] = 0 ;
-
-        // ubo->pos_[i][0][0]    = 0 ;
-        // ubo->pos_[i][0][1]    = 0 ;
-        // ubo->pos_[i][0][2]    = 0 ;
-        // ubo->pos_[i][0][3]    = 0 ;
-        angle += angle_inc ;
     }
 
     SDL_memcpy(vr->uniform_buffers_mapped_[current_frame], ubo, uniform_buffer_object_size) ;
@@ -803,7 +832,7 @@ create_rob(
                 &vr->texture_image_
             ,   &vr->texture_image_memory_
             ,   &vr->texture_mip_levels_
-            ,   "ass/sprites/cube_suzanne/cube_suzanne.png"
+            ,   "ass/sprites/test_cube_suzanne/test_cube_suzanne_0.png"
             ,   vc->device_
             ,   vc->command_pool_
             ,   vc->graphics_queue_
@@ -1153,41 +1182,9 @@ create_rob(
     vkDestroyShaderModule(vc->device_, vr->frag_shader_, NULL) ;
     vr->frag_shader_ = NULL ;
 
-
-    check(load_file((void **)&sprf_, &sprf_size_, "ass/sprites/cube_suzanne/cube_suzanne.sprf" )) ;
-    require(sprf_) ;
-    require(sprf_size_) ;
-    require(0 == (((uintptr_t)sprf_)&15)) ;
-
-    log_debug_u32(sprf_->tid_) ;
-    log_debug_u32(sprf_->frame_count_) ;
-    log_debug_u32(sprf_->pad0_) ;
-    log_debug_u32(sprf_->pad1_) ;
-    for(
-        uint32_t i = 0
-    ;   i < sprf_->frame_count_
-    ;   ++i
-    )
-    {
-        log_debug_f32(sprf_->frames_[i].p0x_) ;
-        log_debug_f32(sprf_->frames_[i].p0y_) ;
-        log_debug_f32(sprf_->frames_[i].t0u_) ;
-        log_debug_f32(sprf_->frames_[i].t0v_) ;
-        log_debug_f32(sprf_->frames_[i].p1x_) ;
-        log_debug_f32(sprf_->frames_[i].p1y_) ;
-        log_debug_f32(sprf_->frames_[i].t1u_) ;
-        log_debug_f32(sprf_->frames_[i].t1v_) ;
-        log_debug_f32(sprf_->frames_[i].p2x_) ;
-        log_debug_f32(sprf_->frames_[i].p2y_) ;
-        log_debug_f32(sprf_->frames_[i].t2u_) ;
-        log_debug_f32(sprf_->frames_[i].t2v_) ;
-        log_debug_f32(sprf_->frames_[i].p3x_) ;
-        log_debug_f32(sprf_->frames_[i].p3y_) ;
-        log_debug_f32(sprf_->frames_[i].t3u_) ;
-        log_debug_f32(sprf_->frames_[i].t3v_) ;
-    }
-
-
+    the_sprite_asset_ptr_ = load_asset_sprite("ass/sprites/test_cube_suzanne/test_cube_suzanne.sprf") ;
+    the_sprite_ = the_sprite_asset_ptr_.this_ ;
+    init_sprites() ;
 
     end_timed_block() ;
     return true ;

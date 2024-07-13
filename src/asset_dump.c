@@ -63,55 +63,97 @@ dump_rect_2d_info(
 
 
 static void
-dump_sprite_2d_vertices(
-    sprite_2d_vertices const * p
+dump_rect_2d_group(
+    rect_2d_group const * p
 )
 {
     require(p) ;
 
-    log_debug_u16(p->vertices_count_) ;
+    log_debug_u16(p->frame_start_) ;
+    log_debug_u16(p->frame_count_) ;
     log_debug_u16(p->pad1_) ;
     log_debug_u16(p->pad2_) ;
-    log_debug_u16(p->pad3_) ;
-
-    log_debug_u16(p->pad4_) ;
-    log_debug_u16(p->pad5_) ;
-    log_debug_u16(p->pad6_) ;
-    log_debug_u16(p->pad7_) ;
-
-    for(
-        uint16_t i = 0
-    ;   i < p->vertices_count_
-    ;   ++i
-    )
-    {
-        log_debug_u16(i) ;
-        dump_rect_2d_vertices(&p->vertices_[i]) ;
-    }
+    dump_rect_2d_bounding_info(&p->bounding_info_) ;
 }
 
-static void
-dump_sprite_2d_infos(
-    sprite_2d_infos const * p
-)
-{
-    require(p) ;
 
-    log_debug_u16(p->infos_count_) ;
-    log_debug_u16(p->pad1_) ;
-    log_debug_u16(p->pad2_) ;
-    log_debug_u16(p->pad3_) ;
 
-    for(
-        uint16_t i = 0
-    ;   i < p->infos_count_
-    ;   ++i
-    )
-    {
-        log_debug_u16(i) ;
-        dump_rect_2d_info(&p->infos_[i]) ;
-    }
-}
+// static void
+// dump_sprite_2d_vertices(
+//     sprite_2d_vertices const * p
+// )
+// {
+//     require(p) ;
+
+//     log_debug_u16(p->vertices_count_) ;
+//     log_debug_u16(p->pad1_) ;
+//     log_debug_u16(p->pad2_) ;
+//     log_debug_u16(p->pad3_) ;
+
+//     log_debug_u16(p->pad4_) ;
+//     log_debug_u16(p->pad5_) ;
+//     log_debug_u16(p->pad6_) ;
+//     log_debug_u16(p->pad7_) ;
+
+//     for(
+//         uint16_t i = 0
+//     ;   i < p->vertices_count_
+//     ;   ++i
+//     )
+//     {
+//         log_debug_u16(i) ;
+//         dump_rect_2d_vertices(&p->vertices_[i]) ;
+//     }
+// }
+
+// static void
+// dump_sprite_2d_infos(
+//     sprite_2d_infos const * p
+// )
+// {
+//     require(p) ;
+
+//     log_debug_u16(p->infos_count_) ;
+//     log_debug_u16(p->pad1_) ;
+//     log_debug_u16(p->pad2_) ;
+//     log_debug_u16(p->pad3_) ;
+
+//     for(
+//         uint16_t i = 0
+//     ;   i < p->infos_count_
+//     ;   ++i
+//     )
+//     {
+//         log_debug_u16(i) ;
+//         dump_rect_2d_info(&p->infos_[i]) ;
+//     }
+// }
+
+
+// static void
+// dump_sprite_2d_groups(
+//     sprite_2d_groups const * p
+// )
+// {
+//     require(p) ;
+
+//     log_debug_u16(p->groups_count_) ;
+//     log_debug_u16(p->pad1_) ;
+//     log_debug_u16(p->pad2_) ;
+//     log_debug_u16(p->pad3_) ;
+
+//     for(
+//         uint16_t i = 0
+//     ;   i < p->groups_count_
+//     ;   ++i
+//     )
+//     {
+//         log_debug_u16(i) ;
+//         dump_sprite_2d_group_info(&p->groups_[i]) ;
+//     }
+
+
+// }
 
 void
 dump_sprite_2d(
@@ -121,26 +163,52 @@ dump_sprite_2d(
     require(p) ;
 
     log_debug_u16(p->tid_) ;
-    log_debug_u16(p->pad1_) ;
-    log_debug_u16(p->pad2_) ;
-    log_debug_u16(p->pad3_) ;
+    log_debug_u16(p->groups_count_) ;
+    log_debug_u16(p->vertices_count_) ;
+    log_debug_u16(p->infos_count_) ;
 
+    log_debug_u32(p->groups_offset_) ;
     log_debug_u32(p->vertices_offset_) ;
     log_debug_u32(p->infos_offset_) ;
 
-    sprite_2d_vertices *    sv = asset_ref(sprite_2d_vertices, p, p->vertices_offset_) ;
-    sprite_2d_infos *       si = asset_ref(sprite_2d_infos, p, p->infos_offset_) ;
+    rect_2d_group *     rg = asset_ref(rect_2d_group,    p, p->groups_offset_) ;
+    rect_2d_vertices *  rv = asset_ref(rect_2d_vertices, p, p->vertices_offset_) ;
+    rect_2d_info *      ri = asset_ref(rect_2d_info,     p, p->infos_offset_) ;
+
+    for(
+        uint16_t i = 0
+    ;   i < p->groups_count_
+    ;   ++i
+    )
+    {
+        log_debug_u16(i) ;
+        dump_rect_2d_group(&rg[i]) ;
+    }
+
+    for(
+        uint16_t i = 0
+    ;   i < p->vertices_count_
+    ;   ++i
+    )
+    {
+        log_debug_u16(i) ;
+        dump_rect_2d_vertices(&rv[i]) ;
+    }
+
+    for(
+        uint16_t i = 0
+    ;   i < p->infos_count_
+    ;   ++i
+    )
+    {
+        log_debug_u16(i) ;
+        dump_rect_2d_info(&ri[i]) ;
+    }
 
 
-    // for(
-    //     uint16_t i = 0
-    // ;   i < p->group_count_
-    // ;   ++i
-    // )
-    // {
-    //     log_debug_u16(i) ;
-    //     dump_sprite_2d_vertices(&sv[i]) ;
-    //     dump_sprite_2d_infos(&si[i]) ;
-    // }
+    //dump_sprite_2d_groups(sg) ;
+    //dump_sprite_2d_vertices(sv) ;
+    //dump_sprite_2d_infos(si) ;
+
 }
 

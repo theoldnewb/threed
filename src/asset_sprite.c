@@ -6,8 +6,7 @@
 #include "check.h"
 
 
-
-sprite_2d *
+sprite_2d_ptr
 load_asset_sprite(
     char const * const  fullname
 )
@@ -15,15 +14,23 @@ load_asset_sprite(
     require(fullname) ;
     require(*fullname) ;
 
-    sprite_2d * p = NULL ;
-    uint64_t    s = 0 ;
+    sprite_2d_ptr ptr = { 0 } ;
 
-    if(check(load_file((void **)&p, &s, fullname)))
+    if(check(load_file((void **)&ptr.this_, &ptr.size_, fullname)))
     {
-        return NULL ;
+        require(0) ;
+        return ptr ;
     }
+    require(ptr.size_) ;
+    require(ptr.this_) ;
+
+    sprite_2d * p = ptr.this_ ;
+
+    ptr.groups_   = asset_ref(rect_2d_group,    p, p->groups_offset_) ;
+    ptr.vertices_ = asset_ref(rect_2d_vertices, p, p->vertices_offset_) ;
+    ptr.infos_    = asset_ref(rect_2d_info,     p, p->infos_offset_) ;
 
     dump_sprite_2d(p) ;
 
-    return p ;
+    return ptr ;
 }

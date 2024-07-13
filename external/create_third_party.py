@@ -62,10 +62,10 @@ def copy_threed_data(src_name, dst_name):
 def main():
     print("Hello, World!")
     print("SCRIPT_PATH=%s" % SCRIPT_PATH)
-    #build_and_install("SDL")
-    #build_and_install("cglm")
-    #just_copy_dir("stb")
-    #create_python_venv("python")
+    build_and_install("SDL")
+    build_and_install("cglm")
+    just_copy_dir("stb")
+    create_python_venv("python")
     copy_threed_data("threed_data/dat", "dat")
 
 if __name__ == "__main__":

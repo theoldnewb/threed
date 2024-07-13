@@ -11,7 +11,6 @@ from pymod import io
 #     {
 #         float pxpytutv_16_[16] ;
 #     } ;
-
 #     struct
 #     {
 #         float p0x_ ;
@@ -31,7 +30,6 @@ from pymod import io
 #         float t3u_ ;
 #         float t3v_ ;
 #     } ;
-
 #     struct
 #     {
 #         float pxpytutv_0_[4] ;
@@ -39,12 +37,10 @@ from pymod import io
 #         float pxpytutv_2_[4] ;
 #         float pxpytutv_3_[4] ;
 #     } ;
-
 #     struct
 #     {
 #         float pxpytutv_4_4_[4][4] ;
 #     } ;
-
 # } rect_2d_vertices ;
 class AssetRect2DVertices:
     def __init__(self):
@@ -86,109 +82,34 @@ class AssetRect2DVertices:
         assert(w.check_alignment(16))
 
 
-# typedef struct sprite_2d_vertices
+# typedef struct rect_2d_bounding_info
 # {
-#     uint16_t            vertices_count_ ;
-#     uint16_t            pad1_ ;
-#     uint16_t            pad2_ ;
-#     uint16_t            pad3_ ;
-
-#     uint16_t            pad4_ ;
-#     uint16_t            pad5_ ;
-#     uint16_t            pad6_ ;
-#     uint16_t            pad7_ ;
-
-#     rect_2d_vertices    vertices_[] ;
-# } sprite_2d_vertices ;
-class AssetSprite2DVertices:
+#     uint32_t    circle_offset_x_ ;
+#     uint32_t    circle_offset_y_ ;
+#     uint32_t    circle_radius_ ;
+#     uint32_t    circle_radius_squared_ ;
+#     uint16_t    crop_w_ ;
+#     uint16_t    crop_h_ ;
+#     uint16_t    w_ ;
+#     uint16_t    h_ ;
+# } rect_2d_bounding_info ;
+class AssetRect2DBoundingInfo:
     def __init__(self):
-        self.vertices_  = list()
-
-
-    def append(self, vertices):
-        self.vertices_.append(vertices)
-
-    def write(self, w):
-        assert(len(self.vertices_) > 0)
-        assert(w.check_alignment())
-        w.u16(len(self.vertices_))
-        w.u16(0)
-        w.u16(0)
-        w.u16(0)
-
-        w.u16(0)
-        w.u16(0)
-        w.u16(0)
-        w.u16(0)
-
-        assert(w.check_alignment(16))
-        for v in self.vertices_:
-            assert(w.check_alignment(16))
-            v.write(w)
-        assert(w.check_alignment(16))
-
-
-
-class AssetSprite2DVerticesList:
-    def __init__(self):
-        self.vertices_ = list()
-
-    def append(self, v):
-        self.vertices_.append(v)
-
-    def write(self, w):
-        assert(len(self.vertices_) > 0)
-        w.check_alignment()
-        for v in self.vertices_:
-            w.check_alignment()
-            v.write(w)
-        w.check_alignment()
-
-
-
-
-# typedef struct rect_2d_info
-# {
-#     uint16_t    texture_index_ ;
-#     uint16_t    group_index_ ;
-#     uint16_t    pad1_ ;
-#     uint16_t    pad2_ ;
-
-#     uint32_t    offset_x_ ;
-#     uint32_t    offset_y_ ;
-
-#     uint32_t    radius_ ;
-#     uint32_t    radius_squared_ ;
-
-#     uint32_t    crop_w_ ;
-#     uint32_t    crop_h_ ;
-
-#     uint32_t    w_ ;
-#     uint32_t    h_ ;
-# } rect_2d_info ;
-class AssetRect2DInfo:
-    def __init__(self):
-        self.texture_index_     = 0
-        self.group_index_       = 0
-        self.offset_x_          = 0
-        self.offset_y_          = 0
-        self.radius_            = 0
-        self.radius_squared_    = 0
-        self.crop_w_            = 0
-        self.crop_h_            = 0
-        self.w_                 = 0
-        self.h_                 = 0
+        self.circle_offset_x_       = 0
+        self.circle_offset_y_       = 0
+        self.circle_radius_         = 0
+        self.circle_radius_squared_ = 0
+        self.crop_w_                = 0
+        self.crop_h_                = 0
+        self.w_                     = 0
+        self.h_                     = 0
 
     def write(self, w):
         assert(w.check_alignment())
-        w.u16(self.texture_index_)
-        w.u16(self.group_index_)
-        w.u16(0)
-        w.u16(0)
-        w.u32(int(self.offset_x_))
-        w.u32(int(self.offset_y_))
-        w.u32(int(self.radius_))
-        w.u32(int(self.radius_squared_))
+        w.u32(int(self.circle_offset_x_))
+        w.u32(int(self.circle_offset_y_))
+        w.u32(int(self.circle_radius_))
+        w.u32(int(self.circle_radius_squared_))
         w.u32(self.crop_w_)
         w.u32(self.crop_h_)
         w.u32(self.w_)
@@ -196,96 +117,102 @@ class AssetRect2DInfo:
         assert(w.check_alignment())
 
 
-# typedef struct sprite_2d_infos
+# typedef struct rect_2d_info
 # {
-#     uint16_t            infos_count_ ;
-#     uint16_t            pad1_ ;
-#     uint16_t            pad2_ ;
-#     uint16_t            pad3_ ;
-
-#     rect_2d_info        infos_[] ;
-# } sprite_2d_infos ;
-class AssetSprite2DInfos:
+#     uint16_t              texture_index_ ;
+#     uint16_t              group_index_ ;
+#     uint16_t              pad1_ ;
+#     uint16_t              pad2_ ;
+#     rect_2d_bounding_info bounding_info_ ;
+# } rect_2d_info ;
+class AssetRect2DInfo:
     def __init__(self):
-        self.infos_ = list()
-
-    def append(self, infos):
-        self.infos_.append(infos)
+        self.texture_index_ = 0
+        self.group_index_   = 0
+        self.bounding_info_ = None
 
     def write(self, w):
-        assert(len(self.infos_) > 0)
+        assert(self.bounding_info_ is not None)
         assert(w.check_alignment())
-
-        w.u16(len(self.infos_))
+        w.u16(self.texture_index_)
+        w.u16(self.group_index_)
         w.u16(0)
         w.u16(0)
-        w.u16(0)
-
-        assert(w.check_alignment())
-        for i in self.infos_:
-            assert(w.check_alignment())
-            i.write(w)
+        self.bounding_info_.write(w)
         assert(w.check_alignment())
 
-
-class AssetSprite2DInfosList:
+# typedef struct sprite_2d_group
+# {
+#     uint16_t                frame_start_ ;
+#     uint16_t                frame_count_ ;
+#     uint16_t                pad1_ ;
+#     uint16_t                pad2_ ;
+#     rect_2d_bounding_info   bounding_info_ ;
+# } sprite_2d_group ;
+class AssetSprite2DGroup:
     def __init__(self):
-        self.infos_ = list()
-
-    def append(self, i):
-        self.infos_.append(i)
+        self.frame_start_   = 0
+        self.frame_count_   = 0
+        self.bounding_info_ = None
 
     def write(self, w):
-        assert(len(self.infos_) > 0)
-        w.check_alignment()
-        for i in self.infos_:
-            w.check_alignment()
-            i.write(w)
-        w.check_alignment()
-
+        assert(self.frame_count_ > 0)
+        assert(self.bounding_info_ is not None)
+        assert(w.check_alignment())
+        w.u16(self.frame_start_)
+        w.u16(self.frame_count_)
+        w.u16(0)
+        w.u16(0)
+        self.bounding_info_.write(w)
+        assert(w.check_alignment())
 
 
 # typedef struct sprite_2d
 # {
 #     uint16_t            tid_ ;
-#     uint16_t            group_count_ ;
-#     uint16_t            pad1_ ;
-#     uint16_t            pad2_ ;
-
-#     uint32_t            group_vertices_offset_ ;
-#     uint32_t            group_infos_offset_ ;
-
-#     //rect_2d_vertices  vertices_[] ;
-#     //sprite_2d_info    infos_[]
+#     uint16_t            groups_count_ ;
+#     uint16_t            vertices_count_ ;
+#     uint16_t            infos_count_ ;
+#     uint32_t            groups_offset_ ;
+#     uint32_t            vertices_offset_ ;
+#     uint32_t            infos_offset_ ;
 # } sprite_2d ;
-
-
-class AssetSprite:
+class AssetSprite2D:
     def __init__(self):
         self.om_        = io.PtrOffsetMap()
-        self.vertices_  = AssetSprite2DVerticesList()
-        self.infos_     = AssetSprite2DInfosList()
+        self.groups_    = io.AssetList()
+        self.vertices_  = io.AssetList()
+        self.infos_     = io.AssetList()
+
+    def append_group(self, g):
+        self.groups_.append(g)
 
     def append_vertices(self, v):
         self.vertices_.append(v)
 
-    def append_infos(self, i):
+    def append_info(self, i):
         self.infos_.append(i)
 
     def write_head(self, w):
-        assert(len(self.vertices_.vertices_) == len(self.infos_.infos_))
+        assert(len(self.groups_))
         assert(w.check_alignment())
         w.u16(asset_tid.atid_sprite)
-        w.u16(len(self.vertices_.vertices_))
-        w.u16(0)
-        w.u16(0)
+        w.u16(len(self.groups_))
+        w.u16(len(self.vertices_))
+        w.u16(len(self.infos_))
         assert(w.check_alignment())
+        w.u32(self.om_.get(self.groups_))
         w.u32(self.om_.get(self.vertices_))
         w.u32(self.om_.get(self.infos_))
+        w.align()
         assert(w.check_alignment())
 
     def write_body(self, w, offset=0):
         assert(w.check_alignment())
+        self.om_.set(self.groups_, w.relative_tell(offset))
+        self.groups_.write(w)
+        assert(w.check_alignment())
+        w.align(16)
         self.om_.set(self.vertices_, w.relative_tell(offset))
         self.vertices_.write(w)
         assert(w.check_alignment())

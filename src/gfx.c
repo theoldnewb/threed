@@ -16,11 +16,11 @@ create_render_objects()
 {
     begin_timed_block() ;
 
-    {
-        vulkan_render_object vr ;
-        make_rob_test(&vr) ;
-        create_vulkan_render_object(&vr) ;
-    }
+    // {
+    //     vulkan_render_object vr ;
+    //     make_rob_test(&vr) ;
+    //     create_vulkan_render_object(&vr) ;
+    // }
 
     // {
     //      vulkan_render_object vr ;
@@ -34,11 +34,11 @@ create_render_objects()
     //     create_vulkan_render_object(&vr) ;
     // }
 
-    // {
-    //     vulkan_render_object vr ;
-    //     make_rob_sprite_animation(&vr) ;
-    //     create_vulkan_render_object(&vr) ;
-    // }
+    {
+        vulkan_render_object vr ;
+        make_rob_sprite_animation(&vr) ;
+        create_vulkan_render_object(&vr) ;
+    }
 
     end_timed_block() ;
     return true ;

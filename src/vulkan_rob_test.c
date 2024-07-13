@@ -5,7 +5,6 @@
 #include "debug.h"
 #include "check.h"
 #include "log.h"
-#include "asset_sprite.h"
 
 #include <cglm/vec2.h>
 #include <cglm/vec3.h>
@@ -99,7 +98,7 @@ typedef struct vulkan_rob
 } vulkan_rob ;
 
 
-static vulkan_rob   the_vulkan_rob_ = { 0 } ;
+static vulkan_rob       the_vulkan_rob_ = { 0 } ;
 
 
 //////////////////////////////////////7
@@ -143,8 +142,6 @@ typedef struct uniform_buffer_object
 
 
 static uint32_t const uniform_buffer_object_size = sizeof(uniform_buffer_object) ;
-
-
 static uniform_buffer_object ubos_[max_vulkan_frames_in_flight] = { 0 } ;
 
 
@@ -1016,9 +1013,6 @@ create_rob(
     vr->vert_shader_ = NULL ;
     vkDestroyShaderModule(vc->device_, vr->frag_shader_, NULL) ;
     vr->frag_shader_ = NULL ;
-
-
-    sprite_2d * p = load_asset_sprite("ass/sprites/test_cube_suzanne/test_cube_suzanne.sprf") ;
 
     end_timed_block() ;
     return true ;

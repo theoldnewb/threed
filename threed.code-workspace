@@ -1,7 +1,16 @@
 {
 	"folders": [
-		{
-			"path": "."
-		}
-	]
+        {
+            "path": "."
+        },
+        {
+            "path": "../../prj/led"
+        },
+        {
+            "path": "../../svn/yasg"
+        },
+        {
+            "path": "../../tmp/led_test/led"
+        }
+    ]
 }

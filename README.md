@@ -19,7 +19,20 @@ The progression of the project can be followed up here:
 Once everything was built properly, a 'tpl' directory should appear.
 
     dir tpl/
-    SDL3 cglm
+    cglm  python  SDL  stb
+
+## Setup python virtual env for asset builder
+
+    source tpl/python/bin/activate
+    pip install pillow rectpack miniball numpy
+
+## Building assets
+
+    ./rebuild_assets.py
+
+## Building shaders
+
+    ./rebuild_shaders.py
 
 ## Building the threed project itself
 

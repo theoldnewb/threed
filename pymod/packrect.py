@@ -1,4 +1,5 @@
 import os
+import operator
 
 from collections import defaultdict
 from PIL import Image
@@ -256,7 +257,8 @@ def create_pack_rect(file_name, local_index, group_index):
     assert(os.path.isfile(file_name))
     pr = PackRect(file_name)
     pr.set_index(local_index, group_index)
-    pr.set_border(1, 1, 1, 1)
+    #pr.set_border(1, 1, 1, 1)
+    pr.set_border(1, 1, 0, 0)
     return pr
 
 
@@ -333,82 +335,52 @@ def pack_pack_rects(pack_rects, dst_dir, create_animation):
 
         for pr in prs:
             w, h = pr.get_pack_size()
+            #print("unique_index_=%s" % str(pr.unique_index_))
             sizes.append( (w, h, pr.unique_index_) )
             assert(pr.unique_index_ not in all_prs)
             all_prs[pr.unique_index_] = pr
 
-
-    allow_rotation  = False
+    allow_rotation  = True
     auto_bin_size   = True
     allow_shrinking = True
     bin_size        = (4096, 4096)
     bins, bs        = binpack.do_pack(sizes, allow_rotation, auto_bin_size, allow_shrinking, bin_size)
 
     groups = defaultdict(list)
-    assert(len(bins) == 1)
     for bidx in bins:
+        bin_img = Image.new("RGBA", bs)
         for r in bins[bidx]:
             x, y, w, h, i, b = r
-            assert(b == 0)
-            all_prs[i].set_packed(x, y, w, h, b, bs[0], bs[1])
-            all_prs[i].calc_pos_uv()
-            groups[all_prs[i].group_index_].append(all_prs[i])
-            print(r)
+            pr = all_prs[i]
+            pr.set_packed(x, y, w, h, b, bs[0], bs[1])
+            pr.calc_pos_uv()
+            copy_pack_rect(bin_img, pr)
+            groups[pr.group_index_].append(pr)
+        img_name = base_name + "_%d.png" % bidx
+        atlas_name = os.path.join(dst_dir, img_name)
+        bin_img.save(atlas_name, "PNG")
 
-    dst_img = Image.new("RGBA", bs)
-    #dst_img.paste(0xffff00ff, (0, 0, bin_w, bin_h))
-    fill_image(dst_img, 0x00ff00ff)
-    for k, r in all_prs.items():
-        #print("k=%s" % str(k))
-        #x = r.packed_l_ + r.border_l_
-        #y = r.packed_t_ + r.border_t_
-        #dst_img.paste(r.crop_img_, (x, y))
-        #r.dump()
-        copy_pack_rect(dst_img, r)
-    dst_img.save(atlas_name, "PNG")
-
-    ass = asset_sprite.AssetSprite()
+    sorted_groups = defaultdict(list)
     for k, v in groups.items():
-        print("k=%s, len(v)=%d" % (str(k), len(v)))
-        asv = asset_sprite.AssetSprite2DVertices()
-        asi = asset_sprite.AssetSprite2DInfos()
+        sorted_groups[k] = sorted(v, key=operator.attrgetter('local_index_'))
+
+    ass = asset_sprite.AssetSprite2D()
+    frame_start = 0
+    frame_count = 0
+    for k, v in sorted_groups.items():
+        #print("k=%s, len(v)=%d" % (str(k), len(v)))
         for x in v:
-            asv.append(misc.make_asset_rect_2d_vertices(x))
-            asi.append(misc.make_asset_rect_2d_info(x))
-        ass.append_vertices(asv)
-        ass.append_infos(asi)
+            x.dump()
+            ass.append_vertices(misc.make_asset_rect_2d_vertices(x))
+            ass.append_info(misc.make_asset_rect_2d_info(x))
+            frame_count = frame_count + 1
+        ass.append_group(misc.make_asset_sprite_2d_group(v, frame_start, frame_count - frame_start))
+        frame_start = frame_count
 
     w = io.AssetWriter(8)
     ass.write(w)
     w.save_as(sprf_name)
 
-    # w.u32(0x00000001)
-    # w.u32(len(all_prs))
-    # w.u32(0)
-    # w.u32(0)
-
-    # for k, r in all_prs.items():
-    #     w.f32(r.ax_)
-    #     w.f32(r.ay_)
-    #     w.f32(r.au_)
-    #     w.f32(r.av_)
-
-    #     w.f32(r.bx_)
-    #     w.f32(r.by_)
-    #     w.f32(r.bu_)
-    #     w.f32(r.bv_)
-
-    #     w.f32(r.cx_)
-    #     w.f32(r.cy_)
-    #     w.f32(r.cu_)
-    #     w.f32(r.cv_)
-
-    #     w.f32(r.dx_)
-    #     w.f32(r.dy_)
-    #     w.f32(r.du_)
-    #     w.f32(r.dv_)
-
-    w.save_as(sprf_name)
 
 
 def create_pack_rects(dst_dir, src_dirs, create_animation):

@@ -36,6 +36,22 @@ def make_u16(a, b):
 #    f.write(x)
 
 
+class AssetList:
+    def __init__(self):
+        self.items_ = list()
+
+    def __len__(self):
+        return len(self.items_)
+
+    def append(self, item):
+        self.items_.append(item)
+
+    def write(self, w):
+        assert(len(self.items_))
+        for item in self.items_:
+            item.write(w)
+
+
 class AssetWriter:
     def __init__(self, alignment=8):
         assert(alignment == 16 or alignment == 8 or alignment == 4 or alignment == 2)
@@ -84,6 +100,34 @@ class AssetWriter:
     def goto(self, v):
         assert(v >= 0 and v <= self.io_.getbuffer().nbytes)
         self.io_.seek(v)
+
+    def fill(self, c, v):
+        for i in range(0, c):
+            self.u8(v)
+
+    def align_fill_zero(self):
+        c = self.tell()
+        n = math.align_number(c, self.align_)
+        if n > c:
+            r = n-c
+            self.fill(r, 0)
+        assert(n == self.tell())
+
+    def align_fill(self, a):
+        c = self.tell()
+        n = math.align_number(c, a)
+        if n > c:
+            r = n-c
+            self.fill(r, r)
+        assert(n == self.tell())
+
+    def align(self, a=None):
+        if a is None:
+            self.align_fill(self.align_)
+            assert(self.check_alignment())
+        else:
+            self.align_fill(a)
+            assert(self.check_alignment(a))
 
 
 class PtrOffsetMap:
