@@ -17,6 +17,8 @@ find_package(Vulkan REQUIRED)
 message(STATUS "Vulkan_FOUND=${Vulkan_FOUND}")
 
 
+add_compile_definitions(NDEBUG)
+
 add_compile_definitions(ENABLE_DEBUG_LOG)
 add_compile_definitions(ENABLE_INFO_LOG)
 add_compile_definitions(ENABLE_ERROR_LOG)

@@ -2,7 +2,7 @@
 import os
 
 
-from pymod import packrect
+from pymod import texture_atlas
 
 
 def run(raw_input_dir, asset_output_dir):
@@ -24,35 +24,30 @@ def run(raw_input_dir, asset_output_dir):
         return os.path.join(dst_dir, d)
 
 
-    packrect.create_animation(
+    texture_atlas.create_animation(
         dst("cube"), [
             src("testing/cube/frames")
         ]
     )
 
-    packrect.create_animation(
+    texture_atlas.create_animation(
         dst("suzanne"), [
             src("testing/suzanne/frames")
         ]
     )
 
-    packrect.create_image_collection(
+    texture_atlas.create_image_collection(
         dst("patset"), [
             src("testing/patset/frames")
         ]
     )
 
-    packrect.create_animation(
+    texture_atlas.create_animation(
         dst("test_cube_suzanne"), [
             src("testing/cube/frames")
         ,   src("testing/suzanne/frames")
         ]
     )
-
-
-    #make_texture_atlas(src("suzanne/frames_gold"), dst("suzanne"))
-    #make_texture_atlas(src("suzanne/frames"), dst("suzanne"))
-    #make_texture_atlas(src("slab/frames"), dst("suzanne"))
 
 
 

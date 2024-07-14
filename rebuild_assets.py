@@ -3,6 +3,8 @@
 import os
 
 from pymod import make_texture_atlas
+#from pymod import make_font_atlas
+
 
 def main():
     root_path = os.path.dirname(os.path.realpath(__file__))
@@ -12,6 +14,7 @@ def main():
         os.makedirs(dst_path)
 
     make_texture_atlas.run(src_path, dst_path)
+    #make_font_atlas.run(src_path, dst_path)
 
 
 if __name__ == "__main__":
