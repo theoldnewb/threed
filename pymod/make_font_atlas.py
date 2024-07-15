@@ -1,9 +1,9 @@
 
+
 import os
 
 
-#from pymod import packrect
-from pymod import unicode_blocks
+from pymod import font_atlas
 from pymod import misc
 
 
@@ -27,50 +27,73 @@ def run(raw_input_dir, asset_output_dir):
 
     is_verbose = True
 
-    ubl = misc.load_unicode_blockstring(unicode_blocks.unicode_blocks_string, is_verbose)
-    assert(ubl)
-    for u in ubl:
-        print(u)
 
-    desired_unicode_blocks = [
-        "Basic Latin"
-    ,   "Latin-1 Supplement"
-    ,   "Greek and Coptic"
-    ,   "Currency Symbols"
-    ,   "Cyrillic"
-    ,   "Cyrillic Supplement"
+    # desired_unicode_blocks = [
+    #     "Basic Latin"
+    # ,   "Latin-1 Supplement"
+    # ,   "Greek and Coptic"
+    # ,   "Currency Symbols"
+    # ,   "Cyrillic"
+    # ,   "Cyrillic Supplement"
+    # ]
+
+    # ubl = misc.get_unicode_block_ranges(desired_unicode_blocks, False)
+
+    # font_file = "/usr/share/fonts/TTF/OpenSans-Bold.ttf"
+    # font_atlas.create_font(ubl, dst("test_font"), [
+    #         (14, font_file)
+    #     ,   (34, font_file)
+    #     ]
+    # )
+
+
+    # latin_unicode_blocks = [
+    #     "Basic Latin"
+    # #,   "Latin-1 Supplement"
+    # #,   "Latin Extended-A"
+    # #,   "Latin Extended-B"
+    # #,   "IPA Extensions"
+    # ]
+
+    # ubl_latin = misc.get_unicode_block_ranges(latin_unicode_blocks, False)
+
+    # font_file = "/usr/share/fonts/noto/NotoSans-Bold.ttf"
+    # font_atlas.create_font(ubl_latin, dst("test_font_noto"), [
+    #         (64, font_file)
+    #     #,   (12, font_file)
+    #     #,   (16, font_file)
+    #     #,   (22, font_file)
+    #     #,   (32, font_file)
+    #     #,   (44, font_file)
+    #     ]
+    # )
+
+
+    cjk_unicode_blocks = [
+        "Hiragana"
+    ,   "Katakana"
+    #,   "CJK Unified Ideographs Extension A"
+    ,   "Enclosed CJK Letters and Months"
+    ,   "CJK Compatibility"
+    #    "CJK Unified Ideographs"
+    #,   "Latin-1 Supplement"
+    #,   "Latin Extended-A"
+    #,   "Latin Extended-B"
+    #,   "IPA Extensions"
     ]
 
-    fubl = misc.filter_unicode_block_ranges(ubl, desired_unicode_blocks, is_verbose)
+    ubl_cjk = misc.get_unicode_block_ranges(cjk_unicode_blocks, False)
 
-    font_file = "/usr/share/fonts/TTF/OpenSans-Bold.ttf"
-
-    packrect.create_font(
-        dst("test_font"), [
-            (34, font_file)
+    font_file = "/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc"
+    font_atlas.create_font(ubl_cjk, dst("test_font_noto-cjk"), [
+            (32, font_file)
+        #,   (12, font_file)
+        #,   (16, font_file)
+        #,   (22, font_file)
+        #,   (32, font_file)
+        #,   (44, font_file)
         ]
     )
-
-    out_file = "test.fnt"
-
-    misc.make_and_pack_font(out_file, font_file, font_size, fubl, is_verbose)
-
-
-
-
-# FF=/usr/share/fonts/gnu-free/FreeSansBold.otf
-# FT=bold
-# FS=34
-# FL=latin
-# OF=${ASSPATH}/fonts/freesans_${FT}_${FS}_${FL}.fnt
-
-# "${PYTCODE}/generate_font.py" -v -f \
-# -o "${OF}" \
-# -ubf "${UBF}" \
-# -ub "Basic Latin" "Latin-1 Supplement" "Currency Symbols" \
-# -ub "Cyrillic" "Cyrillic Supplement" \
-# -ff "${FF}" \
-# -fs "${FS}"
 
 
 

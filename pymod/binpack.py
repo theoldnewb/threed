@@ -189,17 +189,18 @@ def do_pack(sizes, allow_rotation, auto_bin_size=True, allow_shrinking=True, max
 
 
     packer = None
+    lbs = max_bin_size
 
     if allow_shrinking:
         bin_sizes = calc_potential_bin_sizes(max_bin_size[0], max_bin_size[1], True)
         result_list = list()
 
-        pack_algo = (
+        pack_algo = [
             MaxRectsBl
-        ,   MaxRectsBssf
-        ,   MaxRectsBaf
-        ,   MaxRectsBlsf
-        )
+        #,   MaxRectsBssf
+        #,   MaxRectsBaf
+        #,   MaxRectsBlsf
+        ]
 
         for algo in pack_algo:
             lbs = max_bin_size

@@ -326,3 +326,40 @@ class PackRect:
         self.du_ = math.normalize(tdx, tex_range, self.packed_bin_w_)
         self.dv_ = math.normalize(tdy, tex_range, self.packed_bin_h_)
 
+
+def copy_pack_rect(img, pr):
+    l = pr.packed_l_
+    t = pr.packed_t_
+    w = l + pr.packed_w_
+    h = t + pr.packed_h_
+    #print("l=%d, t=%d, w=%d, h=%d" % (l, t, w, h))
+    #col = 0xffff00ff
+    col = 0x00000000
+    for y in range(t, h):
+        for x in range(l, w):
+            img.putpixel((x, y), col)
+
+    show_rotated = False
+    if show_rotated:
+        for y in range(t, h):
+            for x in range(l, w):
+                if pr.rotated_:
+                    col = 0xFF0000FF
+                else:
+                    col = 0xFF00FF00
+                img.putpixel((x, y), col)
+
+
+    for y in range(0, pr.crop_h_):
+        src_y = y + pr.crop_t_
+        for x in range(0, pr.crop_w_):
+            src_x = x + pr.crop_l_
+            if pr.rotated_:
+                dst_x = pr.packed_l_ + pr.border_t_ + pr.crop_h_ - 1 - y
+                dst_y = pr.packed_t_ + pr.border_l_ + x
+            else:
+                dst_x = x + pr.packed_l_ + pr.border_l_
+                dst_y = y + pr.packed_t_ + pr.border_t_
+
+            rgba = pr.image_.getpixel((src_x, src_y))
+            img.putpixel((dst_x, dst_y), rgba)

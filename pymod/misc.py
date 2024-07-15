@@ -4,7 +4,7 @@ from pymod import asset_sprite
 from pymod import packrect
 from pymod import bounding_circle
 from pymod import font
-
+from pymod import unicode_blocks
 
 def make_asset_rect_2d_vertices(r):
     a = asset_sprite.AssetRect2DVertices()
@@ -188,6 +188,16 @@ def filter_unicode_block_ranges(unicode_blocklist, desired_ranges, is_verbose):
         print(sorted_ubl)
 
     return sorted_ubl
+
+
+def get_unicode_block_ranges(desired_unicode_blocks, is_verbose):
+    ubl = load_unicode_blockstring(unicode_blocks.unicode_blocks_string, is_verbose)
+    assert(ubl)
+    #for u in ubl:
+    #    print(u)
+    fubl = filter_unicode_block_ranges(ubl, desired_unicode_blocks, is_verbose)
+    return fubl
+
 
 
 def make_font_pack_rects(chars):
